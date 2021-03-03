@@ -27,19 +27,25 @@ enum ConstraintType {
 };
 
 struct TypeInfo {
-        set<int> &frames;
-        set<string> &units;
+        set<int> frames;
+        set<int> units;
 };
 
 struct ASTContext {
+        // maps each mavlink struct name to its frame field
         const map<string, string> &types_to_frame_field;
+        // maps each mavlink struct name to a map relating fields to units
         const map<string, map<string, int>> &type_to_field_to_unit;
+        // communicates context to AST walkers
         ConstraintType constraint;
         set<string> &possible_frames;
         bool in_mav_constraint;
         map<unsigned, set<string>> &scope_to_tainted;
         bool had_mav_constraint;
         bool had_taint;
+
+        // maps variables to their type info
+        vector<map<string, TypeInfo>> &var_types;
 };
 
 string get_full_path(CXString compile_dir, CXString filename) {
@@ -90,14 +96,22 @@ string get_binary_operator(CXCursor cursor) {
 
 // returns the underlying typename associated with type.
 // e.g. if there are qualifiers like const, those are removed.
+
 string get_object_typename(CXType type) {
+        // recurse to get pointer types
+        if (type.kind == CXType_Pointer)
+                return get_object_typename(clang_getPointeeType(type));
+
         CXString type_spelling = clang_getTypeSpelling(type);
         string result(clang_getCString(type_spelling));
         clang_disposeString(type_spelling);
-        if (clang_isConstQualifiedType(type)) {
-                const string const_prefix = "const ";
-                result = result.substr(const_prefix.length(), result.length() - const_prefix.length());
-        }
+
+        size_t pos;
+        while ((pos = result.find("const ")) != string::npos)
+                result.erase(pos, 6);
+        while ((pos = result.find("&")) != string::npos)
+                result.erase(pos, 1);
+
         // TODO: make this function less wrong
         return result;
 }
@@ -169,6 +183,23 @@ string pretty_print_store(CXCursor c) {
         return result;
 }
 
+// if c is part of a variable initialization, returns a cursor representing the declaration
+CXCursor get_initialization_decl(CXCursor c) {
+        CXCursor parent = c;
+        while (clang_getCursorKind(parent) != CXCursor_VarDecl) {
+                parent = clang_getCursorSemanticParent(parent);
+        }
+        return parent;
+}
+
+// returns the cursor's spelling as a string
+string get_cursor_spelling(CXCursor c) {
+        CXString spelling = clang_getCursorSpelling(c);
+        string result(clang_getCString(spelling));
+        clang_disposeString(spelling);
+        return result;
+}
+
 enum CXChildVisitResult check_tainted_decl_walker(CXCursor c, CXCursor p, CXClientData cd) {
         ASTContext *ctx = static_cast<ASTContext*>(cd);
         if (clang_getCursorKind(c) == CXCursor_DeclRefExpr) {
@@ -185,8 +216,8 @@ enum CXChildVisitResult check_tainted_decl_walker(CXCursor c, CXCursor p, CXClie
 
                 const set<string> &taint_set = ctx->scope_to_tainted[hash];
 
-                if (ctx->types_to_frame_field.find(type_str) != ctx->types_to_frame_field.end()
-                    || taint_set.find(cursor_name) != taint_set.end()) {
+                bool has_known_type = ctx->types_to_frame_field.find(type_str) != ctx->types_to_frame_field.end();
+                if (has_known_type || taint_set.find(cursor_name) != taint_set.end()) {
                         CXCursor parent = p;
                         while (clang_getCursorKind(parent) != CXCursor_VarDecl) {
                                 parent = clang_getCursorSemanticParent(parent);
@@ -198,6 +229,8 @@ enum CXChildVisitResult check_tainted_decl_walker(CXCursor c, CXCursor p, CXClie
 
                         CXCursor definition = clang_getCursorDefinition(parent);
                         CXCursor definition_parent = clang_getCursorSemanticParent(definition);
+                        CXCursor ref = clang_getCursorReferenced(parent);
+                        cout << "REFERERENCED: " << get_cursor_spelling(ref) << endl;
 
                         unsigned hash = clang_hashCursor(definition_parent);
                         ctx->scope_to_tainted[hash].insert(string(clang_getCString(parent_spelling)));
@@ -318,6 +351,25 @@ void check_tainted_store(CXCursor cursor, ASTContext *ctx) {
         }
 }
 
+/**
+ * t - a known type
+ * name - variable name
+ * type_to_field_to_unit - relates types to fields to units
+ * tinfo - type info
+ */
+void add_inner_vars(const string &t,
+                    const string &name,
+                    const map<string, map<string, int>> &type_to_field_to_unit,
+                    map<string, TypeInfo> &tinfo) {
+        auto typeinfo = type_to_field_to_unit.find(t);
+        if (typeinfo == type_to_field_to_unit.end())
+                return;
+        for (const auto &pair: typeinfo->second) {
+                string varname = name + "." + pair.first;
+                tinfo[varname].units.insert(pair.second);
+        }
+}
+
 enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor parent, CXClientData client_data) {
         enum CXChildVisitResult next_action = CXChildVisit_Recurse;
 
@@ -369,6 +421,17 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor parent, CX
                         // TODO: use taint information
                 }
                 clang_disposeString(cspelling);
+        } else if (kind == CXCursor_ParmDecl) {
+                CXType t = clang_getCursorType(cursor);
+                string t_type = get_object_typename(t);
+                bool is_mav_type = ctx->types_to_frame_field.find(t_type)
+                        != ctx->types_to_frame_field.end();
+                if (is_mav_type) {
+                        add_inner_vars(t_type,
+                                       get_cursor_spelling(cursor),
+                                       ctx->type_to_field_to_unit,
+                                       ctx->var_types.back());
+                }
         }
 
         return next_action;
@@ -381,6 +444,9 @@ enum CXChildVisitResult ast_walker(CXCursor cursor, CXCursor parent, CXClientDat
                 ctx->had_mav_constraint = false;
                 ctx->had_taint = false;
 
+                map<string, TypeInfo> scope;
+                ctx->var_types.push_back(scope);
+
                 clang_visitChildren(cursor, function_ast_walker, client_data);
                 ctx->scope_to_tainted.erase(clang_hashCursor(cursor));
 
@@ -390,6 +456,8 @@ enum CXChildVisitResult ast_walker(CXCursor cursor, CXCursor parent, CXClientDat
                              << clang_getCString(cursor_spelling) << endl;
                         clang_disposeString(cursor_spelling);
                 }
+
+                ctx->var_types.pop_back();
 
                 return CXChildVisit_Continue;
         }
@@ -529,6 +597,7 @@ int main(int argc, char **argv) {
 
                 set<string> possible_frames;
                 map<unsigned, set<string>> scope_to_tainted;
+                vector<map<string, TypeInfo>> var_types;
                 ASTContext ctx = {
                         type_to_semantic,
                         type_to_field_to_unit,
@@ -538,6 +607,7 @@ int main(int argc, char **argv) {
                         scope_to_tainted,
                         false,
                         false,
+                        var_types,
                 };
                 if (unit) {
                         CXCursor cursor = clang_getTranslationUnitCursor(unit);
