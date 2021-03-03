@@ -1,3 +1,6 @@
 [submodule "ArduPilot/pugixml"]
 	path = ArduPilot/pugixml
 	url = https://github.com/zeux/pugixml
+[submodule "ArduPilot/rapidjson"]
+	path = ArduPilot/rapidjson
+	url = https://github.com/Tencent/rapidjson

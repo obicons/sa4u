@@ -4,7 +4,6 @@
 #include <iostream>
 #include <fstream>
 #include <map>
-#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -13,7 +12,6 @@ using namespace std;
 extern "C" {
 #include <clang-c/CXCompilationDatabase.h>
 #include <clang-c/Index.h>
-#include <clang-c/CXString.h>
 #include <unistd.h>
 }
 
@@ -28,8 +26,14 @@ enum ConstraintType {
         SWITCHSTMT,
 };
 
+struct TypeInfo {
+        set<int> &frames;
+        set<string> &units;
+};
+
 struct ASTContext {
         const map<string, string> &types_to_frame_field;
+        const map<string, map<string, int>> &type_to_field_to_unit;
         ConstraintType constraint;
         set<string> &possible_frames;
         bool in_mav_constraint;
@@ -103,16 +107,11 @@ enum CXChildVisitResult check_mavlink(CXCursor cursor, CXCursor parent, CXClient
         ctx->in_mav_constraint = false;
         if (clang_getCursorKind(cursor) == CXCursor_DeclRefExpr && clang_getCursorKind(parent) == CXCursor_MemberRefExpr) {
                 CXType type = clang_getCursorType(cursor);
-
-                // CXString type_str = clang_getTypeSpelling(type);
-                // clang_disposeString(type_str);
-                // string the_type = string(clang_getCString(type_str));
                 string the_type = get_object_typename(type);
 
                 CXString parent_member = clang_getCursorSpelling(parent);
                 string the_parent_member = string(clang_getCString(parent_member));
                 clang_disposeString(parent_member);
-
 
                 const auto& pair = ctx->types_to_frame_field.find(the_type);
                 if (pair != ctx->types_to_frame_field.end() && pair->second == the_parent_member) {
@@ -238,7 +237,7 @@ enum CXChildVisitResult mark_store_tainted(CXCursor c, CXCursor UNUSED, CXClient
 }
 
 static int ctaw_childno;
-enum CXChildVisitResult check_tainted_assgn_walker(CXCursor c, CXCursor UNUSED, CXClientData cd) {
+enum CXChildVisitResult check_tainted_assgn_walker(CXCursor c, CXCursor parent, CXClientData cd) {
         if (!ctaw_childno) {
                 ctaw_childno++;
                 return CXChildVisit_Continue;
@@ -249,7 +248,8 @@ enum CXChildVisitResult check_tainted_assgn_walker(CXCursor c, CXCursor UNUSED, 
         pair<bool, ASTContext*> *p = static_cast<pair<bool, ASTContext*>*>(cd);
 
         bool tainted_indirectly = false;
-        if (clang_getCursorKind(c) == CXCursor_DeclRefExpr) {
+        CXCursorKind kind = clang_getCursorKind(c);
+        if (kind == CXCursor_DeclRefExpr) {
                 CXCursor definition = clang_getCursorDefinition(c);
                 CXCursor definition_parent = clang_getCursorSemanticParent(definition);
                 unsigned hash = clang_hashCursor(definition_parent);
@@ -257,6 +257,16 @@ enum CXChildVisitResult check_tainted_assgn_walker(CXCursor c, CXCursor UNUSED, 
                 CXString spelling = clang_getCursorSpelling(c);
                 string cursor_name = string(clang_getCString(spelling));
                 clang_disposeString(spelling);
+
+                const set<string> &tainted_set = p->second->scope_to_tainted[hash];
+                tainted_indirectly = tainted_set.find(cursor_name) != tainted_set.end();
+        } else if (kind == CXCursor_MemberRef) {
+                CXCursor definition = clang_getCursorDefinition(c);
+                CXCursor definition_parent = clang_getCursorSemanticParent(definition);
+                unsigned hash = clang_hashCursor(definition_parent);
+
+                string cursor_name = pretty_print_store(parent);
+                cout << "HERE: " << cursor_name << endl;
 
                 const set<string> &tainted_set = p->second->scope_to_tainted[hash];
                 tainted_indirectly = tainted_set.find(cursor_name) != tainted_set.end();
@@ -294,11 +304,12 @@ void check_tainted_store(CXCursor cursor, ASTContext *ctx) {
 
                                         clang_disposeString(cursor_spelling);
                                 } else {
-                                        CXString cursor_kind_spelling = clang_getCursorKindSpelling(clang_getCursorKind(c));
+                                        CXCursor definition = clang_getCursorDefinition(c);
+                                        CXCursor definition_parent = clang_getCursorSemanticParent(definition);
+                                        unsigned hash = clang_hashCursor(definition_parent);
                                         cout << "MARKING: " << pretty_print_store(p) << endl;
-                                        cout << "KIND: " << clang_getCString(cursor_kind_spelling) << endl;
+                                        ctx->scope_to_tainted[hash].insert(pretty_print_store(p));
                                         clang_visitChildren(c, mark_store_tainted, cd);
-                                        cout << endl;
                                 }
                                 return CXChildVisit_Break;
                         },
@@ -385,6 +396,14 @@ enum CXChildVisitResult ast_walker(CXCursor cursor, CXCursor parent, CXClientDat
         return CXChildVisit_Recurse;
 }
 
+// returns the internal type that will be used to represent the mavlink message with name
+string mavlink_msgname_to_typename(const string &msgname) {
+        string result = msgname;
+        transform(result.begin(), result.end(), result.begin(), [](unsigned char c){ return std::tolower(c); });
+        result = "mavlink_" + result + "_t";
+        return result;
+}
+
 // returns a map relating mavlink message types to their frame field
 map<string, string> get_types_to_frame_field(const pugi::xml_document &doc) {
         map<string, string> result;
@@ -406,16 +425,41 @@ map<string, string> get_types_to_frame_field(const pugi::xml_document &doc) {
 
                         if (frame_member) {
                                 // use the name of the message to generate the c++ struct name
-                                string structname(node_type.value());
-                                transform(structname.begin(), structname.end(), structname.begin(), [](unsigned char c){ return std::tolower(c); });
-                                structname = "mavlink_" + structname + "_t";
-
+                                string structname = mavlink_msgname_to_typename(node_type.value());
                                 result[structname] = frame_member_name;
                         }
                 }
         }
 
         return result;
+}
+
+// returns a map relating mavlink message types to their fields to their unit kinds
+map<string, map<string, int>> get_type_to_field_to_unit(const pugi::xml_document &doc,
+                                                        map<string, int> &unitname_to_id) {
+        int nextid = 0;
+        map<string, map<string, int>> type_to_field_to_unit;
+        for (const pugi::xml_node &msg: doc.child("mavlink").child("messages")) {
+                pugi::xml_attribute msg_name = msg.attribute("name");
+                if (msg_name) {
+                        string structname = mavlink_msgname_to_typename(msg_name.value());
+                        for (const pugi::xml_node &param: msg) {
+                                if (param.type() == pugi::node_element && param.attribute("units")) {
+                                        string unit_type = param.attribute("units").value();
+
+                                        // see if we do not have an ID for this unit type already.
+                                        // if we don't, create one.
+                                        if (unitname_to_id.find(unit_type) == unitname_to_id.end()) {
+                                                unitname_to_id[unit_type] = nextid++;
+                                        }
+
+                                        string field_name(param.attribute("name").value());
+                                        type_to_field_to_unit[structname][field_name] = unitname_to_id[unit_type];
+                                }
+                        }
+                }
+        }
+        return type_to_field_to_unit;
 }
 
 int main(int argc, char **argv) {
@@ -432,6 +476,9 @@ int main(int argc, char **argv) {
         }
 
         map<string, string> type_to_semantic = get_types_to_frame_field(doc);
+        map<string, int> unitname_to_id;
+        map<string, map<string, int>> type_to_field_to_unit =
+                get_type_to_field_to_unit(doc, unitname_to_id);
 
         // (1) load database
         CXCompilationDatabase_Error err;
@@ -482,7 +529,16 @@ int main(int argc, char **argv) {
 
                 set<string> possible_frames;
                 map<unsigned, set<string>> scope_to_tainted;
-                ASTContext ctx = {type_to_semantic, UNCONSTRAINED, possible_frames, false, scope_to_tainted, false, false};
+                ASTContext ctx = {
+                        type_to_semantic,
+                        type_to_field_to_unit,
+                        UNCONSTRAINED,
+                        possible_frames,
+                        false,
+                        scope_to_tainted,
+                        false,
+                        false,
+                };
                 if (unit) {
                         CXCursor cursor = clang_getTranslationUnitCursor(unit);
                         clang_visitChildren(cursor, ast_walker, &ctx);
