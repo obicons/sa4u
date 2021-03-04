@@ -43,8 +43,9 @@ map<string, string> get_types_to_frame_field(const pugi::xml_document &doc) {
 
 // returns a map relating mavlink message types to their fields to their unit kinds
 map<string, map<string, int>> get_type_to_field_to_unit(const pugi::xml_document &doc,
-                                                        map<string, int> &unitname_to_id) {
-        int nextid = 0;
+                                                        map<string, int> &unitname_to_id,
+                                                        int &nextid) {
+        nextid = 0;
         map<string, map<string, int>> type_to_field_to_unit;
         for (const pugi::xml_node &msg: doc.child("mavlink").child("messages")) {
                 pugi::xml_attribute msg_name = msg.attribute("name");
