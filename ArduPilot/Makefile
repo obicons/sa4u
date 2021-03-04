@@ -1,5 +1,5 @@
 target=apmsa
-objects=main.o deduce.o
+objects=main.o deduce.o mav.o
 CXXFLAGS=-I/usr/lib/llvm-13/include -Ipugixml/src -Irapidjson/include/  -Wall -Wextra -Wpedantic -std=c++17 -g
 LDLIBS=-lclang
 LIBRARY_PATH=-L/usr/lib/llvm-13/lib/
