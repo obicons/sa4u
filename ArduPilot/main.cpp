@@ -29,13 +29,42 @@ enum ConstraintType {
         SWITCHSTMT,
 };
 
+enum TypeSourceKind {
+        // a store from param -> var
+        SOURCE_PARAM,
+
+        // a store from global var -> var
+        SOURCE_VAR,
+
+        // the variable has intrinsic type information
+        SOURCE_INTRINSIC,
+};
+
+struct TypeSource {
+        // stores the kind of type source
+        TypeSourceKind kind;
+
+        // stores the # in the param list (if applicable)
+        int param_no;
+
+        // stores the variable name (if applicable)
+        string var_name;
+};
+
 struct TypeInfo {
+        // stores possible frames the object can take on
         set<int> frames;
+
+        // stores possible units the object can take on
         set<int> units;
+
+        // tracks why a type has a particular value
+        vector<TypeSource> source;
 };
 
 struct FunctionSummary {
         set<string> callees;
+        map<string, vector<TypeInfo>> calling_context;
 };
 
 struct ASTContext {
@@ -67,6 +96,12 @@ struct ASTContext {
 
         // stores the names of the parameters of the current function
         set<string> &current_fn_params;
+
+        // maps the name of parameters to their number in args list
+        map<string, int> &param_to_number;
+
+        // counts total # of parameters to this function
+        int total_params;
 };
 
 string trim(const string& str,
@@ -260,9 +295,9 @@ string get_USR(CXCursor c) {
  * type_to_field_to_unit - relates types to fields to units
  * tinfo - type info
  */
-void add_inner_vars(const string &t,
-                    const string &name,
+void add_inner_vars(const string &t, const string &name,
                     const map<string, map<string, int>> &type_to_field_to_unit,
+                    const TypeSource &source,                    
                     map<string, TypeInfo> &tinfo) {
         auto typeinfo = type_to_field_to_unit.find(t);
         if (typeinfo == type_to_field_to_unit.end())
@@ -273,6 +308,8 @@ void add_inner_vars(const string &t,
 
                 for (int i = MAV_FRAME_GLOBAL; i < MAV_FRAME_NONE; i++)
                         tinfo[varname].frames.insert(i);
+
+                tinfo[varname].source.push_back(source);
         }
 }
 
@@ -308,9 +345,9 @@ void check_tainted_decl(CXCursor cursor, ASTContext *ctx) {
         bool is_known_type = ctx->types_to_frame_field.find(cursor_typename)
                 != ctx->types_to_frame_field.end();
         if (is_known_type && !ctx->var_types.empty()) {
-                // cout << "Tainted decl " << get_cursor_spelling(cursor) << " found" << endl;
+                TypeSource source = {SOURCE_INTRINSIC, 0, ""};
                 add_inner_vars(cursor_typename, get_cursor_spelling(cursor),
-                               ctx->type_to_field_to_unit, ctx->var_types.back());
+                               ctx->type_to_field_to_unit, source, ctx->var_types.back());
         } else {
                 clang_visitChildren(cursor, check_tainted_decl_walker, ctx);
         }
@@ -371,6 +408,12 @@ enum CXChildVisitResult check_for_param_rhs(CXCursor c, CXCursor UNUSED, CXClien
                         ti.frames.insert(i);
                 for (int i = 0; i < p->second->num_units; i++)
                         ti.units.insert(i);
+                TypeSource source = {
+                        SOURCE_PARAM,
+                        p->second->param_to_number[varname],
+                        "",
+                };
+                ti.source.push_back(source);
                 p->first = ti;
                 return CXChildVisit_Break;
         }
@@ -388,11 +431,11 @@ void check_tainted_store(CXCursor cursor, ASTContext *ctx) {
                 clang_visitChildren(cursor, check_for_param_rhs, &p);
         } else {
                 string varname = pretty_print_store(cursor);
-                cout << "CONSTRAINED Typed store to " << varname << " detected" << endl;                
+                cout << "CONSTRAINED Typed store to " << varname << " detected" << endl;
         }
         if (p.first && !ctx->var_types.empty()) {
                 string varname = pretty_print_store(cursor);
-                cout << "Typed store to " << varname << " detected" << endl;
+                // cout << "Typed store to " << varname << " detected" << endl;
                 ctx->var_types.back()[varname] = p.first.value();
         }
 }
@@ -404,8 +447,14 @@ void unify_scopes(map<string, TypeInfo> &old, const map<string, TypeInfo> &lates
                 if (it != old.end()) {
                         const auto &latest_frames = p.second.frames;
                         const auto &latest_units = p.second.units;
-                        it->second.frames.insert(latest_frames.begin(), latest_frames.end());
-                        it->second.units.insert(latest_units.begin(), latest_units.end());
+                        const auto &sources = p.second.source;
+                        it->second.frames.insert(latest_frames.begin(),
+                                                 latest_frames.end());
+                        it->second.units.insert(latest_units.begin(),
+                                                latest_units.end());
+                        it->second.source.insert(it->second.source.end(),
+                                                 sources.begin(),
+                                                 sources.end());
                 }
         }
 }
@@ -435,6 +484,7 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
         // find all if statements that constrain mavlink messages
         CXCursorKind kind = clang_getCursorKind(cursor);
         if (kind == CXCursor_IfStmt) {
+                // cout << "IF_STMT" << endl;
                 ctx->constraint = IFCONDITION;
                 
                 // Set up a new scope for the body of the if statement.
@@ -456,7 +506,10 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                 // We've already looked at the child of the if statement.
                 // Time to move on.
                 next_action = CXChildVisit_Continue;
+                // cout << "DONE IF" << endl;
         } else if (kind == CXCursor_ForStmt || kind == CXCursor_WhileStmt) {
+                // cout << "FOR/WHILE" << endl;
+
                 // Set up a new scope for the body of the loop statement.
                 // Subsequent definitions will affect the loop statement's scope.
                 // The winning definitions (e.g. last stores in the loop)
@@ -473,13 +526,18 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                 // Destroy latest scope.
                 ctx->var_types.pop_back();
 
-                // We've already looked at the child of the if statement.
+                // We've already looked at the child of the loop statement.
                 // Time to move on.
                 next_action = CXChildVisit_Continue;
+                // cout << "DONE FOR/WHILE" << endl;
         } else if (kind == CXCursor_BreakStmt) {
+                // cout << "BREAK" << endl;
                 // A break causes an instant unification of the type information.
-                unify_scopes(ctx->var_types[ctx->var_types.size() - 1], ctx->var_types.back());                
+                unify_scopes(ctx->var_types[ctx->var_types.size() - 2], ctx->var_types.back());
+                // cout << "DONE BREAK" << endl;
         } else if (kind == CXCursor_SwitchStmt) {
+                // cout << "SWITCH" << endl;
+
                 ctx->constraint = SWITCHSTMT;
                 clang_visitChildren(cursor, function_ast_walker, client_data);
                 if (ctx->in_mav_constraint) {
@@ -505,17 +563,23 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                 // We've already looked at the child of the switch statement.
                 // Time to move on.
                 next_action = CXChildVisit_Continue;
+                // cout << "DONE SWITCH" << endl;
         } else if (kind == CXCursor_VarDecl) {
                 // cout << "considering var: " << get_cursor_spelling(cursor) << endl;
+                // cout << "SWITCH" << endl;
                 check_tainted_decl(cursor, ctx);
+                // cout << "DONE SWITCH" << endl;
                 // TODO: use taint information
         } else if (kind == CXCursor_BinaryOperator) {
+                // cout << "op=" << endl;
                 string op = get_binary_operator(cursor);
                 if (op == "=") {
                         check_tainted_store(cursor, ctx);
                         // TODO: use taint information
                 }
+                // cout << "done op=" << endl;
         } else if (kind == CXCursor_CallExpr) {
+                // cout << "call expr" << endl;
                 string spelling = get_cursor_spelling(cursor);
                 if (spelling == "operator=") {
                         check_tainted_store(cursor, ctx);
@@ -524,26 +588,29 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                         string this_fn = ctx->current_fn;
                         ctx->fn_summary[this_fn].callees.insert(spelling);
                 }
+                // cout << "done call" << endl;
         } else if (kind == CXCursor_ParmDecl) {
+                // cout << "parm decl" << endl;
                 CXType t = clang_getCursorType(cursor);
                 string t_type = get_object_typename(t);
                 bool is_mav_type = ctx->types_to_frame_field.find(t_type)
                         != ctx->types_to_frame_field.end()
                         || ctx->type_to_field_to_unit.find(t_type)
                         != ctx->type_to_field_to_unit.end();
-                // cout << "  fields: " << endl;
-                // for (const auto &p: ctx->types_to_frame_field)
-                //         cout << "    " << p.first << " " << (trim(p.first) == trim(t_type)) << endl;
-                // cout << endl;
-                // cout << t_type << " " << get_cursor_spelling(cursor) << " " << is_mav_type << endl;
+                string param_name = get_cursor_spelling(cursor);
+                ctx->param_to_number[param_name] = ctx->total_params;                
                 if (is_mav_type) {
+                        TypeSource source = {SOURCE_PARAM, ctx->total_params, ""};
                         add_inner_vars(t_type,
-                                       get_cursor_spelling(cursor),
+                                       param_name,
                                        ctx->type_to_field_to_unit,
+                                       source,
                                        ctx->var_types.back());
                 } else {
-                        ctx->current_fn_params.insert(get_cursor_spelling(cursor));
+                        ctx->current_fn_params.insert(param_name);
                 }
+                ctx->total_params++;
+                // cout << "done parm decl" << endl;
         }
 
         return next_action;
@@ -581,9 +648,19 @@ enum CXChildVisitResult ast_walker(CXCursor cursor, CXCursor UNUSED, CXClientDat
                 // for (const auto &callee: summary.callees)
                 //         cout << "  " << callee << endl;
 
+                // cout << get_cursor_spelling(cursor) << endl;
+                // for (const auto &p: ctx->var_types.back()) {
+                //         cout << "  " << p.first << ":" << endl;
+                //         for (const auto &src: p.second.source)
+                //                 cout << "    " << src.kind
+                //                      << " " << src.param_no << endl;
+                // }
+
+                // clean up this function's mess
                 ctx->var_types.pop_back();
                 ctx->current_fn_params.clear();
-
+                ctx->param_to_number.clear();
+                ctx->total_params = 0;
                 return CXChildVisit_Continue;
         }
         return CXChildVisit_Recurse;
@@ -639,11 +716,11 @@ int main(int argc, char **argv) {
                 CXString filename = clang_CompileCommand_getFilename(cmd);
                 CXString compile_dir = clang_CompileCommand_getDirectory(cmd);
 
-                if (strcmp(clang_getCString(filename), "../../libraries/AP_Mission/AP_Mission.cpp") != 0) {
-                        clang_disposeString(filename);
-                        clang_disposeString(compile_dir);
-                        continue;
-                }
+                // if (strcmp(clang_getCString(filename), "../../libraries/GCS_MAVLink/GCS_Common.cpp") != 0) {
+                //         clang_disposeString(filename);
+                //         clang_disposeString(compile_dir);
+                //         continue;
+                // }
                 cout << clang_getCString(filename) << endl;
 
                 // (3 b) build a translation unit from the compilation command
@@ -669,6 +746,7 @@ int main(int argc, char **argv) {
                 map<unsigned, set<string>> scope_to_tainted;
                 vector<map<string, TypeInfo>> var_types;
                 set<string> current_fn_params;
+                map<string, int> param_to_number;
                 ASTContext ctx = {
                         type_to_semantic,
                         type_to_field_to_unit,
@@ -683,6 +761,8 @@ int main(int argc, char **argv) {
                         fn_summary,
                         "",
                         current_fn_params,
+                        param_to_number,
+                        0,
                 };
                 if (unit) {
                         CXCursor cursor = clang_getTranslationUnitCursor(unit);
