@@ -20,6 +20,7 @@ extern "C" {
 #include <pugixml.hpp>
 
 #include "mav.hpp"
+#include "util.hpp"
 
 #define UNUSED /* UNUSED */
 
@@ -271,22 +272,6 @@ CXCursor get_initialization_decl(CXCursor c) {
                 parent = clang_getCursorSemanticParent(parent);
         }
         return parent;
-}
-
-// returns the cursor's spelling as a string
-string get_cursor_spelling(CXCursor c) {
-        CXString spelling = clang_getCursorSpelling(c);
-        string result(clang_getCString(spelling));
-        clang_disposeString(spelling);
-        return result;
-}
-
-// returns the unified symbol reference for the cursor
-string get_USR(CXCursor c) {
-        CXString usr = clang_getCursorUSR(c);
-        string result(clang_getCString(usr));
-        clang_disposeString(usr);
-        return result;
 }
 
 /**
