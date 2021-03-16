@@ -8,6 +8,7 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 using namespace std;
 
@@ -20,6 +21,7 @@ extern "C" {
 // see https://pugixml.org/docs/manual.html
 #include <pugixml.hpp>
 
+#include "cfg.hpp"
 #include "common.hpp"
 #include "deduce.hpp"
 #include "mav.hpp"
@@ -87,6 +89,9 @@ struct ASTContext {
 
         // stores functions with intrinsic variable types
         set<string> &functions_with_intrinsic_variables;
+
+        // tracks cursors that we've already seen
+        unordered_set<string> &seen_definitions;
 };
 
 string trim(const string& str,
@@ -593,6 +598,7 @@ void check_tainted_store(CXCursor cursor, ASTContext *ctx) {
                         merge_typeinfo(
                                 ctx->store_to_typeinfo[data.first.value()],
                                 p.first.value());
+                        cout << ctx->store_to_typeinfo.size() << endl;
                                 
                 }
 
@@ -800,8 +806,10 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                         != ctx->types_to_frame_field.end()
                         || ctx->type_to_field_to_unit.find(t_type)
                         != ctx->type_to_field_to_unit.end();                
-                if (is_mav_type)
+                if (is_mav_type) {
                         ctx->functions_with_intrinsic_variables.insert(ctx->current_fn);
+                        ctx->had_taint = true;
+                }
 
                 // cout << "DONE SWITCH" << endl;
                 // TODO: use taint information
@@ -818,8 +826,9 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                 string spelling = get_cursor_spelling(cursor);
                 if (spelling == "operator=") {
                         check_tainted_store(cursor, ctx);
+                        ctx->had_taint = true;
                         // TODO: use taint information
-                } else {
+                } else if (!spelling.empty()) {
                         string this_fn = ctx->current_fn;
                         ctx->fn_summary[this_fn].callees.insert(spelling);
 
@@ -853,6 +862,7 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                                        ctx->var_types.back());
                         ctx->param_to_typesource_kind[ctx->total_params] = SOURCE_INTRINSIC;
                         ctx->functions_with_intrinsic_variables.insert(ctx->current_fn);
+                        ctx->had_taint = true;
                 } else {
                         // TODO: should this really be unknown?
                         ctx->param_to_typesource_kind[ctx->total_params] = SOURCE_UNKNOWN;
@@ -863,10 +873,19 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                 ctx->total_params++;
                 // cout << "done parm decl" << endl;
         } else if (kind == CXCursor_CompoundStmt) {
+                if (!ctx->had_fn_definition)
+                        ctx->seen_definitions.insert(ctx->current_fn);
                 ctx->had_fn_definition = true;
         }
 
         return next_action;
+}
+
+string get_cursor_usr(CXCursor cursor) {
+        CXString str = clang_getCursorUSR(cursor);
+        string result(clang_getCString(str));
+        clang_disposeString(str);
+        return result;
 }
 
 enum CXChildVisitResult ast_walker(CXCursor cursor, CXCursor UNUSED, CXClientData client_data) {
@@ -874,6 +893,14 @@ enum CXChildVisitResult ast_walker(CXCursor cursor, CXCursor UNUSED, CXClientDat
         if (kind == CXCursor_FunctionDecl || kind == CXCursor_CXXMethod) {
                 // TODO: handle overloading + overriding
                 ASTContext *ctx = static_cast<ASTContext*>(client_data);
+                string usr = get_cursor_usr(cursor);
+
+                // checks if we already visited this function
+                if (ctx->seen_definitions.find(usr) != ctx->seen_definitions.end())
+                        return CXChildVisit_Continue;
+                else if (clang_Cursor_isFunctionInlined(cursor))
+                        return CXChildVisit_Continue;
+
                 ctx->had_mav_constraint = false;
                 ctx->had_taint = false;
                 ctx->current_fn = get_cursor_spelling(cursor);
@@ -893,14 +920,12 @@ enum CXChildVisitResult ast_walker(CXCursor cursor, CXCursor UNUSED, CXClientDat
                                 ctx->semantic_context = ctx->semantic_context + "::" + semantic_spelling;
                 }
 
-                // cout << "In: " << ctx->current_fn << endl;
-
                 clang_visitChildren(cursor, function_ast_walker, client_data);
                 ctx->scope_to_tainted.erase(clang_hashCursor(cursor));
 
-                if (ctx->had_taint && !ctx->had_mav_constraint) {
+                if (ctx->had_taint && ctx->had_fn_definition && !ctx->had_mav_constraint) {
                         CXString cursor_spelling = clang_getCursorSpelling(cursor);
-                        cout << "unconstrained MAV frame used in: "
+                        cout << "BUG: unconstrained MAV frame used in: "
                              << clang_getCString(cursor_spelling) << endl;
                         clang_disposeString(cursor_spelling);
                 }
@@ -911,6 +936,7 @@ enum CXChildVisitResult ast_walker(CXCursor cursor, CXCursor UNUSED, CXClientDat
                                 ctx->total_params;
                         ctx->fn_summary[name].param_to_typesource_kind.swap(ctx->param_to_typesource_kind);
                         ctx->name_to_tu[name].insert(ctx->translation_unit_no);
+                        ctx->fn_summary[name].store_to_typeinfo.swap(ctx->store_to_typeinfo);
                 }
 
                 // clean up this function's mess
@@ -971,12 +997,11 @@ int main(int argc, char **argv) {
         // (2) get compilation commands
         CXCompileCommands cmds = clang_CompilationDatabase_getAllCompileCommands(cdatabase);
 
-
         // (3) search each file in the compilation commands for mavlink messages
         unsigned num_cmds = clang_CompileCommands_getSize(cmds);
         vector<map<string, FunctionSummary>> fn_summaries(num_cmds);
         unordered_map<string, set<unsigned>> name_to_tu;
-        name_to_tu.reserve(num_cmds * 20);
+        name_to_tu.reserve(num_cmds * 50);
 
         // TODO - initialize me!
         set<string> interesting_writes;
@@ -985,6 +1010,8 @@ int main(int argc, char **argv) {
 
         map<string, TypeInfo> current_interesting_writes;
         set<string> functions_with_instrinsic_variables;
+        unordered_set<string> seen_definitions;
+        seen_definitions.reserve(num_cmds * 50);
 
         CXIndex index = clang_createIndex(0, 0);
         for (auto i = 0u; i < num_cmds; i++) {
@@ -994,11 +1021,13 @@ int main(int argc, char **argv) {
                 CXString filename = clang_CompileCommand_getFilename(cmd);
                 CXString compile_dir = clang_CompileCommand_getDirectory(cmd);
 
-                // if (strcmp(clang_getCString(filename), "../../libraries/GCS_MAVLink/GCS_Common.cpp") != 0) {
+                // if (strcmp(clang_getCString(filename), "../../libraries/AC_AttitudeControl/AC_PosControl.cpp") != 0) {
                 //         clang_disposeString(filename);
                 //         clang_disposeString(compile_dir);
                 //         continue;
                 // }
+                //if (i > 100) break;
+
                 if (i % 50 == 0) {
                                 for (const auto &fn: functions_with_instrinsic_variables)
                                         cout << fn << endl;
@@ -1054,7 +1083,8 @@ int main(int argc, char **argv) {
                   "",
                   interesting_writes,
                   current_interesting_writes,
-                  functions_with_instrinsic_variables,                  
+                  functions_with_instrinsic_variables,
+                  seen_definitions,                
                 };
                 if (unit) {
                         CXCursor cursor = clang_getTranslationUnitCursor(unit);
@@ -1088,11 +1118,17 @@ int main(int argc, char **argv) {
         clang_CompileCommands_dispose(cmds);
         clang_CompilationDatabase_dispose(cdatabase);
 
-        // for (const auto &p: name_to_tu)
-        //         cout << p.first << endl;
-
-        for (const auto &fn: functions_with_instrinsic_variables)
-                cout << fn << endl;
-
-        exit(0);
+        vector<vector<string>> traces = get_unconstrained_traces(
+                name_to_tu,
+                fn_summaries,
+                functions_with_instrinsic_variables
+        );
+        // for (const auto &trace: traces) {
+        //         string sep = "";
+        //         for (const auto &fn: trace) {
+        //                 cout << sep << fn;
+        //                 sep = " -> ";
+        //         }
+        //         cout 
+	exit(0);
 }
