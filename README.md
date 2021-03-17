@@ -38,3 +38,7 @@ while.
 > cd /home/ardupilot/sa4u/src/
 > make
 ```
+7: Run the analysis:
+```
+> ./apmsa ../../ardupilot/build/sitl/ ../platforms/ArduPilot/common.xml ../platforms/ArduPilot/sample.json
+```
