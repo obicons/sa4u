@@ -9,8 +9,12 @@ There are currently 2 directories:
   subdirectory, e.g. `platforms/ArduPilot`.
 * `src/` contains the source code for SA4U. 
 
-## Build Steps
+## Important Notes
+The analysis process generates a lot of data (e.g. 32GB). You may run out of
+memory. Increase your swap size if this occurs. SA4U is designed to
+use memory in a way that swapping should not slow down the analysis too much.
 
+## Build Steps
 1. Clone this repository:
 ```
 > git clone https://github.com/obicons/sa4u
