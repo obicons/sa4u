@@ -55,7 +55,7 @@ static vector<vector<string>> get_storage_trace(const string &fn,
                 for (const auto &store: fs.store_to_typeinfo) {
                         for (const auto &source: store.second.source) {
                                 if (source.kind == SOURCE_PARAM) {
-                                        assert(source.param_no < argtypes.size());
+				        assert((size_t) source.param_no < argtypes.size());
                                         const TypeInfo &the_param = argtypes.at(source.param_no);
 
                                         const auto &it = prior_types.find(store.first);
@@ -106,7 +106,6 @@ static vector<vector<string>> get_storage_trace(const string &fn,
 static vector<TypeInfo> get_initial_argtypes(const string &fn,
                                              const unordered_map<string, set<unsigned>> &name_to_tu,
                                              const vector<map<string, FunctionSummary>> &fn_summaries,
-                                             const set<string> &fns_with_intrinsic_variables,
                                              int num_units) {
         // find translation units containing fn
         auto it = name_to_tu.find(fn);
@@ -155,7 +154,6 @@ vector<vector<string>> get_unconstrained_traces(const unordered_map<string, set<
                         fn, 
                         name_to_tu, 
                         fn_summaries, 
-                        fns_with_intrinsic_variables,
                         num_units
                 );
                 vector<vector<string>> traces = get_storage_trace(
