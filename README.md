@@ -10,7 +10,7 @@ There are currently 2 directories:
 * `src/` contains the source code for SA4U. 
 
 ## Important Notes
-The analysis process generates a lot of data (e.g. 32GB). You may run out of
+The analysis process generates a lot of data. You may run out of
 memory. Increase your swap size if this occurs. SA4U is designed to
 use memory in a way that swapping should not slow down the analysis too much.
 
