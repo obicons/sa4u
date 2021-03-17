@@ -45,6 +45,16 @@ struct TypeInfo {
 
         // tracks why a type has a particular value
         vector<TypeSource> source;
+
+        bool operator==(const TypeInfo &other) const {
+                return frames == other.frames &&
+                units == other.units;
+        }
+
+        bool operator!=(const TypeInfo &other) const {
+                return frames != other.frames ||
+                units != other.units;
+        }
 };
 
 struct FunctionSummary {
