@@ -15,7 +15,7 @@ There are currently 2 directories:
 ```
 > git clone https://github.com/obicons/sa4u
 ```
-2. Initialize all dependencies:
+2. Change directories into sa4u (`cd sa4u`). Initialize all dependencies:
 ```
 > git submodule update --init --recursive
 ```
@@ -24,11 +24,16 @@ while.
 ```
 > docker image build -t sa4u-ardupilot ./platforms/ArduPilot
 ```
-4. Start an analysis container:
+4. Change the permissions of the source code repository so that the
+   Docker container's user can read/write:
+```
+> chmod -R a+rw ./
+```
+5. Start an analysis container:
 ```
 > docker container run -ti -v $(pwd):/home/ardupilot/sa4u sa4u-ardupilot bash
 ```
-5. In the analysis container, build SA4U:
+6. In the analysis container, build SA4U:
 ```
 > cd /home/ardupilot/sa4u/src/
 > make
