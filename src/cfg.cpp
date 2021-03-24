@@ -51,7 +51,6 @@ static vector<vector<string>> get_storage_trace(const string &fn,
         visited.insert(fn);
         for (const auto &fs: summaries) {
                 // if we write to a global, add our name to the the trace
-                // TODO: this should happen only if we are not in the right constraint
                 for (const auto &store: fs.store_to_typeinfo) {
                         for (const auto &source: store.second.source) {
                                 if (source.kind == SOURCE_PARAM) {
@@ -76,7 +75,6 @@ static vector<vector<string>> get_storage_trace(const string &fn,
 
                         // iterate over each call site
                         for (const auto &call: ccs.second) {
-                                // TODO: supply call site information to get_storage_trace
                                 vector<vector<string>> traces = get_storage_trace(
                                         callee_name,
                                         visited,
@@ -93,8 +91,6 @@ static vector<vector<string>> get_storage_trace(const string &fn,
                                         new_trace.insert(new_trace.end(), trace.begin(), trace.end());
                                         results.push_back(new_trace);
                                 }
-                                // only consider a call site once
-                                break;
                         }
                 }
         }

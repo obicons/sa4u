@@ -56,6 +56,9 @@ struct ASTContext {
         // stores the current function name
         string current_fn;
 
+        // stores the current function usr
+        string current_usr;
+
         // stores the names of the parameters of the current function
         set<string> &current_fn_params;
 
@@ -874,7 +877,7 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                 // cout << "done parm decl" << endl;
         } else if (kind == CXCursor_CompoundStmt) {
                 if (!ctx->had_fn_definition)
-                        ctx->seen_definitions.insert(ctx->current_fn);
+                        ctx->seen_definitions.insert(ctx->current_usr);
                 ctx->had_fn_definition = true;
         }
 
@@ -895,15 +898,20 @@ enum CXChildVisitResult ast_walker(CXCursor cursor, CXCursor UNUSED, CXClientDat
                 ASTContext *ctx = static_cast<ASTContext*>(client_data);
                 string usr = get_cursor_usr(cursor);
 
+                // cout << "In: " << usr << endl;
+
                 // checks if we already visited this function
                 if (ctx->seen_definitions.find(usr) != ctx->seen_definitions.end())
                         return CXChildVisit_Continue;
-                else if (clang_Cursor_isFunctionInlined(cursor))
-                        return CXChildVisit_Continue;
+                // else if (clang_Cursor_isFunctionInlined(cursor)) {
+                //         cout << "Skipping " << usr << endl;
+                //         return CXChildVisit_Continue;
+                // }
 
                 ctx->had_mav_constraint = false;
                 ctx->had_taint = false;
                 ctx->current_fn = get_cursor_spelling(cursor);
+                ctx->current_usr = usr;
 
                 map<string, TypeInfo> scope;
                 ctx->var_types.push_back(scope);
@@ -1117,6 +1125,7 @@ int main(int argc, char **argv) {
                   false,
                   var_types,
                   fn_summaries[i],
+                  "",
                   "",
                   current_fn_params,
                   param_to_number,
