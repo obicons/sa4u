@@ -1186,7 +1186,6 @@ int main(int argc, char **argv) {
         // initialize worker threads
         mutex lock;
         vector<thread> workers;
-        vector<ThreadContext> ctx;
         unsigned num_workers = max(1u, thread::hardware_concurrency() - 1);
         for (unsigned i = 0u; i < num_workers; i++) {
                 workers.push_back(
