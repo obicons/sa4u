@@ -4,9 +4,12 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <mutex>
 #include <optional>
+#include <queue>
 #include <set>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -95,6 +98,9 @@ struct ASTContext {
 
         // tracks cursors that we've already seen
         unordered_set<string> &seen_definitions;
+
+        // used to coordinate access to shared data structures
+        mutex &lock;
 };
 
 string trim(const string& str,
@@ -228,7 +234,6 @@ enum CXChildVisitResult get_struct_object_helper(CXCursor cursor,
         }
         return CXChildVisit_Recurse;
 }
-
 
 // If this operator= stores to a structure field, returns the name of the object containing the field.
 optional<string> get_struct_object(CXCursor c) {
@@ -810,7 +815,9 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                         || ctx->type_to_field_to_unit.find(t_type)
                         != ctx->type_to_field_to_unit.end();                
                 if (is_mav_type) {
+                        ctx->lock.lock();
                         ctx->functions_with_intrinsic_variables.insert(ctx->current_fn);
+                        ctx->lock.unlock();
                         ctx->had_taint = true;
                 }
 
@@ -832,9 +839,6 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                         ctx->had_taint = true;
                         // TODO: use taint information
                 } else if (!spelling.empty()) {
-                        string this_fn = ctx->current_fn;
-                        ctx->fn_summary[this_fn].callees.insert(spelling);
-
                         int num_args = clang_Cursor_getNumArguments(cursor);
                         vector<TypeInfo> call_info;
                         for (int i = 0; i < num_args; i++) {
@@ -843,7 +847,11 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                                 call_info.push_back(t);
                         }
 
+                        string this_fn = ctx->current_fn;
+                        ctx->lock.lock();
+                        ctx->fn_summary[this_fn].callees.insert(spelling);
                         ctx->fn_summary[this_fn].calling_context[spelling].push_back(call_info);
+                        ctx->lock.unlock();
                 }
                 // cout << "done call" << endl;
         } else if (kind == CXCursor_ParmDecl) {
@@ -864,7 +872,9 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                                        source,
                                        ctx->var_types.back());
                         ctx->param_to_typesource_kind[ctx->total_params] = SOURCE_INTRINSIC;
+                        ctx->lock.lock();
                         ctx->functions_with_intrinsic_variables.insert(ctx->current_fn);
+                        ctx->lock.unlock();
                         ctx->had_taint = true;
                 } else {
                         // TODO: should this really be unknown?
@@ -876,9 +886,18 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                 ctx->total_params++;
                 // cout << "done parm decl" << endl;
         } else if (kind == CXCursor_CompoundStmt) {
-                if (!ctx->had_fn_definition)
-                        ctx->seen_definitions.insert(ctx->current_usr);
-                ctx->had_fn_definition = true;
+                if (!ctx->had_fn_definition) {
+                        ctx->lock.lock();
+                        if (ctx->seen_definitions.find(ctx->current_usr) ==
+                                ctx->seen_definitions.end())
+                                ctx->seen_definitions.insert(ctx->current_usr);
+                        else
+                                // this is tricky part i
+                                ctx->had_fn_definition = true;
+                        ctx->lock.unlock();
+                        // this is tricky part ii
+                        ctx->had_fn_definition = !ctx->had_fn_definition;
+                }
         }
 
         return next_action;
@@ -898,15 +917,13 @@ enum CXChildVisitResult ast_walker(CXCursor cursor, CXCursor UNUSED, CXClientDat
                 ASTContext *ctx = static_cast<ASTContext*>(client_data);
                 string usr = get_cursor_usr(cursor);
 
-                // cout << "In: " << usr << endl;
-
                 // checks if we already visited this function
-                if (ctx->seen_definitions.find(usr) != ctx->seen_definitions.end())
+                ctx->lock.lock();
+                if (ctx->seen_definitions.find(usr) != ctx->seen_definitions.end()) {
+                        ctx->lock.unlock();
                         return CXChildVisit_Continue;
-                // else if (clang_Cursor_isFunctionInlined(cursor)) {
-                //         cout << "Skipping " << usr << endl;
-                //         return CXChildVisit_Continue;
-                // }
+                }
+                ctx->lock.unlock();
 
                 ctx->had_mav_constraint = false;
                 ctx->had_taint = false;
@@ -929,7 +946,6 @@ enum CXChildVisitResult ast_walker(CXCursor cursor, CXCursor UNUSED, CXClientDat
                 }
 
                 clang_visitChildren(cursor, function_ast_walker, client_data);
-                ctx->scope_to_tainted.erase(clang_hashCursor(cursor));
 
                 if (ctx->had_taint && ctx->had_fn_definition && !ctx->had_mav_constraint) {
                         CXString cursor_spelling = clang_getCursorSpelling(cursor);
@@ -940,11 +956,13 @@ enum CXChildVisitResult ast_walker(CXCursor cursor, CXCursor UNUSED, CXClientDat
 
                 if (ctx->had_fn_definition) {
                         string name = get_cursor_spelling(cursor);
+                        ctx->lock.lock();
                         ctx->fn_summary[name].num_params =
                                 ctx->total_params;
                         ctx->fn_summary[name].param_to_typesource_kind.swap(ctx->param_to_typesource_kind);
                         ctx->name_to_tu[name].insert(ctx->translation_unit_no);
                         ctx->fn_summary[name].store_to_typeinfo.swap(ctx->store_to_typeinfo);
+                        ctx->lock.unlock();
                 }
 
                 // clean up this function's mess
@@ -1007,6 +1025,106 @@ static map<string, TypeInfo> vars_to_typeinfo(const vector<VariableEntry> &vars,
         return results;
 }
 
+void do_work(CXCompileCommands cmds, 
+             unsigned thread_no, 
+             unsigned stride,
+             const set<string> &interesting_writes, 
+             map<string, TypeInfo> &current_interesting_writes,
+             set<string> &functions_with_instrinsic_variables, 
+             unordered_set<string> &seen_definitions,
+             const map<string, string> &type_to_semantic, 
+             const map<string, map<string, int>> &type_to_field_to_unit,
+             vector<map<string, FunctionSummary>> &fn_summaries,
+             unordered_map<string, set<unsigned>> &name_to_tu,
+             mutex &lock,
+             int num_units) {
+        unsigned num_cmds = clang_CompileCommands_getSize(cmds);
+        CXIndex index = clang_createIndex(0, 0);
+        for (auto i = thread_no; i < num_cmds; i += stride) {
+                CXCompileCommand cmd = clang_CompileCommands_getCommand(cmds, i);
+
+                // (3 a) print the filename that was compiled by this command
+                CXString filename = clang_CompileCommand_getFilename(cmd);
+                CXString compile_dir = clang_CompileCommand_getDirectory(cmd);
+
+                cout << i+1 << "/" << num_cmds << " " << clang_getCString(filename) << endl;
+
+                // (3 b) build a translation unit from the compilation command
+                // (3 b i) collect arguments
+                unsigned num_args = clang_CompileCommand_getNumArgs(cmd);
+                vector<CXString> args;
+                const char **cmd_argv = new const char*[num_args];
+                for (auto j = 0u; j < num_args; j++) {
+                        args.push_back(clang_CompileCommand_getArg(cmd, j));
+                        cmd_argv[j] = clang_getCString(args[j]);
+                }
+
+                // (3 b ii) construct translation unit
+                if (change_thread_working_dir(clang_getCString(compile_dir))) {
+                       cerr << "[WARN] unable to cd to " << clang_getCString(compile_dir) << ". skipping." << endl;
+                       continue;
+                }
+
+                CXTranslationUnit unit = clang_createTranslationUnitFromSourceFile(index, nullptr,
+                                                                                   num_args, cmd_argv, 0, nullptr);
+
+                set<string> possible_frames;
+                map<unsigned, set<string>> scope_to_tainted;
+                vector<map<string, TypeInfo>> var_types;
+                set<string> current_fn_params;
+                map<string, int> param_to_number;
+                map<int, TypeSourceKind> param_to_typesource_kind;
+                ASTContext ctx = {
+                  type_to_semantic,
+                  type_to_field_to_unit,
+                  num_units,
+                  UNCONSTRAINED,
+                  possible_frames,
+                  false,
+                  scope_to_tainted,
+                  false,
+                  false,
+                  var_types,
+                  fn_summaries[i],
+                  "",
+                  "",
+                  current_fn_params,
+                  param_to_number,
+                  param_to_typesource_kind,
+                  0,
+                  name_to_tu,
+                  false,
+                  i,
+                  "",
+                  interesting_writes,
+                  current_interesting_writes,
+                  functions_with_instrinsic_variables,
+                  seen_definitions,
+                  lock,
+                };
+                if (unit) {
+                        CXCursor cursor = clang_getTranslationUnitCursor(unit);
+                        clang_visitChildren(cursor, ast_walker, &ctx);
+                } else {
+                        cerr << "[WARN] error building translation unit for "
+                             << get_full_path(compile_dir, filename) << ". skipping." << endl;                        
+                }
+
+                // free memory from (3 b ii)
+                clang_disposeTranslationUnit(unit);
+
+                // free memory from (3 b i)
+                delete[] cmd_argv;
+                for (auto str: args)
+                        clang_disposeString(str);
+
+                // free memory from (3 b a)
+                clang_disposeString(filename);
+                clang_disposeString(compile_dir);
+        }
+        clang_disposeIndex(index);
+}
+
 int main(int argc, char **argv) {
         if (argc != 4) {
                 cerr << "usage: " << argv[0] << " [compilation database directory] [message definitions] [seed json]" << endl;
@@ -1056,7 +1174,6 @@ int main(int argc, char **argv) {
         unordered_map<string, set<unsigned>> name_to_tu;
         name_to_tu.reserve(num_cmds * 50);
 
-        // TODO - initialize me!
         set<string> interesting_writes;
         for (const auto &entry: vars)
                 interesting_writes.insert(entry.variable_name);
@@ -1066,109 +1183,36 @@ int main(int argc, char **argv) {
         unordered_set<string> seen_definitions;
         seen_definitions.reserve(num_cmds * 50);
 
-        CXIndex index = clang_createIndex(0, 0);
-        for (auto i = 0u; i < num_cmds; i++) {
-                CXCompileCommand cmd = clang_CompileCommands_getCommand(cmds, i);
-
-                // (3 a) print the filename that was compiled by this command
-                CXString filename = clang_CompileCommand_getFilename(cmd);
-                CXString compile_dir = clang_CompileCommand_getDirectory(cmd);
-
-                // if (strcmp(clang_getCString(filename), "../../libraries/AC_AttitudeControl/AC_PosControl.cpp") != 0) {
-                //         clang_disposeString(filename);
-                //         clang_disposeString(compile_dir);
-                //         continue;
-                // }
-                //if (i > 100) break;
-
-                if (i % 50 == 0) {
-                                for (const auto &fn: functions_with_instrinsic_variables)
-                                        cout << fn << endl;
-
-                }
-                cout << i+1 << "/" << num_cmds << " " << clang_getCString(filename) << endl;
-
-                // (3 b) build a translation unit from the compilation command
-                // (3 b i) collect arguments
-                unsigned num_args = clang_CompileCommand_getNumArgs(cmd);
-                vector<CXString> args;
-                const char **cmd_argv = new const char*[num_args];
-                for (auto j = 0u; j < num_args; j++) {
-                        args.push_back(clang_CompileCommand_getArg(cmd, j));
-                        cmd_argv[j] = clang_getCString(args[j]);
-                }
-
-                // (3 b ii) construct translation unit
-                if (chdir(clang_getCString(compile_dir))) {
-                        cerr << "[WARN] unable to cd to " << clang_getCString(compile_dir) << ". skipping." << endl;
-                        continue;
-                }
-
-                CXTranslationUnit unit = clang_createTranslationUnitFromSourceFile(index, nullptr,
-                                                                                   num_args, cmd_argv, 0, nullptr);
-
-                set<string> possible_frames;
-                map<unsigned, set<string>> scope_to_tainted;
-                vector<map<string, TypeInfo>> var_types;
-                set<string> current_fn_params;
-                map<string, int> param_to_number;
-                map<int, TypeSourceKind> param_to_typesource_kind;
-                ASTContext ctx = {
-                  type_to_semantic,
-                  type_to_field_to_unit,
-                  num_units,
-                  UNCONSTRAINED,
-                  possible_frames,
-                  false,
-                  scope_to_tainted,
-                  false,
-                  false,
-                  var_types,
-                  fn_summaries[i],
-                  "",
-                  "",
-                  current_fn_params,
-                  param_to_number,
-                  param_to_typesource_kind,
-                  0,
-                  name_to_tu,
-                  false,
-                  i,
-                  "",
-                  interesting_writes,
-                  current_interesting_writes,
-                  functions_with_instrinsic_variables,
-                  seen_definitions,                
-                };
-                if (unit) {
-                        CXCursor cursor = clang_getTranslationUnitCursor(unit);
-                        clang_visitChildren(cursor, ast_walker, &ctx);
-                } else {
-                        cerr << "[WARN] error building translation unit for "
-                             << get_full_path(compile_dir, filename) << ". (" << err << "). skipping." << endl;                        
-                }
-
-                // free memory from (3 b ii)
-                clang_disposeTranslationUnit(unit);
-
-                // free memory from (3 b i)
-                delete[] cmd_argv;
-                for (auto str: args)
-                        clang_disposeString(str);
-
-                // free memory from (3 b a)
-                clang_disposeString(filename);
-                clang_disposeString(compile_dir);
+        // initialize worker threads
+        mutex lock;
+        vector<thread> workers;
+        vector<ThreadContext> ctx;
+        unsigned num_workers = max(1u, thread::hardware_concurrency() - 1);
+        for (unsigned i = 0u; i < num_workers; i++) {
+                workers.push_back(
+                        thread(
+                                do_work,
+                                cmds,
+                                i,
+                                num_workers,
+                                ref(interesting_writes),
+                                ref(current_interesting_writes),
+                                ref(functions_with_instrinsic_variables),
+                                ref(seen_definitions),
+                                ref(type_to_semantic),
+                                ref(type_to_field_to_unit),
+                                ref(fn_summaries),
+                                ref(name_to_tu),
+                                ref(lock),
+                                num_units
+                        )
+                );
         }
 
-        // for (const auto &p: fn_summary) {
-        //         cout << p.first << ": " << p.second.callees.size() << endl;
-        //         // for (const auto &ci: p.second.calling_context) {
-        //         //         cout << " " << ci.first << endl;
-        //         // }
-        // }
+        // wait for completion
+        for (auto &thread: workers)
+                thread.join();
 
-        clang_disposeIndex(index);
         clang_CompileCommands_dispose(cmds);
         clang_CompilationDatabase_dispose(cdatabase);
 
