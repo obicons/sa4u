@@ -24,6 +24,9 @@ extern "C" {
 // see https://pugixml.org/docs/manual.html
 #include <pugixml.hpp>
 
+// see https://github.com/jarro2783/cxxopts
+#include <cxxopts.hpp>
+
 #include "cfg.hpp"
 #include "common.hpp"
 #include "deduce.hpp"
@@ -619,16 +622,6 @@ void unify_scopes(map<string, TypeInfo> &old, const map<string, TypeInfo> &lates
         for (const auto &p: latest) {
                 const auto &it = old.find(p.first);
                 if (it != old.end()) {
-                        // const auto &latest_frames = p.second.frames;
-                        // const auto &latest_units = p.second.units;
-                        // const auto &sources = p.second.source;
-                        // it->second.frames.insert(latest_frames.begin(),
-                        //                          latest_frames.end());
-                        // it->second.units.insert(latest_units.begin(),
-                        //                         latest_units.end());
-                        // it->second.source.insert(it->second.source.end(),
-                        //                          sources.begin(),
-                        //                          sources.end());
                         merge_typeinfo(it->second, p.second);
                 }
         }
@@ -1126,14 +1119,38 @@ void do_work(CXCompileCommands cmds,
 }
 
 int main(int argc, char **argv) {
-        if (argc != 4) {
-                cerr << "usage: " << argv[0] << " [compilation database directory] [message definitions] [seed json]" << endl;
+        cxxopts::Options options("sa4u", "static analysis for UAVs");
+        options.add_options()
+                ("c,compilation-database", 
+                 "directory containing the compilation database",
+                 cxxopts::value<string>())
+                ("m,mavlink-definitions", 
+                 "path to XML file containing MAVLink spec",
+                 cxxopts::value<string>())
+                ("p,prior-types",
+                 "path to JSON file describing previously known types",
+                  cxxopts::value<string>())
+                ("h,help", "print this message and exit");
+        
+        cxxopts::ParseResult result = options.parse(argc, argv);
+        if (result.count("help")) {
+                cout << options.help() << endl;
+                exit(0);
+        }
+
+        string compilation_database_path, mavlink_def_path, prior_types_path;
+        try {
+                compilation_database_path = result["compilation-database"].as<string>();
+                mavlink_def_path = result["mavlink-definitions"].as<string>();
+                prior_types_path = result["prior-types"].as<string>();
+        } catch (domain_error &e) {
+                cerr << options.help() << endl;
                 exit(1);
         }
 
         // (0) load data sources
         pugi::xml_document doc;
-        ifstream xml_in(argv[2]);
+        ifstream xml_in(mavlink_def_path);
         if (!doc.load(xml_in)) {
                 cerr << "error: cannot load xml" << endl;
                 exit(1);
@@ -1148,7 +1165,7 @@ int main(int argc, char **argv) {
                 get_type_to_field_to_unit(doc, unitname_to_id, num_units);
 
 
-        ifstream json_in(argv[3]);
+        ifstream json_in(prior_types_path);
         if (!json_in) {
                 cerr << "error: cannot load seed json" << endl;
                 exit(1);
@@ -1159,7 +1176,10 @@ int main(int argc, char **argv) {
 
         // (1) load database
         CXCompilationDatabase_Error err;
-        CXCompilationDatabase cdatabase = clang_CompilationDatabase_fromDirectory(argv[1], &err);
+        CXCompilationDatabase cdatabase = clang_CompilationDatabase_fromDirectory(
+                compilation_database_path.c_str(), 
+                &err
+        );
         if (err != CXCompilationDatabase_NoError) {
                 cerr << "error: cannot load database" << endl;
                 exit(1);
