@@ -4,3 +4,6 @@
 [submodule "ArduPilot/rapidjson"]
 	path = src/rapidjson
 	url = https://github.com/Tencent/rapidjson
+[submodule "src/cxxopts"]
+	path = src/cxxopts
+	url = https://github.com/jarro2783/cxxopts
