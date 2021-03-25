@@ -44,5 +44,8 @@ while.
 ```
 7: Run the analysis:
 ```
-> ./apmsa ../../ardupilot/build/sitl/ ../platforms/ArduPilot/common.xml ../platforms/ArduPilot/sample.json
+> ./sa4u                                                    \
+	--compilation-database ../../ardupilot/build/sitl/      \
+	--mavlink-definitions ../platforms/ArduPilot/common.xml \
+	--prior-types ../platforms/ArduPilot/sample.json
 ```

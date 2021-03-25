@@ -1,4 +1,4 @@
-target=apmsa
+target=sa4u
 objects=main.o deduce.o mav.o util.o cfg.o
 machine=$(shell uname -s)
 
