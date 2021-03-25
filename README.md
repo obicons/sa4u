@@ -45,7 +45,7 @@ while.
 7: Run the analysis:
 ```
 > ./sa4u                                                    \
-	--compilation-database ../../ardupilot/build/sitl/      \
-	--mavlink-definitions ../platforms/ArduPilot/common.xml \
-	--prior-types ../platforms/ArduPilot/sample.json
+    --compilation-database ../../ardupilot/build/sitl/      \
+    --mavlink-definitions ../platforms/ArduPilot/common.xml \
+    --prior-types ../platforms/ArduPilot/sample.json
 ```
