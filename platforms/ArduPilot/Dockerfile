@@ -1,15 +1,23 @@
 FROM ubuntu:20.04
 
+RUN apt-get update && \
+    apt-get install -y keyboard-configuration
+
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update            \
-    && apt-get install -y     \
-           build-essential    \
-           cmake              \
-           git                \
-           lsb-release        \
-           wget               \
-           sudo               \
+RUN apt-get update												\
+    && apt-get install -y											\
+           build-essential											\
+           cmake												\
+           git													\
+           lsb-release												\
+           wget													\
+	   software-properties-common										\
+           sudo													\
+    && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -                                \
+    && add-apt-repository "deb http://apt.llvm.org/focal/     llvm-toolchain-focal$LLVM_VERSION_STRING    main" \
+    && apt-get update                                                                                           \
+    && apt-get install -y libclang-13-dev									\
     && rm -rf /var/lib/apt/lists/*
 
 RUN adduser ardupilot             \
@@ -31,10 +39,3 @@ RUN git clone https://github.com/ArduPilot/ardupilot \
     && git submodule update --init --recursive       \
     && ./waf configure                               \
     && make copter
-
-# TODO - this should be installed when we install our other dependencies
-RUN sudo apt-get install -y software-properties-common                                                               \
-    && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -                                     \
-    && sudo add-apt-repository "deb http://apt.llvm.org/focal/     llvm-toolchain-focal$LLVM_VERSION_STRING    main" \
-    && sudo apt-get update                                                                                           \
-    && sudo apt-get install -y libclang-13-dev
