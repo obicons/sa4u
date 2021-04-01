@@ -476,9 +476,9 @@ enum CXChildVisitResult check_tainted_decl_walker(CXCursor c, CXCursor UNUSED, C
 
         optional<TypeInfo> ti = get_var_typeinfo(varname, ctx->var_types);
         if (ti.has_value() && !ctx->var_types.empty()) {
-                spdlog::info("(thread {}) getting initialization info", ctx->thread_no)
+                spdlog::info("(thread {}) getting initialization info", ctx->thread_no);
                 CXCursor lhs = get_initialization_decl(c);
-                spdlog::info("(thread {}) got initialization info", ctx->thread_no)
+                spdlog::info("(thread {}) got initialization info", ctx->thread_no);
                 string new_varname = get_cursor_spelling(lhs);
                 ctx->var_types.back()[new_varname] = ti.value();
                 return CXChildVisit_Break;
