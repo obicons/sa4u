@@ -27,6 +27,9 @@ extern "C" {
 // see https://github.com/jarro2783/cxxopts
 #include <cxxopts.hpp>
 
+// see https://github.com/gabime/spdlog
+#include <spdlog/spdlog.h>
+
 #include "cfg.hpp"
 #include "common.hpp"
 #include "deduce.hpp"
@@ -464,18 +467,18 @@ enum CXChildVisitResult check_tainted_decl_walker(CXCursor c, CXCursor UNUSED, C
         if (kind == CXCursor_DeclRefExpr) {
                 varname = get_cursor_spelling(c);
         } else if (kind == CXCursor_MemberRefExpr) {
-                //cout << "(thread " << ctx->thread_no << ") pping" << endl;
+                spdlog::info("(thread {}) pretty printing", ctx->thread_no);
                 varname = pretty_print_memberRefExpr(c);
-                //cout << "(thread " << ctx->thread_no << ") pped" << endl;
+                spdlog::info("(thread {}) pretty printed", ctx->thread_no);
         } else {
                 return CXChildVisit_Recurse;
         }
 
         optional<TypeInfo> ti = get_var_typeinfo(varname, ctx->var_types);
         if (ti.has_value() && !ctx->var_types.empty()) {
-                //cout << "(thread " << ctx->thread_no << ") getting initialization info" << endl;
+                spdlog::info("(thread {}) getting initialization info", ctx->thread_no)
                 CXCursor lhs = get_initialization_decl(c);
-                //cout << "(thread " << ctx->thread_no << ") got initialization info" << endl;
+                spdlog::info("(thread {}) got initialization info", ctx->thread_no)
                 string new_varname = get_cursor_spelling(lhs);
                 ctx->var_types.back()[new_varname] = ti.value();
                 return CXChildVisit_Break;
@@ -1112,7 +1115,7 @@ void do_work(CXCompileCommands cmds,
                   functions_with_instrinsic_variables,
                   seen_definitions,
                   lock,
-                  thread_no,
+                  static_cast<int>(thread_no),
                 };
                 if (unit) {
                         CXCursor cursor = clang_getTranslationUnitCursor(unit);
@@ -1149,7 +1152,8 @@ int main(int argc, char **argv) {
                 ("p,prior-types",
                  "path to JSON file describing previously known types",
                   cxxopts::value<string>())
-                ("h,help", "print this message and exit");
+                ("h,help", "print this message and exit")
+                ("v,verbose", "enable verbose output");
         
         cxxopts::ParseResult result = options.parse(argc, argv);
         if (result.count("help")) {
@@ -1162,6 +1166,8 @@ int main(int argc, char **argv) {
                 compilation_database_path = result["compilation-database"].as<string>();
                 mavlink_def_path = result["mavlink-definitions"].as<string>();
                 prior_types_path = result["prior-types"].as<string>();
+                if (result["verbose"].as<bool>())
+                        spdlog::set_level(spdlog::level::info);
         } catch (domain_error &e) {
                 cerr << options.help() << endl;
                 exit(1);
@@ -1171,7 +1177,7 @@ int main(int argc, char **argv) {
         pugi::xml_document doc;
         ifstream xml_in(mavlink_def_path);
         if (!doc.load(xml_in)) {
-                cerr << "error: cannot load xml" << endl;
+                spdlog::critical("cannot load MAVLink XML");
                 exit(1);
         }        
         xml_in.close();
@@ -1186,7 +1192,7 @@ int main(int argc, char **argv) {
 
         ifstream json_in(prior_types_path);
         if (!json_in) {
-                cerr << "error: cannot load seed json" << endl;
+                spdlog::critical("cannot load prior JSON");
                 exit(1);
         }
         vector<VariableEntry> vars = read_variable_info(json_in);
@@ -1200,7 +1206,7 @@ int main(int argc, char **argv) {
                 &err
         );
         if (err != CXCompilationDatabase_NoError) {
-                cerr << "error: cannot load database" << endl;
+                spdlog::critical("cannot load compilation database");
                 exit(1);
         }
 
@@ -1248,13 +1254,8 @@ int main(int argc, char **argv) {
         }
 
         // wait for completion
-        //cout << "JOINING " << num_workers << " THREADS" << endl;
-        for (auto &thread: workers) {
+        for (auto &thread: workers)
                 thread.join();
-                //cout << "JOINED" << endl;
-                //cout.flush();
-        }
-        //cout << "THREADS JOINED" << endl;
 
         clang_CompileCommands_dispose(cmds);
         clang_CompilationDatabase_dispose(cdatabase);
