@@ -877,8 +877,8 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                         ctx->lock.lock();
                         ctx->functions_with_intrinsic_variables.insert(ctx->current_fn);
                         ctx->lock.unlock();
-                        if (ctx->types_to_frame_field.find(t_type) != ctx->types_to_frame_field.end())
-                                ctx->had_taint = true;
+                        //if (ctx->types_to_frame_field.find(t_type) != ctx->types_to_frame_field.end())
+                        //        ctx->had_taint = true;
                 } else {
                         // TODO: should this really be unknown?
                         ctx->param_to_typesource_kind[ctx->total_params] = SOURCE_UNKNOWN;
