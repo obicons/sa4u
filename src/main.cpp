@@ -104,6 +104,8 @@ struct ASTContext {
 
         // used to coordinate access to shared data structures
         mutex &lock;
+
+        int thread_no;
 };
 
 string trim(const string& str,
@@ -342,7 +344,7 @@ string pretty_print_store(CXCursor c) {
 // if c is part of a variable initialization, returns a cursor representing the declaration
 CXCursor get_initialization_decl(CXCursor c) {
         CXCursor parent = c;
-        while (clang_getCursorKind(parent) != CXCursor_VarDecl) {
+        while (!clang_Cursor_isNull(parent) && clang_getCursorKind(parent) != CXCursor_VarDecl) {
                 parent = clang_getCursorSemanticParent(parent);
         }
         return parent;
@@ -462,17 +464,20 @@ enum CXChildVisitResult check_tainted_decl_walker(CXCursor c, CXCursor UNUSED, C
         if (kind == CXCursor_DeclRefExpr) {
                 varname = get_cursor_spelling(c);
         } else if (kind == CXCursor_MemberRefExpr) {
+                //cout << "(thread " << ctx->thread_no << ") pping" << endl;
                 varname = pretty_print_memberRefExpr(c);
+                //cout << "(thread " << ctx->thread_no << ") pped" << endl;
         } else {
                 return CXChildVisit_Recurse;
         }
 
         optional<TypeInfo> ti = get_var_typeinfo(varname, ctx->var_types);
         if (ti.has_value() && !ctx->var_types.empty()) {
+                //cout << "(thread " << ctx->thread_no << ") getting initialization info" << endl;
                 CXCursor lhs = get_initialization_decl(c);
+                //cout << "(thread " << ctx->thread_no << ") got initialization info" << endl;
                 string new_varname = get_cursor_spelling(lhs);
                 ctx->var_types.back()[new_varname] = ti.value();
-                // cout << "Tainted decl " << new_varname << " found" << endl;
                 return CXChildVisit_Break;
         }
 
@@ -489,7 +494,9 @@ void check_tainted_decl(CXCursor cursor, ASTContext *ctx) {
                 add_inner_vars(cursor_typename, get_cursor_spelling(cursor),
                                ctx->type_to_field_to_unit, source, ctx->var_types.back());
         } else {
+                //cout << "(thread " << ctx->thread_no << ") walking" << endl;
                 clang_visitChildren(cursor, check_tainted_decl_walker, ctx);
+                //cout << "(thread " << ctx->thread_no << ") walked" << endl;
         }
 }
 
@@ -609,7 +616,7 @@ void check_tainted_store(CXCursor cursor, ASTContext *ctx) {
                         merge_typeinfo(
                                 ctx->store_to_typeinfo[data.first.value()],
                                 p.first.value());
-                        cout << ctx->store_to_typeinfo.size() << endl;
+                        //cout << ctx->store_to_typeinfo.size() << endl;
                                 
                 }
 
@@ -698,26 +705,28 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
         ASTContext *ctx = static_cast<ASTContext*>(client_data);
         if (ctx->constraint == IFCONDITION) {
                 ctx->constraint = UNCONSTRAINED;
-
+                //cout << " (thread " << ctx->thread_no << ") " << " in if" << endl;
                 // check if we're comparing against a mavlink frame
                 if (clang_getCursorKind(cursor) == CXCursor_BinaryOperator
                     && get_binary_operator(cursor) == "==") {
                         clang_visitChildren(cursor, check_mavlink, client_data);
                 }
-
+                //cout << " (thread " << ctx->thread_no << ") " << " done if" << endl;
                 return CXChildVisit_Continue;
         } else if (ctx->constraint == SWITCHSTMT) {
                 // this indicates the cursor is the control expression of a switch statement.
                 // we'll visit this control expression and see if it's on a mavlink field.
+                //cout << " (thread " << ctx->thread_no << ") " << " in switch" << endl;
                 ctx->constraint = UNCONSTRAINED;
                 clang_visitChildren(cursor, check_mavlink, client_data);
+                //cout << " (thread " << ctx->thread_no << ") " << " done switch" << endl;
                 return CXChildVisit_Break;
         }
 
         // find all if statements that constrain mavlink messages
         CXCursorKind kind = clang_getCursorKind(cursor);
         if (kind == CXCursor_IfStmt) {
-                // cout << "IF_STMT" << endl;
+                //cout << " (thread " << ctx->thread_no << ") " << " in if" << endl;
                 ctx->constraint = IFCONDITION;
                 
                 // Set up a new scope for the body of the if statement.
@@ -739,9 +748,9 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                 // We've already looked at the child of the if statement.
                 // Time to move on.
                 next_action = CXChildVisit_Continue;
-                // cout << "DONE IF" << endl;
+                //cout << " (thread " << ctx->thread_no << ") " << " done if" << endl;
         } else if (kind == CXCursor_ForStmt || kind == CXCursor_WhileStmt) {
-                // cout << "FOR/WHILE" << endl;
+                //cout << " (thread " << ctx->thread_no << ") " << " in for" << endl;
 
                 // Set up a new scope for the body of the loop statement.
                 // Subsequent definitions will affect the loop statement's scope.
@@ -762,14 +771,14 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                 // We've already looked at the child of the loop statement.
                 // Time to move on.
                 next_action = CXChildVisit_Continue;
-                // cout << "DONE FOR/WHILE" << endl;
+                //cout << " (thread " << ctx->thread_no << ") " << " in for" << endl;
         } else if (kind == CXCursor_BreakStmt) {
-                // cout << "BREAK" << endl;
+                //cout << " (thread " << ctx->thread_no << ") " << " in break" << endl;
                 // A break causes an instant unification of the type information.
                 unify_scopes(ctx->var_types[ctx->var_types.size() - 2], ctx->var_types.back());
-                // cout << "DONE BREAK" << endl;
+                //cout << " (thread " << ctx->thread_no << ") " << " done break" << endl;
         } else if (kind == CXCursor_SwitchStmt) {
-                // cout << "SWITCH" << endl;
+                //cout << " (thread " << ctx->thread_no << ") " << " in switch" << endl;
 
                 ctx->constraint = SWITCHSTMT;
                 clang_visitChildren(cursor, function_ast_walker, client_data);
@@ -796,11 +805,11 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                 // We've already looked at the child of the switch statement.
                 // Time to move on.
                 next_action = CXChildVisit_Continue;
-                // cout << "DONE SWITCH" << endl;
+                //cout << " (thread " << ctx->thread_no << ") " << " done switch" << endl;
         } else if (kind == CXCursor_VarDecl) {
-                // cout << "considering var: " << get_cursor_spelling(cursor) << endl;
-                // cout << "SWITCH" << endl;
+                //cout << " (thread " << ctx->thread_no << ") " << " in var decl" << endl;
                 check_tainted_decl(cursor, ctx);
+                //cout << " (thread " << ctx->thread_no << ") " << " checked tainted decl" << endl;
                 CXType t = clang_getCursorType(cursor);
                 string t_type = get_object_typename(t);
                 bool is_mav_type = ctx->types_to_frame_field.find(t_type)
@@ -811,25 +820,25 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                         ctx->lock.lock();
                         ctx->functions_with_intrinsic_variables.insert(ctx->current_fn);
                         ctx->lock.unlock();
-                        ctx->had_taint = true;
+                        if (ctx->types_to_frame_field.find(t_type) != ctx->types_to_frame_field.end())
+                                ctx->had_taint = true;
                 }
 
-                // cout << "DONE SWITCH" << endl;
+                //cout << " (thread " << ctx->thread_no << ") " << " done var decl" << endl;
                 // TODO: use taint information
         } else if (kind == CXCursor_BinaryOperator) {
-                // cout << "op=" << endl;
+                //cout << " (thread " << ctx->thread_no << ") " << " in binop" << endl;
                 string op = get_binary_operator(cursor);
                 if (op == "=") {
                         check_tainted_store(cursor, ctx);
                         // TODO: use taint information
                 }
-                // cout << "done op=" << endl;
+                //cout << " (thread " << ctx->thread_no << ") " << " done binop" << endl;
         } else if (kind == CXCursor_CallExpr) {
-                // cout << "call expr" << endl;
+                //cout << " (thread " << ctx->thread_no << ") " << " in call expr" << endl;
                 string spelling = get_cursor_spelling(cursor);
                 if (spelling == "operator=") {
                         check_tainted_store(cursor, ctx);
-                        ctx->had_taint = true;
                         // TODO: use taint information
                 } else if (!spelling.empty()) {
                         int num_args = clang_Cursor_getNumArguments(cursor);
@@ -846,9 +855,9 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                         ctx->fn_summary[this_fn].calling_context[spelling].push_back(call_info);
                         ctx->lock.unlock();
                 }
-                // cout << "done call" << endl;
+                //cout << " (thread " << ctx->thread_no << ") " << " done call expr" << endl;
         } else if (kind == CXCursor_ParmDecl) {
-                // cout << "parm decl" << endl;
+                //cout << " (thread " << ctx->thread_no << ") " << " in parm decl" << endl;
                 CXType t = clang_getCursorType(cursor);
                 string t_type = get_object_typename(t);
                 bool is_mav_type = ctx->types_to_frame_field.find(t_type)
@@ -868,7 +877,8 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                         ctx->lock.lock();
                         ctx->functions_with_intrinsic_variables.insert(ctx->current_fn);
                         ctx->lock.unlock();
-                        ctx->had_taint = true;
+                        if (ctx->types_to_frame_field.find(t_type) != ctx->types_to_frame_field.end())
+                                ctx->had_taint = true;
                 } else {
                         // TODO: should this really be unknown?
                         ctx->param_to_typesource_kind[ctx->total_params] = SOURCE_UNKNOWN;
@@ -877,8 +887,9 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                         add_unknown_param(param_name, ctx, source);
                 }
                 ctx->total_params++;
-                // cout << "done parm decl" << endl;
+                //cout << " (thread " << ctx->thread_no << ") " << " done parm decl" << endl;
         } else if (kind == CXCursor_CompoundStmt) {
+                //cout << " (thread " << ctx->thread_no << ") " << " in compound stmt" << endl;
                 if (!ctx->had_fn_definition) {
                         ctx->lock.lock();
                         if (ctx->seen_definitions.find(ctx->current_usr) ==
@@ -891,6 +902,7 @@ enum CXChildVisitResult function_ast_walker(CXCursor cursor, CXCursor UNUSED, CX
                         // this is tricky part ii
                         ctx->had_fn_definition = !ctx->had_fn_definition;
                 }
+                //cout << " (thread " << ctx->thread_no << ") " << " done compound stmt" << endl;
         }
 
         return next_action;
@@ -926,6 +938,8 @@ enum CXChildVisitResult ast_walker(CXCursor cursor, CXCursor UNUSED, CXClientDat
                 map<string, TypeInfo> scope;
                 ctx->var_types.push_back(scope);
                 ctx->had_fn_definition = false;
+
+                //cout << " (thread " << ctx->thread_no << ") " << " in " << ctx->current_fn << endl;
 
                 int old_ctx_len = ctx->semantic_context.length();
                 if (kind == CXCursor_CXXMethod) {
@@ -967,6 +981,9 @@ enum CXChildVisitResult ast_walker(CXCursor cursor, CXCursor UNUSED, CXClientDat
                 if (kind == CXCursor_CXXMethod)
                         ctx->semantic_context.erase(old_ctx_len);
                 ctx->store_to_typeinfo.clear();
+
+                //cout << " (thread " << ctx->thread_no << ") " << " done with " << ctx->current_fn << endl;
+
                 return CXChildVisit_Continue;
         }
         // TODO: handle global variable declarations
@@ -1031,6 +1048,7 @@ void do_work(CXCompileCommands cmds,
              unordered_map<string, set<unsigned>> &name_to_tu,
              mutex &lock,
              int num_units) {
+        //cout << thread_no << " is starting " << endl;
         unsigned num_cmds = clang_CompileCommands_getSize(cmds);
         CXIndex index = clang_createIndex(0, 0);
         for (auto i = thread_no; i < num_cmds; i += stride) {
@@ -1094,6 +1112,7 @@ void do_work(CXCompileCommands cmds,
                   functions_with_instrinsic_variables,
                   seen_definitions,
                   lock,
+                  thread_no,
                 };
                 if (unit) {
                         CXCursor cursor = clang_getTranslationUnitCursor(unit);
@@ -1206,7 +1225,7 @@ int main(int argc, char **argv) {
         // initialize worker threads
         mutex lock;
         vector<thread> workers;
-        unsigned num_workers = max(1u, thread::hardware_concurrency() - 1);
+        unsigned num_workers = max(1u, thread::hardware_concurrency());
         for (unsigned i = 0u; i < num_workers; i++) {
                 workers.push_back(
                         thread(
@@ -1229,8 +1248,13 @@ int main(int argc, char **argv) {
         }
 
         // wait for completion
-        for (auto &thread: workers)
+        //cout << "JOINING " << num_workers << " THREADS" << endl;
+        for (auto &thread: workers) {
                 thread.join();
+                //cout << "JOINED" << endl;
+                //cout.flush();
+        }
+        //cout << "THREADS JOINED" << endl;
 
         clang_CompileCommands_dispose(cmds);
         clang_CompilationDatabase_dispose(cdatabase);
