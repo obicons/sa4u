@@ -5,19 +5,20 @@ RUN apt-get update && \
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update												\
-    && apt-get install -y											\
-           build-essential											\
-           cmake												\
-           git													\
-           lsb-release												\
-           wget													\
-	   software-properties-common										\
-           sudo													\
+RUN apt-get update                      \
+    && apt-get install -y			    \
+           build-essential			    \
+           cmake					    \
+           git						    \
+           lsb-release				    \
+           wget			    		    \
+	       software-properties-common   \
+           sudo	                        \
     && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -                                \
     && add-apt-repository "deb http://apt.llvm.org/focal/     llvm-toolchain-focal$LLVM_VERSION_STRING    main" \
     && apt-get update                                                                                           \
-    && apt-get install -y libclang-13-dev									\
+    #&& apt-get install -y libclang-13-dev									                                    \
+    && apt-get install -y libclang-14-dev                                                                       \
     && rm -rf /var/lib/apt/lists/*
 
 RUN adduser ardupilot             \

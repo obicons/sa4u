@@ -3,9 +3,9 @@ objects=main.o deduce.o mav.o util.o cfg.o
 machine=$(shell uname -s)
 
 ifeq "$(machine)" "Linux"
-	CXXFLAGS=-I/usr/lib/llvm-13/include -Ipugixml/src -Irapidjson/include/ -Icxxopts/include/ -Ispdlog/include/ \
+	CXXFLAGS=-I/usr/lib/llvm-14/include -Ipugixml/src -Irapidjson/include/ -Icxxopts/include/ -Ispdlog/include/ \
 			 -Wall -Wextra -Wpedantic -std=c++2a -g -lpthread
-	LIBRARY_PATH=-L/usr/lib/llvm-13/lib/
+	LIBRARY_PATH=-L/usr/lib/llvm-14/lib/
 	PUGIXML_PATH=pugixml/build/make-g++-debug-standard-c++11/src/pugixml.cpp.o
 endif
 

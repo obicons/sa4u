@@ -93,8 +93,9 @@ struct ASTContext {
         // e.g. if we're in a struct T, then stores "T"
         string semantic_context;
 
-        // stores the set of writes that we're interested in
-        const set<string> &interesting_writes;
+        // Stores the set of writes that we're interested in.
+        // A write is interesting if it is a write to a variable with a type known a priori.
+        const set<string> &writes_to_variables_with_known_types;
 
         // tracks the current interesting stores
         map<string, TypeInfo> &store_to_typeinfo;
@@ -504,7 +505,7 @@ void check_tainted_decl(CXCursor cursor, ASTContext *ctx) {
         }
 }
 
-static int ctaw_childno;
+thread_local static int ctaw_childno;
 enum CXChildVisitResult check_tainted_assgn_walker(CXCursor c, CXCursor UNUSED, CXClientData cd) {
         if (!ctaw_childno) {
                 ctaw_childno++;
@@ -607,7 +608,8 @@ void check_tainted_store(CXCursor cursor, ASTContext *ctx) {
                       return CXChildVisit_Break;
                     },
                     &data);
-                if (data.first && ctx->interesting_writes.find(data.first.value()) != ctx->interesting_writes.end()) {
+
+                if (data.first && ctx->writes_to_variables_with_known_types.find(data.first.value()) != ctx->writes_to_variables_with_known_types.end()) {
                         spdlog::trace("(thread {}) found store in {} for {}", ctx->thread_no, ctx->current_fn, data.first.value());
                         merge_typeinfo(
                                 ctx->store_to_typeinfo[data.first.value()],
@@ -1242,6 +1244,9 @@ int main(int argc, char **argv) {
 
         clang_CompileCommands_dispose(cmds);
         clang_CompilationDatabase_dispose(cdatabase);
+
+        // for (const string &fn_name: functions_with_instrinsic_variables)
+        //         cout << "Has a global store: " << fn_name << endl;
 
         vector<vector<string>> traces = get_unconstrained_traces(
                 name_to_tu,

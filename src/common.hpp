@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <map>
 #include <set>
 #include <vector>
@@ -54,6 +55,21 @@ struct TypeInfo {
         bool operator!=(const TypeInfo &other) const {
                 return frames != other.frames ||
                 units != other.units;
+        }
+};
+
+static size_t hash_typeinfo(const TypeInfo &ti) {
+        size_t hash = 0;
+        for (auto i: ti.frames) hash ^= i;
+        for (auto i: ti.units) hash ^= i;
+        return hash;    
+}
+
+struct TypeInfoHash {
+        size_t operator()(const vector<TypeInfo> &v) const noexcept {
+                size_t hash = 0;
+                for (const auto &ti: v) hash ^= hash_typeinfo(ti);
+                return hash;    
         }
 };
 

@@ -1,28 +1,30 @@
-[{
-	"VariableName": "AC_WPNav::_destination",
-	"SemanticInfo": {
-		"Units": ["cm"],
-		"CoordinateFrames": ["GLOBAL"]
+[
+	{
+		"VariableName": "AC_WPNav::_destination",
+		"SemanticInfo": {
+			"Units": ["cm"],
+			"CoordinateFrames": ["GLOBAL"]
+		}
+	},
+	{
+		"VariableName": "AC_PosControl::_pos_target::x",
+		"SemanticInfo": {
+			"Units": ["cm"],
+			"CoordinateFrames": ["GLOBAL"]
+		}
+	},
+	{
+		"VariableName": "AC_PosControl::_pos_target::y",
+		"SemanticInfo": {
+			"Units": ["cm"],
+			"CoordinateFrames": ["GLOBAL"]
+		}
+	},
+	{
+			"VariableName": "AC_PosControl::_pos_target::z",
+			"SemanticInfo": {
+					"Units": ["cm"],
+					"CoordinateFrames": ["GLOBAL"]
+			}
 	}
-},
-{
-	"VariableName": "AC_PosControl::_pos_target::x",
-	"SemanticInfo": {
-		"Units": ["cm"],
-		"CoordinateFrames": ["GLOBAL"]
-	}
-},
-{
-	"VariableName": "AC_PosControl::_pos_target::y",
-	"SemanticInfo": {
-		"Units": ["cm"],
-		"CoordinateFrames": ["GLOBAL"]
-	}
-},
-{
-        "VariableName": "AC_PosControl::_pos_target::z",
-        "SemanticInfo": {
-                "Units": ["cm"],
-                "CoordinateFrames": ["GLOBAL"]
-        }
-}]
+]

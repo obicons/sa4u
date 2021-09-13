@@ -3,10 +3,13 @@
 #include <set>
 #include <optional>
 #include <unordered_map>
+#include <sstream>
 #include "cfg.hpp"
 #include "common.hpp"
 #include "mav.hpp"
 using namespace std;
+
+#define MAX_DEPTH 8
 
 static vector<FunctionSummary> get_fn_summaries(const string &fn, 
                                                 const unordered_map<string, set<unsigned>> &name_to_tu,
@@ -27,57 +30,91 @@ static vector<FunctionSummary> get_fn_summaries(const string &fn,
         return s;
 }
 
-static unordered_map<string, vector<vector<string>>> trace_map;
+// Maps (function names, call information) to their traces of buggy stores.
+static unordered_map<string, unordered_map<vector<TypeInfo>, vector<vector<string>>, TypeInfoHash>> memoized_traces;
+
+// Maps variable names to their type.
+// For now, we just store the first type that was stored to the variable.
+// If types differ later, then we probably found a bug.
+// TODO: We could deduce what type is correct based on a majority voting scheme.
+static unordered_map<string, TypeInfo> variable_name_to_type;
 
 static vector<vector<string>> get_storage_trace(const string &fn,
                                                 set<string> &visited,
+                                                vector<vector<string>> &inconsistent_storage_traces,
                                                 const unordered_map<string, set<unsigned>> &name_to_tu,
                                                 const vector<map<string, FunctionSummary>> &fn_summaries,
                                                 const set<string> &fns_with_intrinsic_variables,
                                                 const vector<TypeInfo> &argtypes,
                                                 const map<string, TypeInfo> &prior_types,
                                                 int depth=0) {
-        if (trace_map.find(fn) != trace_map.end())
-                return trace_map[fn];
-        else if (depth > 6)
+        auto memoized_map = memoized_traces.find(fn);
+        if (memoized_map != memoized_traces.end()) {
+                auto memoized_result = memoized_map->second.find(argtypes);
+                if (memoized_result != memoized_map->second.end()) {
+                        return memoized_result->second;
+                }
+        }
+
+        if (depth > MAX_DEPTH)
                 return {};
 
-        for (auto i = 0; i < 2 * depth; i++)
-                cout << " ";
-        cout << fn << endl;
+        // for (auto i = 0; i < 2 * depth; i++)
+        //        cout << " ";
+        // cout << fn << endl;
 
         vector<FunctionSummary> summaries = get_fn_summaries(fn, name_to_tu, fn_summaries);
         vector<vector<string>> results;
         visited.insert(fn);
         for (const auto &fs: summaries) {
-                // if we write to a global, add our name to the the trace
+                // If we write to a global, add our name to the trace.
                 for (const auto &store: fs.store_to_typeinfo) {
                         for (const auto &source: store.second.source) {
+                                TypeInfo variable_type = store.second;
+
                                 if (source.kind == SOURCE_PARAM) {
+                                        if ((size_t) source.param_no >= argtypes.size()) continue;
+
 				        assert((size_t) source.param_no < argtypes.size());
                                         const TypeInfo &the_param = argtypes.at(source.param_no);
 
                                         const auto &it = prior_types.find(store.first);
                                         assert(it != prior_types.end());
 
+                                        // TODO: Only check types that were already known.
                                         if (it->second != the_param) {
                                                 results.push_back({fn});
                                         }
+                                        results.push_back({fn});
+
+                                        variable_type = the_param;
+                                }
+
+                                // Check if this store matches the type of a previous store.
+                                // If it doesn't, then we have found an inconsistent storage violation.
+                                const auto &previously_found_type = variable_name_to_type.find(store.first);
+                                if (previously_found_type != variable_name_to_type.end() &&
+                                        previously_found_type->second != variable_type) {
+                                                cout << "HERE" << endl;
+                                                inconsistent_storage_traces.push_back({fn});
+                                } else {
+                                        variable_name_to_type[store.first] = store.second;
                                 }
                         }
                 }
 
-                // iterate over each function we call
+                // Iterate over each function we call.
                 for (const auto &ccs: fs.calling_context) {
                         string callee_name = ccs.first;
                         if (visited.find(callee_name) != visited.end())
                                 continue;
 
-                        // iterate over each call site
+                        // Iterate over each call site.
                         for (const auto &call: ccs.second) {
                                 vector<vector<string>> traces = get_storage_trace(
                                         callee_name,
                                         visited,
+                                        inconsistent_storage_traces,
                                         name_to_tu,
                                         fn_summaries,
                                         fns_with_intrinsic_variables,
@@ -85,17 +122,21 @@ static vector<vector<string>> get_storage_trace(const string &fn,
                                         prior_types,
                                         depth+1
                                 );
-                                // add fn to the front of every trace and add to our results
+                                // Add fn to the front of every trace and add to our results.
                                 for (const auto &trace: traces) {
                                         vector<string> new_trace = {fn};
                                         new_trace.insert(new_trace.end(), trace.begin(), trace.end());
                                         results.push_back(new_trace);
                                 }
+                                // Add fn to the front of every inconsistent storage trace.
+                                for (auto &inconsistent_trace: inconsistent_storage_traces) {
+                                        inconsistent_trace.insert(inconsistent_trace.begin(), fn);
+                                }
                         }
                 }
         }
         visited.erase(fn);
-        trace_map[fn] = results;
+        memoized_traces[fn][argtypes] = results;
         return results;
 }
 
@@ -136,6 +177,24 @@ static vector<TypeInfo> get_initial_argtypes(const string &fn,
         return args;
 }
 
+void print_trace(ostream &of, const vector<string> &trace) {
+        string sep = "";
+        for (const auto &fn: trace) {
+                of << sep << fn;
+                sep = " -> ";
+        }
+}
+
+/**
+ * @brief Returns the traces that contain an unconstrained store to a variable with a type already known.
+ * 
+ * @param name_to_tu A map relating function names to the translation unit containing their definitions.
+ * @param fn_summaries A collection of function summaries. fn_summaries[0] is the summary of each function in TU 0, etc.
+ * @param fns_with_intrinsic_variables The set of functions that contain variables with intrinsic semantic types.
+ * @param prior_types A map relating variable names to their type information.
+ * @param num_units The number of translation units.
+ * @return vector<vector<string>> A vector of traces, e.g. [["fn1", "fn2", "lastFn"], ...]
+ */
 vector<vector<string>> get_unconstrained_traces(const unordered_map<string, set<unsigned>> &name_to_tu,
                                                 const vector<map<string, FunctionSummary>> &fn_summaries,
                                                 const set<string> &fns_with_intrinsic_variables,
@@ -143,6 +202,7 @@ vector<vector<string>> get_unconstrained_traces(const unordered_map<string, set<
                                                 int num_units) {
         vector<vector<string>> result;
         int i = 1;
+        set<string> found_traces;
         for (const auto &fn: fns_with_intrinsic_variables) {
                 cout << i << " / " << fns_with_intrinsic_variables.size() << endl;
                 set<string> visited;
@@ -152,9 +212,11 @@ vector<vector<string>> get_unconstrained_traces(const unordered_map<string, set<
                         fn_summaries, 
                         num_units
                 );
+                vector<vector<string>> inconsistent_storage_traces;
                 vector<vector<string>> traces = get_storage_trace(
                         fn,
                         visited,
+                        inconsistent_storage_traces,
                         name_to_tu, 
                         fn_summaries, 
                         fns_with_intrinsic_variables,
@@ -162,13 +224,23 @@ vector<vector<string>> get_unconstrained_traces(const unordered_map<string, set<
                         prior_types
                 );
                 for (const auto &trace: traces) {
-                        string sep = "";
-                        cout << "BUG: ";
-                        for (const auto &fn: trace) {
-                                cout << sep << fn;
-                                sep = " -> ";
+                        stringstream ss;
+                        print_trace(ss, trace);
+                        string trace_str = ss.str();
+                        if (found_traces.find(trace_str) == found_traces.end()) {
+                                found_traces.insert(trace_str);
+                                cout << "BUG: " << trace_str << endl;
                         }
-                        cout << endl;
+                }
+                set<string> inconsistent_traces;
+                for (const auto &trace: inconsistent_storage_traces) {
+                        stringstream ss;
+                        print_trace(ss, trace);
+                        auto trace_str = ss.str();
+                        if (inconsistent_traces.find(trace_str) == inconsistent_traces.end()) {
+                                inconsistent_traces.insert(trace_str);
+                                cout << "Inconsistent store: " << trace_str << endl;
+                        }
                 }
                 result.insert(result.end(), traces.begin(), traces.end());
                 i++;
