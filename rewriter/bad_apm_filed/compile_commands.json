@@ -1,0 +1,13 @@
+[
+    {
+        "arguments": [
+            "g++",
+            "-c",
+            "-o",
+            "ownptr",
+            "main.cpp"
+        ],
+        "directory": "/home/rewriter/src/bad_apm_filed",
+        "file": "main.cpp"
+    }
+]

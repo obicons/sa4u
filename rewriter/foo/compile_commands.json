@@ -1,0 +1,13 @@
+[
+    {
+        "arguments": [
+            "g++",
+            "-c",
+            "-o",
+            "hello.o",
+            "hello.cpp"
+        ],
+        "directory": "/home/rewriter/src/foo",
+        "file": "hello.cpp"
+    }
+]
