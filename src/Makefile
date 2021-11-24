@@ -4,7 +4,7 @@ machine=$(shell uname -s)
 
 ifeq "$(machine)" "Linux"
 	CXXFLAGS=-I/usr/lib/llvm-14/include -Ipugixml/src -Irapidjson/include/ -Icxxopts/include/ -Ispdlog/include/ \
-			 -Wall -Wextra -Wpedantic -std=c++2a -g -lpthread
+			 -Wall -Wextra -Wpedantic -std=c++2a -O3 -lpthread
 	LIBRARY_PATH=-L/usr/lib/llvm-14/lib/
 	PUGIXML_PATH=pugixml/build/make-g++-debug-standard-c++11/src/pugixml.cpp.o
 endif
