@@ -38,6 +38,8 @@ extern "C" {
 
 #define UNUSED /* UNUSED */
 
+enum MessageDefinitionType { UNKNOWN, MAVLINK, LMCP };
+
 struct ASTContext {
         // maps each mavlink struct name to its frame field
         const map<string, string> &types_to_frame_field;
@@ -1235,17 +1237,28 @@ void do_work(CXCompileCommands cmds, unsigned thread_no, unsigned stride,
         clang_disposeIndex(index);
 }
 
+MessageDefinitionType detect_definition_type(const pugi::xml_document &doc) {
+        if (doc.child("mavlink")) {
+                return MAVLINK;
+        }
+        if (doc.child("MDM")) {
+                return LMCP;
+        }
+        return UNKNOWN;
+}
+
 int main(int argc, char **argv) {
         cxxopts::Options options("sa4u", "static analysis for UAVs");
         options.add_options()("c,compilation-database",
                               "directory containing the compilation database",
                               cxxopts::value<string>())(
-            "m,mavlink-definitions", "path to XML file containing MAVLink spec",
+            "m,message-definition",
+            "path to XML file containing the message spec: Supported specs are "
+            "MavLink and LMCP",
             cxxopts::value<string>())(
             "p,prior-types",
             "path to JSON file describing previously known types",
-            cxxopts::value<string>())("h,help", "print this message and "
-                                                "exit")(
+            cxxopts::value<string>())("h,help", "print this message and exit")(
             "v,verbose", "enable verbose output");
 
         cxxopts::ParseResult result = options.parse(argc, argv);
@@ -1254,11 +1267,11 @@ int main(int argc, char **argv) {
                 exit(0);
         }
 
-        string compilation_database_path, mavlink_def_path, prior_types_path;
+        string compilation_database_path, message_def_path, prior_types_path;
         try {
                 compilation_database_path =
                     result["compilation-database"].as<string>();
-                mavlink_def_path = result["mavlink-definitions"].as<string>();
+                message_def_path = result["message-definition"].as<string>();
                 prior_types_path = result["prior-types"].as<string>();
                 if (result["verbose"].as<bool>())
                         spdlog::set_level(spdlog::level::trace);
@@ -1269,19 +1282,39 @@ int main(int argc, char **argv) {
 
         // (0) load data sources
         pugi::xml_document doc;
-        ifstream xml_in(mavlink_def_path);
+        ifstream xml_in(message_def_path);
         if (!doc.load(xml_in)) {
-                spdlog::critical("cannot load MAVLink XML");
+                spdlog::critical("cannot load message XML");
                 exit(1);
         }
         xml_in.close();
 
-        map<string, string> type_to_semantic = get_types_to_frame_field(doc);
-
         int num_units;
+        map<string, string> type_to_semantic;
         map<string, int> unitname_to_id;
-        map<string, map<string, int>> type_to_field_to_unit =
-            get_type_to_field_to_unit(doc, unitname_to_id, num_units);
+        map<string, map<string, int>> type_to_field_to_unit;
+
+        switch (detect_definition_type(doc)) {
+        case MAVLINK:
+                type_to_semantic = get_types_to_frame_field(doc);
+                type_to_field_to_unit =
+                    get_type_to_field_to_unit(doc, unitname_to_id, num_units);
+                break;
+        case LMCP:
+                /*
+                type_to_semantic = get_types_to_frame_field(doc);
+                type_to_field_to_unit = get_type_to_field_to_unit(doc,
+                unitname_to_id, num_units);
+                */
+                spdlog::critical("LMCP not implemented");
+                exit(1);
+                break;
+        case UNKNOWN:
+        default:
+                spdlog::critical("message not in a supported spec");
+                exit(1);
+                break;
+        }
 
         ifstream json_in(prior_types_path);
         if (!json_in) {
