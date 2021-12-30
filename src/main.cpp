@@ -1263,17 +1263,23 @@ MessageDefinitionType detect_definition_type(const pugi::xml_document &doc) {
 
 int main(int argc, char **argv) {
         cxxopts::Options options("sa4u", "static analysis for UAVs");
-        options.add_options()("c,compilation-database",
-                              "directory containing the compilation database",
-                              cxxopts::value<string>())(
-            "m,message-definition",
-            "path to XML file containing the message spec: Supported specs are "
-            "MavLink and LMCP",
-            cxxopts::value<string>())(
-            "p,prior-types",
-            "path to JSON file describing previously known types",
-            cxxopts::value<string>())("h,help", "print this message and exit")(
-            "v,verbose", "enable verbose output");
+        // clang-format off
+        options.add_options()
+          ("c,compilation-database",
+           "directory containing the compilation database",
+           cxxopts::value<string>())
+          ("m,message-definition",
+           "path to XML file containing the message spec: Supported specs are "
+           "MavLink and LMCP",
+           cxxopts::value<string>())
+          ("p,prior-types",
+           "path to JSON file describing previously known types",
+           cxxopts::value<string>())
+          ("h,help", 
+           "print this message and exit")
+          ("v,verbose",
+           "enable verbose output");
+        // clang-format on
 
         cxxopts::ParseResult result = options.parse(argc, argv);
         if (result.count("help")) {
