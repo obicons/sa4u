@@ -1,5 +1,5 @@
 target=sa4u
-objects=main.o deduce.o mav.o util.o cfg.o
+objects=main.o deduce.o mav.o util.o cfg.o lmcp.o
 machine=$(shell uname -s)
 
 ifeq "$(machine)" "Linux"
