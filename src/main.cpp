@@ -33,6 +33,7 @@ extern "C" {
 #include "cfg.hpp"
 #include "common.hpp"
 #include "deduce.hpp"
+#include "lmcp.hpp"
 #include "mav.hpp"
 #include "util.hpp"
 
@@ -115,6 +116,9 @@ struct ASTContext {
 
         // stores the thread ID currently working
         int thread_no;
+
+        // Relates variables with known types to their types.
+        const map<string, TypeInfo> &prior_var_to_typeinfo;
 };
 
 string trim(const string &str, const string &whitespace = " ") {
@@ -465,7 +469,6 @@ string get_member_access_str(ASTContext *ctx, CXCursor cursor) {
         else
                 access_str = ctx->semantic_context + "::" + scope_ops +
                              "::" + get_cursor_spelling(cursor);
-        // return get_smallest_context(access_str);
         return access_str;
 }
 
@@ -567,7 +570,7 @@ enum CXChildVisitResult check_tainted_assgn_walker(CXCursor c, CXCursor UNUSED,
         CXCursorKind kind = clang_getCursorKind(c);
         string varname;
         if (kind == CXCursor_MemberRefExpr)
-                varname = pretty_print_memberRefExpr(c);
+                varname = get_member_access_str(p->second, c);
         else if (kind == CXCursor_DeclRefExpr)
                 varname = get_cursor_spelling(c);
 
@@ -575,6 +578,11 @@ enum CXChildVisitResult check_tainted_assgn_walker(CXCursor c, CXCursor UNUSED,
                 return CXChildVisit_Recurse;
 
         p->first = get_var_typeinfo(varname, p->second->var_types);
+        const map<string, TypeInfo> &priors = p->second->prior_var_to_typeinfo;
+        // See if the variable has a type that was supplied via the prior type switch.
+        if (!p->first && priors.find(varname) != priors.end()) {
+                p->first = {priors.find(varname)->second};
+        }
 
         if (p->first)
                 return CXChildVisit_Break;
@@ -665,12 +673,19 @@ void check_tainted_store(CXCursor cursor, ASTContext *ctx) {
                     },
                     &data);
 
+                if (!data.first) {
+                        data.first = varname;
+                }
+
                 if (data.first &&
                     ctx->writes_to_variables_with_known_types.find(
                         data.first.value()) !=
                         ctx->writes_to_variables_with_known_types.end()) {
                         cout << "found store in " << ctx->current_fn << " "
                              << data.first.value() << endl;
+                        ctx->lock.lock();
+                        ctx->functions_with_intrinsic_variables.insert(ctx->current_fn);
+                        ctx->lock.unlock();
                         spdlog::trace("(thread {}) found store in {} for {}",
                                       ctx->thread_no, ctx->current_fn,
                                       data.first.value());
@@ -685,8 +700,6 @@ void check_tainted_store(CXCursor cursor, ASTContext *ctx) {
                         cout << ctx->current_fn << ": "
                              << "no known type info for " << varname << endl;
                 }
-
-                // ctx->var_types.back()[varname] = p.first.value();
         }
 }
 
@@ -1132,14 +1145,14 @@ vars_to_typeinfo(const vector<VariableEntry> &vars,
 
 void do_work(CXCompileCommands cmds, unsigned thread_no, unsigned stride,
              const set<string> &interesting_writes,
-             // map<string, TypeInfo> &current_interesting_writes,
              set<string> &functions_with_intrinsic_variables,
              unordered_set<string> &seen_definitions,
              const map<string, string> &type_to_semantic,
              const map<string, map<string, int>> &type_to_field_to_unit,
              vector<map<string, FunctionSummary>> &fn_summaries,
              unordered_map<string, set<unsigned>> &name_to_tu, mutex &lock,
-             int num_units, int &file_no, mutex &cout_lock) {
+             int num_units, int &file_no, mutex &cout_lock,
+             const map<string, TypeInfo> &prior_type_to_typeinfo) {
         unsigned num_cmds = clang_CompileCommands_getSize(cmds);
         CXIndex index = clang_createIndex(0, 0);
         for (auto i = thread_no; i < num_cmds; i += stride) {
@@ -1212,6 +1225,7 @@ void do_work(CXCompileCommands cmds, unsigned thread_no, unsigned stride,
                     seen_definitions,
                     lock,
                     static_cast<int>(thread_no),
+                    prior_type_to_typeinfo,
                 };
                 if (unit) {
                         CXCursor cursor = clang_getTranslationUnitCursor(unit);
@@ -1249,17 +1263,23 @@ MessageDefinitionType detect_definition_type(const pugi::xml_document &doc) {
 
 int main(int argc, char **argv) {
         cxxopts::Options options("sa4u", "static analysis for UAVs");
-        options.add_options()("c,compilation-database",
-                              "directory containing the compilation database",
-                              cxxopts::value<string>())(
-            "m,message-definition",
-            "path to XML file containing the message spec: Supported specs are "
-            "MavLink and LMCP",
-            cxxopts::value<string>())(
-            "p,prior-types",
-            "path to JSON file describing previously known types",
-            cxxopts::value<string>())("h,help", "print this message and exit")(
-            "v,verbose", "enable verbose output");
+        // clang-format off
+        options.add_options()
+          ("c,compilation-database",
+           "directory containing the compilation database",
+           cxxopts::value<string>())
+          ("m,message-definition",
+           "path to XML file containing the message spec: Supported specs are "
+           "MavLink and LMCP",
+           cxxopts::value<string>())
+          ("p,prior-types",
+           "path to JSON file describing previously known types",
+           cxxopts::value<string>())
+          ("h,help", 
+           "print this message and exit")
+          ("v,verbose",
+           "enable verbose output");
+        // clang-format on
 
         cxxopts::ParseResult result = options.parse(argc, argv);
         if (result.count("help")) {
@@ -1293,6 +1313,7 @@ int main(int argc, char **argv) {
         map<string, string> type_to_semantic;
         map<string, int> unitname_to_id;
         map<string, map<string, int>> type_to_field_to_unit;
+        map<string, int> function_to_return_type;
 
         switch (detect_definition_type(doc)) {
         case MAVLINK:
@@ -1301,13 +1322,7 @@ int main(int argc, char **argv) {
                     get_type_to_field_to_unit(doc, unitname_to_id, num_units);
                 break;
         case LMCP:
-                /*
-                type_to_semantic = get_types_to_frame_field(doc);
-                type_to_field_to_unit = get_type_to_field_to_unit(doc,
-                unitname_to_id, num_units);
-                */
-                spdlog::critical("LMCP not implemented");
-                exit(1);
+                function_to_return_type = get_units_of_functions(doc, unitname_to_id, num_units);
                 break;
         case UNKNOWN:
         default:
@@ -1350,7 +1365,6 @@ int main(int argc, char **argv) {
         for (const auto &entry : vars)
                 interesting_writes.insert(entry.variable_name);
 
-        map<string, TypeInfo> current_interesting_writes;
         set<string> functions_with_intrinsic_variables;
         unordered_set<string> seen_definitions;
         seen_definitions.reserve(num_cmds * 50);
@@ -1363,12 +1377,11 @@ int main(int argc, char **argv) {
         for (unsigned i = 0u; i < num_workers; i++) {
                 workers.push_back(thread(
                     do_work, cmds, i, num_workers, ref(interesting_writes),
-                    // ref(current_interesting_writes),
                     ref(functions_with_intrinsic_variables),
                     ref(seen_definitions), ref(type_to_semantic),
                     ref(type_to_field_to_unit), ref(fn_summaries),
                     ref(name_to_tu), ref(lock), num_units, ref(file_no),
-                    ref(cout_lock)));
+                    ref(cout_lock), ref(prior_var_to_typeinfo)));
         }
 
         // wait for completion
@@ -1381,6 +1394,12 @@ int main(int argc, char **argv) {
         vector<vector<string>> traces = get_unconstrained_traces(
             name_to_tu, fn_summaries, functions_with_intrinsic_variables,
             prior_var_to_typeinfo, num_units);
+        
+        cout << "functions with intrinsic variables: " << endl;
+        for (const string &str : functions_with_intrinsic_variables) {
+                cout << str << endl;
+        }
+
         // for (const auto &trace: traces) {
         //         string sep = "";
         //         for (const auto &fn: trace) {

@@ -59,10 +59,6 @@ static vector<vector<string>> get_storage_trace(const string &fn,
         if (depth > MAX_DEPTH)
                 return {};
 
-        // for (auto i = 0; i < 2 * depth; i++)
-        //        cout << " ";
-        // cout << fn << endl;
-
         vector<FunctionSummary> summaries = get_fn_summaries(fn, name_to_tu, fn_summaries);
         vector<vector<string>> results;
         visited.insert(fn);
@@ -95,7 +91,6 @@ static vector<vector<string>> get_storage_trace(const string &fn,
                                 const auto &previously_found_type = variable_name_to_type.find(store.first);
                                 if (previously_found_type != variable_name_to_type.end() &&
                                         previously_found_type->second != variable_type) {
-                                                cout << "HERE" << endl;
                                                 inconsistent_storage_traces.push_back({fn});
                                 } else {
                                         variable_name_to_type[store.first] = store.second;
@@ -111,10 +106,11 @@ static vector<vector<string>> get_storage_trace(const string &fn,
 
                         // Iterate over each call site.
                         for (const auto &call: ccs.second) {
+                                vector<vector<string>> callee_inconsistent_traces;
                                 vector<vector<string>> traces = get_storage_trace(
                                         callee_name,
                                         visited,
-                                        inconsistent_storage_traces,
+                                        callee_inconsistent_traces,
                                         name_to_tu,
                                         fn_summaries,
                                         fns_with_intrinsic_variables,
@@ -123,14 +119,16 @@ static vector<vector<string>> get_storage_trace(const string &fn,
                                         depth+1
                                 );
                                 // Add fn to the front of every trace and add to our results.
-                                for (const auto &trace: traces) {
+                                for (const auto &trace : traces) {
                                         vector<string> new_trace = {fn};
                                         new_trace.insert(new_trace.end(), trace.begin(), trace.end());
                                         results.push_back(new_trace);
                                 }
                                 // Add fn to the front of every inconsistent storage trace.
-                                for (auto &inconsistent_trace: inconsistent_storage_traces) {
-                                        inconsistent_trace.insert(inconsistent_trace.begin(), fn);
+                                for (auto &inconsistent_trace : callee_inconsistent_traces) {
+                                        vector<string> new_trace = {fn};
+                                        new_trace.insert(new_trace.end(), inconsistent_trace.begin(), inconsistent_trace.end());
+                                        inconsistent_storage_traces.push_back(new_trace);
                                 }
                         }
                 }
