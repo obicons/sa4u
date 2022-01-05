@@ -2,6 +2,7 @@
 
 #include <string>
 #include <iostream>
+#include <map>
 
 extern "C" {
 #include <clang-c/Index.h>
@@ -20,3 +21,6 @@ string get_USR(CXCursor);
 
 // changes the current working directory only for the calling thread
 int change_thread_working_dir(const char *);
+
+// Inverts the map by mapping each value to its key.
+map<int, string> invert_map(map<string, int> &m);

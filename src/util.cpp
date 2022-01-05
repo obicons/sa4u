@@ -64,3 +64,12 @@ int change_thread_working_dir(const char *dirname) {
         #endif
         return result;
 }
+
+// Inverts the map by mapping each value to its key.
+map<int, string> invert_map(map<string, int> &m) {
+        map<int, string> result;
+        for (const auto &p : m) {
+                result[p.second] = p.first;
+        }
+        return result;
+}

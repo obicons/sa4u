@@ -1,0 +1,107 @@
+[
+    {
+        "arguments": [
+            "g++",
+            "-c",
+            "-I/usr/lib/llvm-14/include",
+            "-Ipugixml/src",
+            "-Irapidjson/include/",
+            "-Icxxopts/include/",
+            "-Ispdlog/include/",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-std=c++2a",
+            "-g",
+            "-o",
+            "deduce.o",
+            "deduce.cpp"
+        ],
+        "directory": "/home/ardupilot/sa4u/src",
+        "file": "deduce.cpp"
+    },
+    {
+        "arguments": [
+            "g++",
+            "-c",
+            "-I/usr/lib/llvm-14/include",
+            "-Ipugixml/src",
+            "-Irapidjson/include/",
+            "-Icxxopts/include/",
+            "-Ispdlog/include/",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-std=c++2a",
+            "-g",
+            "-o",
+            "mav.o",
+            "mav.cpp"
+        ],
+        "directory": "/home/ardupilot/sa4u/src",
+        "file": "mav.cpp"
+    },
+    {
+        "arguments": [
+            "g++",
+            "-c",
+            "-I/usr/lib/llvm-14/include",
+            "-Ipugixml/src",
+            "-Irapidjson/include/",
+            "-Icxxopts/include/",
+            "-Ispdlog/include/",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-std=c++2a",
+            "-g",
+            "-o",
+            "cfg.o",
+            "cfg.cpp"
+        ],
+        "directory": "/home/ardupilot/sa4u/src",
+        "file": "cfg.cpp"
+    },
+    {
+        "arguments": [
+            "g++",
+            "-c",
+            "-I/usr/lib/llvm-14/include",
+            "-Ipugixml/src",
+            "-Irapidjson/include/",
+            "-Icxxopts/include/",
+            "-Ispdlog/include/",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-std=c++2a",
+            "-g",
+            "-o",
+            "util.o",
+            "util.cpp"
+        ],
+        "directory": "/home/ardupilot/sa4u/src",
+        "file": "util.cpp"
+    },
+    {
+        "arguments": [
+            "g++",
+            "-c",
+            "-I/usr/lib/llvm-14/include",
+            "-Ipugixml/src",
+            "-Irapidjson/include/",
+            "-Icxxopts/include/",
+            "-Ispdlog/include/",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-std=c++2a",
+            "-g",
+            "-o",
+            "main.o",
+            "main.cpp"
+        ],
+        "directory": "/home/ardupilot/sa4u/src",
+        "file": "main.cpp"
+    }
+]
