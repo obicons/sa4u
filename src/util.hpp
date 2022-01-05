@@ -22,5 +22,8 @@ string get_USR(CXCursor);
 // changes the current working directory only for the calling thread
 int change_thread_working_dir(const char *);
 
+// Returns the gcd of the parameters.
+int gcd(int, int);
+
 // Inverts the map by mapping each value to its key.
 map<int, string> invert_map(map<string, int> &m);

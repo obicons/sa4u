@@ -73,3 +73,16 @@ map<int, string> invert_map(map<string, int> &m) {
         }
         return result;
 }
+
+// Returns the GCD of the parameters.
+int gcd(int a, int b) {
+        int greatest = max(a, b);
+        int smallest = min(a, b);
+        int remainder = greatest % smallest;
+        while (remainder) {
+                greatest = smallest;
+                smallest = remainder;
+                remainder = greatest % smallest;                
+        }
+        return smallest;
+}

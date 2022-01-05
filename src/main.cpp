@@ -37,6 +37,7 @@ extern "C" {
 #include "mav.hpp"
 #include "methods.hpp"
 #include "util.hpp"
+#include "units.hpp"
 
 #define UNUSED /* UNUSED */
 
@@ -122,7 +123,7 @@ struct ASTContext {
         const map<string, TypeInfo> &prior_var_to_typeinfo;
 
         // Tracks the return types of functions.
-        map<string, int> &function_names_to_return_unit;
+        map<string, TypeInfo> &function_names_to_return_unit;
 
         // Relates unit IDs to their human-readable names.
         const map<int, string> &id_to_unitname;
@@ -138,6 +139,9 @@ string trim(const string &str, const string &whitespace = " ") {
 
         return str.substr(strBegin, strRange);
 }
+
+enum CXChildVisitResult type_check_rhs(CXCursor c, CXCursor UNUSED, CXClientData cd);
+static thread_local int ctaw_childno = 0;
 
 /**
  * Returns true if the cursor contains a decl ref expr referring to a local
@@ -537,10 +541,54 @@ enum CXChildVisitResult check_tainted_decl_walker(CXCursor c, CXCursor UNUSED,
                         return CXChildVisit_Recurse;
                 }
                 ctx->lock.unlock();
+                ti = ctx->function_names_to_return_unit.at(fq_method_name);
+        } else if (kind == CXCursor_BinaryOperator) {
+                string spelling = get_binary_operator(c);
+                if (spelling == "*") {
+                        int old_ctaw = ctaw_childno;
+                        ctaw_childno = 1;
+                        pair<optional<TypeInfo>, ASTContext *> lhs_p = {{}, ctx};
+                        clang_visitChildren(c, type_check_rhs, &lhs_p);
+
+                        pair<optional<TypeInfo>, ASTContext *> rhs_p = {{}, ctx};
+                        ctaw_childno = 0;
+                        clang_visitChildren(c, type_check_rhs, &rhs_p);
+                        ctaw_childno = old_ctaw;
+
+                        if (lhs_p.first && lhs_p.first.value().dimension &&
+                            rhs_p.first && rhs_p.first.value().dimension) {
+                                    TypeInfo lhs_ti = lhs_p.first.value();
+                                    TypeInfo rhs_ti = rhs_p.first.value();
+                                    
+                                    set<int> frames;
+                                    frames.insert(lhs_ti.frames.begin(), lhs_ti.frames.end());
+                                    frames.insert(rhs_ti.frames.begin(), rhs_ti.frames.end());
+
+                                    set<int> units;
+                                    units.insert(lhs_ti.units.begin(), lhs_ti.units.end());
+                                    units.insert(rhs_ti.units.begin(), rhs_ti.units.end());
+
+                                    ti = {
+                                            .frames = frames,
+                                            .units = units,
+                                            .source = {},
+                                            .dimension = lhs_ti.dimension.value() * rhs_ti.dimension.value(),
+                                    };
+                        }
+                }
+        } else if (kind == CXCursor_IntegerLiteral) {
+                CXEvalResult result = clang_Cursor_Evaluate(c);
+                int value = clang_EvalResult_getAsInt(result);
+                Dimension d = {
+                        .coefficients = {0, 0, 0, 0, 0, 0, 0},
+                        .scalar_numerator = value,
+                        .scalar_denominator = 1,
+                };
                 ti = {
-                        .frames = {MAV_FRAME_GLOBAL}, 
-                        .units = {ctx->function_names_to_return_unit[fq_method_name]},
-                        .source = vector<TypeSource>{SOURCE_INTRINSIC}
+                        .frames = {},
+                        .units = {},
+                        .source = {},
+                        .dimension = d,
                 };
         } else {
                 return CXChildVisit_Recurse;
@@ -582,7 +630,6 @@ void check_tainted_decl(CXCursor cursor, ASTContext *ctx) {
         }
 }
 
-thread_local static int ctaw_childno;
 enum CXChildVisitResult check_tainted_assgn_walker(CXCursor c, CXCursor UNUSED,
                                                    CXClientData cd) {
         if (!ctaw_childno) {
@@ -639,12 +686,59 @@ enum CXChildVisitResult type_check_rhs(CXCursor c, CXCursor UNUSED,
                         return CXChildVisit_Recurse;
                 }
 
-                TypeInfo ti = {
-                        .frames = {MAV_FRAME_GLOBAL}, 
-                        .units = {p->second->function_names_to_return_unit[fq_method_name]},
-                        .source = vector<TypeSource>{SOURCE_INTRINSIC}
-                };
+                TypeInfo ti = p->second->function_names_to_return_unit.at(fq_method_name);
                 p->second->lock.unlock();
+                p->first = ti;
+                return CXChildVisit_Break;
+        } else if (kind == CXCursor_BinaryOperator) {
+                string spelling = get_binary_operator(c);
+                if (spelling == "*") {
+                        pair<optional<TypeInfo>, ASTContext *> lhs_p = {{}, p->second};
+                        clang_visitChildren(c, type_check_rhs, &lhs_p);
+
+                        int old_ctaw = ctaw_childno;
+                        pair<optional<TypeInfo>, ASTContext *> rhs_p = {{}, p->second};
+                        ctaw_childno = 0;
+                        clang_visitChildren(c, type_check_rhs, &rhs_p);
+                        ctaw_childno = old_ctaw;
+
+                        if (lhs_p.first && lhs_p.first.value().dimension &&
+                            rhs_p.first && rhs_p.first.value().dimension) {
+                                    TypeInfo lhs_ti = lhs_p.first.value();
+                                    TypeInfo rhs_ti = rhs_p.first.value();
+                                    
+                                    set<int> frames;
+                                    frames.insert(lhs_ti.frames.begin(), lhs_ti.frames.end());
+                                    frames.insert(rhs_ti.frames.begin(), rhs_ti.frames.end());
+
+                                    set<int> units;
+                                    units.insert(lhs_ti.units.begin(), lhs_ti.units.end());
+                                    units.insert(rhs_ti.units.begin(), rhs_ti.units.end());
+
+                                    p->first = {
+                                            .frames = frames,
+                                            .units = units,
+                                            .source = {},
+                                            .dimension = lhs_ti.dimension.value() * rhs_ti.dimension.value(),
+                                    };
+                                    return CXChildVisit_Break;
+                        }
+                }
+                return CXChildVisit_Recurse;
+        } else if (kind == CXCursor_IntegerLiteral) {
+                CXEvalResult result = clang_Cursor_Evaluate(c);
+                int value = clang_EvalResult_getAsInt(result);
+                Dimension d = {
+                        .coefficients = {0, 0, 0, 0, 0, 0, 0},
+                        .scalar_numerator = value,
+                        .scalar_denominator = 1,
+                };
+                TypeInfo ti = {
+                        .frames = {},
+                        .units = {},
+                        .source = {},
+                        .dimension = d,
+                };
                 p->first = ti;
                 return CXChildVisit_Break;
         } else {
@@ -1203,6 +1297,7 @@ vars_to_typeinfo(const vector<VariableEntry> &vars,
                         } else {
                                 ti.units.insert(it->second);
                         }
+                        ti.dimension = string_to_dimension(unit_name);
                 }
                 ti.source.push_back({SOURCE_INTRINSIC, -1, ""});
                 results[ve.variable_name] = ti;
@@ -1221,7 +1316,7 @@ void do_work(CXCompileCommands cmds, unsigned thread_no, unsigned stride,
              unordered_map<string, set<unsigned>> &name_to_tu, mutex &lock,
              int num_units, int &file_no, mutex &cout_lock,
              const map<string, TypeInfo> &prior_type_to_typeinfo,
-             map<string, int> &function_name_to_return_unit_type,
+             map<string, TypeInfo> &function_name_to_return_unit_type,
              const map<int, string> &id_to_unitname) {
         unsigned num_cmds = clang_CompileCommands_getSize(cmds);
         CXIndex index = clang_createIndex(0, 0);
@@ -1385,7 +1480,7 @@ int main(int argc, char **argv) {
         map<string, string> type_to_semantic;
         map<string, int> unitname_to_id;
         map<string, map<string, int>> type_to_field_to_unit;
-        map<string, int> function_to_return_type;
+        map<string, TypeInfo> function_to_return_type;
 
         switch (detect_definition_type(doc)) {
         case MAVLINK:
