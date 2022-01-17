@@ -1,0 +1,12 @@
+[
+    {
+        "arguments": [
+            "g++",
+            "ex.cpp",
+            "-o",
+            "ex"
+        ],
+        "directory": "/src/demos/01",
+        "file": "ex.cpp"
+    }
+]

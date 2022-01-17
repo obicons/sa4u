@@ -53,6 +53,7 @@ struct Dimension {
         array<int, SI_BASE_UNITS_COUNT> coefficients;        
 
         // Stores the numerator of the scalar multiple of a unit.
+        // e.g. 1 cm = 1/100 * 1m
         int scalar_numerator;
         int scalar_denominator;
 
