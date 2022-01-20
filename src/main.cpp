@@ -540,8 +540,8 @@ enum CXChildVisitResult check_tainted_decl_walker(CXCursor c, CXCursor UNUSED,
                         ctx->lock.unlock();
                         return CXChildVisit_Recurse;
                 }
-                ctx->lock.unlock();
                 ti = ctx->function_names_to_return_unit.at(fq_method_name);
+                ctx->lock.unlock();
         } else if (kind == CXCursor_BinaryOperator) {
                 string spelling = get_binary_operator(c);
                 if (spelling == "*") {
@@ -641,10 +641,22 @@ enum CXChildVisitResult check_tainted_assgn_walker(CXCursor c, CXCursor UNUSED,
             static_cast<pair<optional<TypeInfo>, ASTContext *> *>(cd);
         CXCursorKind kind = clang_getCursorKind(c);
         string varname;
-        if (kind == CXCursor_MemberRefExpr)
+        if (kind == CXCursor_MemberRefExpr) {
                 varname = get_member_access_str(p->second, c);
-        else if (kind == CXCursor_DeclRefExpr)
+        } else if (kind == CXCursor_DeclRefExpr) {
                 varname = get_cursor_spelling(c);
+        } else if (kind == CXCursor_CallExpr) {
+                string fq_method_name = get_fq_method(c);
+                ASTContext *ctx = p->second;
+                ctx->lock.lock();
+                // See if we know the return type of the method.
+                if (ctx->function_names_to_return_unit.find(fq_method_name) == ctx->function_names_to_return_unit.end()) {
+                        ctx->lock.unlock();
+                        return CXChildVisit_Recurse;
+                }
+                p->first = ctx->function_names_to_return_unit.at(fq_method_name);
+                ctx->lock.unlock();
+        }
 
         if (varname == "")
                 return CXChildVisit_Recurse;
@@ -762,6 +774,12 @@ enum CXChildVisitResult type_check_rhs(CXCursor c, CXCursor UNUSED,
                 ti.source.push_back(source);
                 p->first = ti;
                 return CXChildVisit_Break;
+        } else if (!varname.empty() && !p->second->var_types.empty()) {
+                optional<TypeInfo> ti = get_var_typeinfo(varname, p->second->var_types);
+                if (ti) {
+                        p->first = ti;
+                        return CXChildVisit_Break;
+                }
         }
 
         return CXChildVisit_Recurse;
@@ -780,11 +798,17 @@ void merge_typeinfo(TypeInfo &dst, const TypeInfo &src) {
 // Checks if cursor stores (op =) a mavlink message field into another object
 void check_tainted_store(CXCursor cursor, ASTContext *ctx) {
         pair<optional<TypeInfo>, ASTContext *> p({}, ctx);
+        // ctaw_childno = 0;
+        // clang_visitChildren(cursor, check_tainted_assgn_walker, &p);
+        // if (!p.first) {
+        //         ctaw_childno = 0;
+        //         clang_visitChildren(cursor, type_check_rhs, &p);
+        // }
         ctaw_childno = 0;
-        clang_visitChildren(cursor, check_tainted_assgn_walker, &p);
+        clang_visitChildren(cursor, type_check_rhs, &p);
         if (!p.first) {
                 ctaw_childno = 0;
-                clang_visitChildren(cursor, type_check_rhs, &p);
+                clang_visitChildren(cursor, check_tainted_assgn_walker, &p);
         }
 
         if (p.first && !ctx->var_types.empty()) {

@@ -76,7 +76,7 @@ struct Dimension {
                 d.scalar_denominator = scalar_numerator * other.scalar_numerator;
                 d.scalar_numerator = scalar_denominator * other.scalar_denominator;
                 int factor = gcd(d.scalar_numerator, d.scalar_denominator);
-                if (factor != 1) {
+                if (factor != 0) {
                         d.scalar_denominator /= factor;
                         d.scalar_numerator /= factor;
                 }
