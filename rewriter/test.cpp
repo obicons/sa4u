@@ -8,6 +8,7 @@
  * -lclangIndex -lclangSerialization -lclangToolingCore -lclangTooling
  * -lclangFormat -Wl,--end-group
  */
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -331,6 +332,10 @@ class NoOpDiagnosticConsumer : public DiagnosticConsumer {
   //                               const Diagnostic &Info);
 };
 
+static std::string homedir() {
+    return getenv("HOME");
+}
+
 int main(int argc, const char **argv) {
   if (argc != 3) {
     std::cerr
@@ -369,7 +374,7 @@ int main(int argc, const char **argv) {
   // To further customize this, we could create our own factory class.
   int ret = Tool.run(newFrontendActionFactory<MyFrontendAction>().get());
 
-  std::ofstream varname("/home/rewriter/variable_names.csv");
+  std::ofstream varname(homedir() + "/variable_names.csv");
   varname << "name,id" << std::endl;
   for (const auto &it : varname_to_id) {
     varname << it.first << "," << it.second << std::endl;
