@@ -6,7 +6,7 @@
             "-o",
             "ex"
         ],
-        "directory": "/src/demos/01",
+        "directory": "/src/",
         "file": "ex.cpp"
     }
 ]
