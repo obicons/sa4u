@@ -14,13 +14,15 @@ import {
 	CompletionItemKind,
 	TextDocumentPositionParams,
 	TextDocumentSyncKind,
-	InitializeResult
+	InitializeResult,
+	Position
 } from 'vscode-languageserver/node';
 
 import {
 	TextDocument
 } from 'vscode-languageserver-textdocument';
-
+//const { exec } = require('child_process');
+import { exec, ExecException } from 'child_process';
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 const connection = createConnection(ProposedFeatures.all);
@@ -130,55 +132,44 @@ documents.onDidClose(e => {
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
-documents.onDidChangeContent(change => {
+documents.onDidSave(change => {
 	validateTextDocument(change.document);
 });
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// In this simple example we get the settings for every validate run.
 	const settings = await getDocumentSettings(textDocument.uri);
-
-	// The validator creates diagnostics for all uppercase words length 2 and more
-	const text = textDocument.getText();
-	const pattern = /\b[A-Z]{2,}\b/g;
-	let m: RegExpExecArray | null;
-
-	let problems = 0;
-	const diagnostics: Diagnostic[] = [];
-	while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
-		problems++;
-		const diagnostic: Diagnostic = {
-			severity: DiagnosticSeverity.Warning,
-			range: {
-				start: textDocument.positionAt(m.index),
-				end: textDocument.positionAt(m.index + m[0].length)
-			},
-			message: `${m[0]} is all uppercase.`,
-			source: 'ex'
-		};
-		if (hasDiagnosticRelatedInformationCapability) {
-			diagnostic.relatedInformation = [
-				{
-					location: {
-						uri: textDocument.uri,
-						range: Object.assign({}, diagnostic.range)
+	
+	let path = decodeURIComponent(textDocument.uri);
+	path = path.substring(0,path.lastIndexOf("/")+1);
+	path = path.replace(/(^\w+:|^)\/\//, '');
+	path = path.replace(/:/, '');
+	exec(`docker container run -v ${path}:/src/ sa4u -c /src/ -p /src/ex_prior.json -m /src/CMASI.xml`,
+	(error: ExecException | null, stdout: string, stderr: string) => {
+			const incorrectStoreRegex = /Incorrect store to variable (.*) in (.*) line ([0-9]+)\. (.*)/;
+			const arrayout = stdout.split("\n");
+			const diagnostics: Diagnostic[] = [];
+			arrayout.forEach(line => {
+				const maybeMatchArray: RegExpMatchArray | null = line.match(incorrectStoreRegex);
+				if (maybeMatchArray == null)
+					return;
+				const [_, var_name, file_name, line_no, message] = maybeMatchArray;
+				
+				const diagnostic: Diagnostic = {
+					severity: DiagnosticSeverity.Error,
+					range: {
+						start: {line: parseInt(line_no)-1, character: 0},//textDocument.positionAt(m.index),
+						end: {line: parseInt(line_no), character: 0},//textDocument.positionAt(m.index + m[0].length)
 					},
-					message: 'Spelling matters'
-				},
-				{
-					location: {
-						uri: textDocument.uri,
-						range: Object.assign({}, diagnostic.range)
-					},
-					message: 'Particularly for names'
-				}
-			];
+					message: `Incorrect store to ${var_name}. ${message}`,
+					source: `${file_name}`
+				};
+				diagnostics.push(diagnostic);
+				
+			});
+			connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 		}
-		diagnostics.push(diagnostic);
-	}
-
-	// Send the computed diagnostics to VSCode.
-	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+	);
 }
 
 connection.onDidChangeWatchedFiles(_change => {
