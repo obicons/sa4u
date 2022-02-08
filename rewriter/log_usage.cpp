@@ -3,16 +3,21 @@
 #include <cmath>
 #include <cstring>
 #include <cstdio>
+#include <ctime>
 #include <iostream>
 #include <fstream>
 #include <map>
 #include <mutex>
 #include <thread>
 #include <unordered_map>
+#include <vector>
 
 extern "C" {
     #include <unistd.h>
 }
+
+#define INTEGRAL_TYPE 0 
+#define FLOATING_TYPE 1
 
 // compute MSE
 static double mse(double a, double b);
@@ -52,65 +57,73 @@ static std::unordered_map<unsigned, std::array<double, 11>>& get_variables_to_va
     return variables_to_values;
 }
 
-double leak;
-extern "C" void log_usage(unsigned varid, void *data, unsigned long long size) {
-    // double r = static_cast<double>(rand()) / static_cast<double>(RAND_MAX);
-    // if (r > 0.1) {
-    //     // Only log 10% of the time.
-    //     return;
-    // }
+// Returns a map relating variable IDs to a sequence of (timestamp, value) pair.
+static std::unordered_map<unsigned, std::vector<std::tuple<time_t, double>>>& get_variable_history() {
+    static std::unordered_map<unsigned, std::vector<std::tuple<time_t, double>>> variable_readings;
+    static bool first_use = true;
+    if (first_use) {
+        variable_readings.reserve(50000);
+        first_use = false;
+    }
+    return variable_readings;
+}
 
-    //std::unordered_map<unsigned, unsigned long> &variables_to_updates = get_variables_to_updates();
-    //std::array<double, 11> &varinfo_measurements = get_varinfo_measurements();
-    //std::unordered_map<unsigned, std::array<double, 11>> &variables_to_values = get_variables_to_values();
-    //std::mutex &lock = get_lock();
+extern "C" void log_usage(int vartype, unsigned varid, void *data, unsigned long long size) {
+    double r = static_cast<double>(rand()) / static_cast<double>(RAND_MAX);
+    if (r > 0.1) {
+        // Only log 10% of the time.
+        return;
+    }
+
+    std::unordered_map<unsigned, std::vector<std::tuple<time_t, double>>> &variable_readings = get_variable_history();
+    std::mutex &lock = get_lock();
     if (!data) return;
 
-    double val = 0;
-    // std::ofstream log_out("/home/rewriter/log", std::ios::app);
-    // log_out << "reading..." << std::endl;
-    // if (size == sizeof(double)) {
-    //     memcpy(&val, data, sizeof(double));
-    // } else if (size == sizeof(float)) {
-    //     float f;
-    //     memcpy(&f, data, sizeof(float));
-    //     val = f;
-    // } else {
-    //     return;
-    // }
-    char buff[sizeof(double)];
-    if (size < sizeof(buff)) {
-        memcpy(buff, data, size);
-    } else {
-        return;
+    double val = 0.0;
+
+    if (vartype == INTEGRAL_TYPE) {
+        switch (size) {
+            case sizeof(char):
+                char ch;
+                memcpy(&ch, data, 1);
+                val = ch;
+                break;
+            case sizeof(short):
+                short s;
+                mempcpy(&s, data, sizeof(short));
+                val = s;
+                break;
+            case sizeof(int):
+                int i;
+                memcpy(&i, data, sizeof(int));
+                val = i;
+                break;
+            case sizeof(long):
+                long l;
+                memcpy(&l, data, sizeof(long));
+                val = l;
+                break;
+            default:
+                break;
+        }
+    } else if (vartype == FLOATING_TYPE) {
+        switch (size) {
+            case sizeof(float):
+                float f;
+                memcpy(&f, data, sizeof(float));
+                val = f;
+                break;
+            case sizeof(double):
+                memcpy(&val, data, sizeof(double));
+                break;
+            default:
+                break;
+        }
     }
-
-    if (size == sizeof(long)) {
-        long l;
-        memcpy(&l, buff, sizeof(long));
-        val = l;
-    } else if (size == sizeof(int)) {
-        int i;
-        memcpy(&i, buff, sizeof(int));
-        val = i;
-    } else {
-        return;
-    }
-
-    leak = val;
-    // log_out << "read" << std::endl;
-    // log_out.close();
-
-    // lock.lock();
-    // variables_to_updates[varid]++;
-    // for (int i = 0; i < 11; i++) {
-    //     // computing online avg. MSE
-    //     double a = 1.0 / variables_to_updates[varid];
-    //     double b = (1.0 - a);
-    //     variables_to_values[varid][i] = a * mse(val, varinfo_measurements[i]) +
-    //                                     b * variables_to_values[varid][i];
-    // }
-    // lock.unlock();
+    
+    lock.lock();
+    variable_readings[varid].push_back({time(nullptr), val});
+    lock.unlock();
 }
 
 // compute MSE
@@ -122,24 +135,21 @@ static void print_log() {
     using namespace std;
 
     while (true) {
-        ofstream out;
-        out.open("/home/rewriter/mse_log.csv", ofstream::out);
+        ofstream out("/home/rewriter/log.csv", ofstream::out);
+        out << "variable_id,timestamp,value" << endl;
 
-        //unordered_map<string, map<string, double>> &variables_to_values = get_variables_to_values();
-        unordered_map<unsigned, std::array<double, 11>> &variables_to_values = get_variables_to_values();
+        const unordered_map<unsigned, std::vector<std::tuple<time_t, double>>>& vars = get_variable_history();
         mutex &lock = get_lock();
 
-        out << "variable name, measurement type, MSE" << endl;
         lock.lock();
-        for (const auto &pair: variables_to_values) {
-            for (int i = 0; i < 11; i++) {
-                out << pair.first << "," << i << "," << pair.second[i] << endl;
+        for (const auto &pair: vars) {
+            for (const auto &reading: pair.second) {
+                out << pair.first << "," << get<0>(reading) << "," << get<1>(reading) << endl;
             }
         }
         lock.unlock();
-        out.close();
-        sleep(60);
+        sleep(300);
     }
 }
 
-//std::thread th(print_log);
+std::thread th(print_log);

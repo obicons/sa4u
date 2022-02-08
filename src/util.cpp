@@ -64,3 +64,29 @@ int change_thread_working_dir(const char *dirname) {
         #endif
         return result;
 }
+
+// Inverts the map by mapping each value to its key.
+map<int, string> invert_map(map<string, int> &m) {
+        map<int, string> result;
+        for (const auto &p : m) {
+                result[p.second] = p.first;
+        }
+        return result;
+}
+
+// Returns the GCD of the parameters.
+int gcd(int a, int b) {
+        if (a == 0 || b == 0) {
+                return max(a, b);
+        }
+
+        int greatest = max(a, b);
+        int smallest = min(a, b);
+        int remainder = greatest % smallest;
+        while (remainder) {
+                greatest = smallest;
+                smallest = remainder;
+                remainder = greatest % smallest;                
+        }
+        return smallest;
+}

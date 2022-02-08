@@ -1,10 +1,10 @@
 target=sa4u
-objects=main.o deduce.o mav.o util.o cfg.o lmcp.o
+objects=main.o deduce.o mav.o util.o cfg.o lmcp.o methods.o units.o
 machine=$(shell uname -s)
 
 ifeq "$(machine)" "Linux"
 	CXXFLAGS=-I/usr/lib/llvm-14/include -Ipugixml/src -Irapidjson/include/ -Icxxopts/include/ -Ispdlog/include/ \
-			 -Wall -Wextra -Wpedantic -std=c++2a -O3 -lpthread
+			 -Wall -Wextra -Wpedantic -std=c++2a -lpthread
 	LIBRARY_PATH=-L/usr/lib/llvm-14/lib/
 	PUGIXML_PATH=pugixml/build/make-g++-debug-standard-c++11/src/pugixml.cpp.o
 endif
@@ -26,12 +26,12 @@ pugixml.cpp.o: pugixml/src/pugixml.cpp pugixml/src/pugixml.hpp
 	cp $(PUGIXML_PATH) pugixml.cpp.o
 
 libspdlog.a:
-	cd spdlog/ && \
-	mkdir -p build/ && \
-	cd build/ && \
-	cmake ../ && \
-	make && \
-	cd ../../ && \
+	cd spdlog/ &&		\
+	mkdir -p build/ &&	\
+	cd build/ && 		\
+	cmake ../ && 		\
+	make && 			\
+	cd ../../ && 		\
 	cp spdlog/build/libspdlog.a libspdlog.a
 
 .PHONY: clean

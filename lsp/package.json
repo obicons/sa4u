@@ -17,7 +17,7 @@
 		"vscode": "^1.43.0"
 	},
 	"activationEvents": [
-		"onLanguage:plaintext"
+		"onLanguage:cpp"
 	],
 	"main": "./client/out/extension",
 	"contributes": {
@@ -59,7 +59,7 @@
 		"@typescript-eslint/eslint-plugin": "^4.23.0",
 		"@typescript-eslint/parser": "^4.23.0",
 		"eslint": "^7.26.0",
-		"mocha": "^8.3.2",
+		"mocha": "^9.2.0",
 		"typescript": "^4.4.3"
 	}
 }
