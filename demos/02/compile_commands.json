@@ -1,0 +1,12 @@
+[
+    {
+        "arguments": [
+            "g++",
+            "ex.cpp",
+            "-o",
+            "ex"
+        ],
+        "directory": "/Users/taylor.2751/src/sa4u-z3-python/demos/02",
+        "file": "ex.cpp"
+    }
+]

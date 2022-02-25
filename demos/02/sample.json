@@ -1,0 +1,1190 @@
+[
+	{
+		"VariableName": "AC_WPNav::_destination",
+		"SemanticInfo": {
+			"Units": [
+				"cm"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AC_PosControl::_pos_target::x",
+		"SemanticInfo": {
+			"Units": [
+				"cm"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AC_PosControl::_pos_target::y",
+		"SemanticInfo": {
+			"Units": [
+				"cm"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AC_PosControl::_pos_target::z",
+		"SemanticInfo": {
+			"Units": [
+				"cm"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "RC_Channels::last_update_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::timeAtArming_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::lastPosPassTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::lastVelPassTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::lastRngBcnPassTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AC_PosControl::_vel_max_xy_cms",
+		"SemanticInfo": {
+			"Units": [
+				"cm/s"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AC_PosControl::_last_update_xy_us",
+		"SemanticInfo": {
+			"Units": [
+				"us"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AC_PosControl::_accel_max_z_cmss",
+		"SemanticInfo": {
+			"Units": [
+				"cm/s/s"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::magYawResetTimer_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::lastGpsVelPass_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AC_PosControl::_last_update_z_us",
+		"SemanticInfo": {
+			"Units": [
+				"us"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::lastGpsCheckTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::lastInnovPassTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_Stats::last_flush_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AC_PosControl::_ekf_z_reset_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_DAL::_last_imu_time_us",
+		"SemanticInfo": {
+			"Units": [
+				"us"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_DAL::_RFRH::time_flying_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_DAL::_RFRH::time_us",
+		"SemanticInfo": {
+			"Units": [
+				"us"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "last_message_time_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "delta_time_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "last_fix_time_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "average_delta_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "last_baud_change_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "Storage::_last_empty_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "state::time_week_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "state::last_gps_time_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_SmartRTL::_last_good_position_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_SmartRTL::_thorough_clean_complete_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_SmartRTL::_last_position_save_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::imuSampleTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::prevTasStep_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::lastBaroReceived_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::lastHgtPassTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::lastTimeGpsReceived_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::rngValidMeaTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::flowMeaTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::lastPosReset_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::lastVelReset_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::lastPosResetD_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::lastRngMeasTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::badIMUdata_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::goodIMUdata_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::gpsVelInnovTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::hgtRetryTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "timestamp_us",
+		"SemanticInfo": {
+			"Units": [
+				"us"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::extNavMeasTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::extNavLastPosResetTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::lastHealthyMagTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::lastMagUpdate_us",
+		"SemanticInfo": {
+			"Units": [
+				"us"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::last_filter_ok_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "last_update_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "last_update_us",
+		"SemanticInfo": {
+			"Units": [
+				"us"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_InertialSensor_SITL::temp_start_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "Aircraft::last_wall_time_us",
+		"SemanticInfo": {
+			"Units": [
+				"us"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "Aircraft::last_one_hz_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "Aircraft::last_time_us",
+		"SemanticInfo": {
+			"Units": [
+				"us"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "Aircraft::last_fps_report_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "interval_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "GCS_MAVLINK::_timesync_request::last_sent_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AC_PolyFence_loader::_load_time_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "entry_created_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "StatusTextQueue::last_prune_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AC_PosControl::_vel_max_up_cms",
+		"SemanticInfo": {
+			"Units": [
+				"cm/s"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "PerfInfo::last_check_us",
+		"SemanticInfo": {
+			"Units": [
+				"us"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "time_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::lastMagRead_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_BattMonitor_Backend::_resistance_timer_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_BattMonitor_Backend::_state::low_voltage_start_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_BattMonitor_Backend::_state::critical_voltage_start_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3::imuSampleTime_us",
+		"SemanticInfo": {
+			"Units": [
+				"us"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "JitterCorrection::min_sample_us",
+		"SemanticInfo": {
+			"Units": [
+				"us"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "state::last_reading_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_Terrain::last_mission_change_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "Copter::vibration_check::start_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "last_healthy_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "MissionItemProtocol::timelast_receive_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "MissionItemProtocol::timelast_request_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AC_PrecLand::last_log_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "state::distance_m",
+		"SemanticInfo": {
+			"Units": [
+				"m"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_DAL_RangeFinder::_RRNH::ground_clearance_cm",
+		"SemanticInfo": {
+			"Units": [
+				"cm"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_DAL_RangeFinder::_RRNH::max_distance_cm",
+		"SemanticInfo": {
+			"Units": [
+				"cm"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_DAL_RangeFinder_Backend::_RRNI::distance_cm",
+		"SemanticInfo": {
+			"Units": [
+				"cm"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_Scheduler::_loop_timer_start_us",
+		"SemanticInfo": {
+			"Units": [
+				"us"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_Scheduler::_last_loop_time_s",
+		"SemanticInfo": {
+			"Units": [
+				"s"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "last_access_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "Copter::gndeffect_state::takeoff_time_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_AHRS::takeoff_expected_start_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_AHRS::touchdown_expected_start_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "Copter::last_radio_update_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "Scheduler::_min_delay_cb_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "Copter::failsafe::terrain_last_failure_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "Copter::failsafe::terrain_first_failure_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "last_send_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_InertialSensor::_startup_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_GPS_Backend::state::uart_timestamp_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_GPS_Backend::_last_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::gndHgtValidTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::timeAtLastAuxEKF_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::rngBcnLast3DmeasTime_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3::lastLogWrite_us",
+		"SemanticInfo": {
+			"Units": [
+				"us"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_Logger_File::_last_write_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "AP_AHRS_DCM::_last_pos_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "time_us",
+		"SemanticInfo": {
+			"Units": [
+				"us"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
+		"VariableName": "NavEKF3_core::last_oneHz_ms",
+		"SemanticInfo": {
+			"Units": [
+				"ms"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	}
+]

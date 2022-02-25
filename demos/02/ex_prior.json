@@ -1,0 +1,24 @@
+[
+    {
+		"VariableName": "alt_in_cm",
+		"SemanticInfo": {
+			"Units": [
+				"centimeter"
+			],
+			"CoordinateFrames": [
+				"MAV_FRAME_GLOBAL"
+			]
+		}
+	},
+    {
+		"VariableName": "alt_in_cm_local",
+		"SemanticInfo": {
+			"Units": [
+				"centimeter"
+			],
+			"CoordinateFrames": [
+				"MAV_FRAME_LOCAL_NED"
+			]
+		}
+	}
+]

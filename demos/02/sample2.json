@@ -1,0 +1,13 @@
+[
+	{
+		"VariableName": "AC_WPNav::_destination",
+		"SemanticInfo": {
+			"Units": [
+				"cm"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	}
+]
