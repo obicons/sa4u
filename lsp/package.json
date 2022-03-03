@@ -23,24 +23,13 @@
 	"contributes": {
 		"configuration": {
 			"type": "object",
-			"title": "Example configuration",
+			"title": "SA4U",
 			"properties": {
-				"languageServerExample.maxNumberOfProblems": {
+				"SA4U.messageDefinition": {
 					"scope": "resource",
-					"type": "number",
-					"default": 100,
-					"description": "Controls the maximum number of problems produced by the server."
-				},
-				"languageServerExample.trace.server": {
-					"scope": "window",
 					"type": "string",
-					"enum": [
-						"off",
-						"messages",
-						"verbose"
-					],
-					"default": "off",
-					"description": "Traces the communication between VS Code and the language server."
+					"default": "CMASI.xml",
+					"description": "Message Description XML."
 				}
 			}
 		}
@@ -61,5 +50,8 @@
 		"eslint": "^7.26.0",
 		"mocha": "^9.2.0",
 		"typescript": "^4.4.3"
+	},
+	"dependencies": {
+		"@types/vscode": "^1.66.0"
 	}
 }

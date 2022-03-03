@@ -12,7 +12,7 @@ import {
 	Command,
 	CodeActionKind,
 	TextDocumentEdit,
-	TextEdit,
+	TextEdit
 } from 'vscode-languageserver/node';
 
 import {
@@ -21,7 +21,6 @@ import {
 
 import { exec, ExecException } from 'child_process';
 import { promisify } from 'util';
-
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 const connection = createConnection(ProposedFeatures.all);
@@ -31,7 +30,7 @@ const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
-
+let messDef:string;
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
 
@@ -48,10 +47,6 @@ connection.onInitialize((params: InitializeParams) => {
 		capabilities: {
 			codeActionProvider: true,
 			textDocumentSync: TextDocumentSyncKind.Incremental,
-			// Tell the client that this server supports code completion.
-			completionProvider: {
-				resolveProvider: true,
-			},
 			executeCommandProvider: {
 				commands: ['sa4u.fix']
 			}
@@ -71,6 +66,12 @@ connection.onInitialized(() => {
 	if (hasConfigurationCapability) {
 		// Register for all configuration changes.
 		connection.client.register(DidChangeConfigurationNotification.type, undefined);
+		connection.workspace.getConfiguration('SA4U').then((value) => {
+			if (value.messageDefinition) {
+				messDef = value.messageDefinition;
+				documents.all().forEach(validateTextDocument);
+			}
+		});
 	}
 	if (hasWorkspaceFolderCapability) {
 		connection.workspace.onDidChangeWorkspaceFolders(_event => {
@@ -91,10 +92,11 @@ connection.onDidChangeConfiguration(change => {
 	if (hasConfigurationCapability) {
 		// Reset all cached document settings
 		documentSettings.clear();
+		if (change.settings.SA4U){
+			messDef = change.settings.SA4U.messageDefinition;
+			documents.all().forEach(validateTextDocument);
+		}
 	}
-
-	// Revalidate all open text documents
-	documents.all().forEach(validateTextDocument);
 });
 
 // Only keep settings for open documents
@@ -120,49 +122,85 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	path = path.replace(/:/, '');
 	const diagnostics: Diagnostic[] = [];
 	const execPromise = promisify(exec);
-	const sa4uPromise = execPromise(`docker container run --rm -v ${path}:/src/ sa4u -c /src/ -p /src/ex_prior.json -m /src/CMASI.xml`);
-	const sa4uZ3Promise = execPromise(`docker container run --rm --mount type=bind,source="${path}",target="/src/" sa4u-z3 -c /src/ -p /src/ex_prior.json -m /src/CMASI.xml`);
-	const sa4uOutput = await sa4uPromise;
-	const sa4uZ3Output = await sa4uZ3Promise;
-	const createDiagnostics = (input:{stdout:string, stderr:string}, regex:RegExp, isZ3:boolean) => {
-		const arrayout = input.stdout.split("\n");
-		arrayout.forEach(line => {
-			const maybeMatchArray: RegExpMatchArray | null = line.match(regex);
-			if (maybeMatchArray == null)
-				return;
-			if (isZ3) {
-				const [_, var_name, file_name, line_no, message] = maybeMatchArray;
-			
-				const diagnostic: Diagnostic = {
-					severity: DiagnosticSeverity.Error,
-					range: {
-						start: {line: parseInt(line_no)-1, character: 0},
-						end: {line: parseInt(line_no), character: 0},
-					},
-					message: `Incorrect store to ${var_name}. ${message}`,
-					source: `${file_name}`
-				};
-				diagnostics.push(diagnostic);
-			} else {
-				const [_, var_name, file_name, line_no] = maybeMatchArray;
-			
-				const diagnostic: Diagnostic = {
-					severity: DiagnosticSeverity.Error,
-					range: {
-						start: {line: parseInt(line_no)-1, character: 0},
-						end: {line: parseInt(line_no), character: 0},
-					},
-					message: `Incorrect store to ${var_name}.`,
-					source: `${file_name}`,
-					data: {title: `Multiply ${var_name} by 100.`, change: ' * 100'}
-				};
-				diagnostics.push(diagnostic);
+	//const sa4uPromise = execPromise(`docker container run --rm -v ${path}:/src/ sa4u -c /src/ -p /src/ex_prior.json -m /src/CMASI.xml`);
+	try {
+		const sa4uZ3Promise = execPromise(`docker container run --rm --mount type=bind,source="${path}",target="/src/" sa4u-z3 -c /src/ -p /src/ex_prior.json -m /src/${messDef}`);
+		//const sa4uOutput = await sa4uPromise;
+		const sa4uZ3Output = await sa4uZ3Promise;
+
+		const createDiagnostics = (line: string) => {
+			const parsers = [
+				/*{
+					regex: /(.*) return unit known from CMASI definition (.*)/,
+					extra: ([_, functionName, unit]: string[]) => ({
+						functionName: functionName,
+						unit: unit,
+					}),
+				},*/
+				{
+					regex: /Incorrect store to variable (.*) in (.*) line ([0-9]+)\. (.*)/,
+					parse: ([_, varName, filename, line]: string[]) => ({
+						severity: DiagnosticSeverity.Error,
+						range: {
+							start: {line: parseInt(line)-1, character: 0},
+							end: {line: parseInt(line), character: 0},
+						},
+						message: `Incorrect store to ${varName}.`,
+						source: `${filename}`,
+						data: {title: `Multiply ${varName} by 100.`, change: ' * 100'}
+					}),
+				},
+				{
+					regex: /Assignment to (.*) in (.*) on line ([0-9]+)/,
+					parse: ([_, varName, filename, line]: string[]) => ({
+							severity: DiagnosticSeverity.Error,
+							range: {
+								start: {line: parseInt(line)-1, character: 0},
+								end: {line: parseInt(line), character: 0},
+							},
+							message: `Stores to ${varName}.`,
+							source: `${filename}`,
+							data: {title: `Multiply ${varName} by 100.`, change: ' * 100'},
+					}),
+				},
+				{
+					regex: /Call to (.*) in (.*) on line ([0-9]+)/,
+					parse: ([_, functionName, filename, line]: string[]) => ({
+							severity: DiagnosticSeverity.Error,
+							range: {
+								start: {line: parseInt(line)-1, character: 0},
+								end: {line: parseInt(line), character: 0},
+							},
+							message: `Calls to ${functionName}.`,
+							source: `${filename}`,
+					}),
+				},
+			];
+
+			for (const parser of parsers) {
+				const maybeMatch = line.match(parser.regex);
+				if (maybeMatch) {
+					diagnostics.push(parser.parse(maybeMatch));
+					break;
+				}
 			}
-		});
-	};
-	createDiagnostics(sa4uOutput, /Incorrect store to variable (.*) in (.*) line ([0-9]+)\. (.*)/, false);
-	createDiagnostics(sa4uZ3Output, /Variable (.*) declared in (.*) on line ([0-9]+) \((.*)\)/, true);
-	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+		};
+
+		const outputs = [
+			//sa4uOutput,
+			sa4uZ3Output,
+		];
+		for (const tool of outputs) {
+			tool.stdout.split('\n').forEach(line => createDiagnostics(line));
+		}
+
+		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+	} catch (e: unknown) {
+		const error = e as {stderr:string, stdout:string};
+		if (error.stderr) {
+			connection.sendNotification("ServerError", error.stderr);
+		}
+	}
 }
 
 connection.onCodeAction((params) => {
@@ -170,18 +208,11 @@ connection.onCodeAction((params) => {
 	if (textDocument === undefined) {
 		return undefined;
 	}
-	const codeActions: CodeAction[] = [];
-	for (let i=0; i<params.context.diagnostics.length; i++) {
-		const diagnostic = params.context.diagnostics[i];
-		if (params.range.start.line == diagnostic.range.start.line && params.range.start.character == diagnostic.range.start.character && params.range.end.line == diagnostic.range.end.line && params.range.end.character == diagnostic.range.end.character) {
-			if(diagnostic.data){
-				const data = (Object)(diagnostic.data);
-				const title = data.title;
-				codeActions.push(CodeAction.create(title, Command.create(title, 'sa4u.fix', textDocument.uri, data.change, diagnostic.range), CodeActionKind.QuickFix));
-			}
-		}
+	const data = (Object)(params.context.diagnostics[0].data);
+	const title = data.title;
+	if (params.context.diagnostics[0].data) {
+		return [CodeAction.create(title, Command.create(title, 'sa4u.fix', textDocument.uri, data.change, params.context.diagnostics[0].range), CodeActionKind.QuickFix)];
 	}
-	return codeActions;
 });
 
 connection.onExecuteCommand(async (params) => {

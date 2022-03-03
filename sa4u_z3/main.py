@@ -1,10 +1,10 @@
 import argparse
 import ccsyspath
-from pyexpat import model
 import clang.cindex as cindex
 import json
 import os.path
 import time
+import typing
 import xml.etree.ElementTree as ET
 from typing import Any, Dict, Iterator, Optional, Set, TextIO, Tuple
 from util import *
@@ -38,7 +38,6 @@ MAV_FRAME_TO_ID = {
 NUM_FRAMES = len(list(MAV_FRAME_TO_ID.keys()))
 
 # The maximum number of parameters one of our functions can accept.
-# MAX_FUNCTION_PARAMETERS = 42
 MAX_FUNCTION_PARAMETERS = 0
 
 # Maps unit names to their base vector.
@@ -52,11 +51,16 @@ UNIT_TO_BASE_UNIT_VECTOR = {
     'm': [1, 0, 0, 0, 0, 0, 0],
     'mgauss': [0, -2, 0, -1, 0, 0, 1],
     'meter': [1, 0, 0, 0, 0, 0, 0],
+    'meter/sec': [1, -1, 0, 0, 0, 0, 0],
+    'meter/sec/sec': [1, -2, 0, 0, 0, 0, 0],
+    'millisecond': [0, 1, 0, 0, 0, 0, 0],
+    'milliseconds': [0, 1, 0, 0, 0, 0, 0],
     'mm': [1, 0, 0, 0, 0, 0, 0],
     'ms': [0, 1, 0, 0, 0, 0, 0],
     'm/s': [1, -1, 0, 0, 0, 0, 0],
     'm/s/s': [1, -2, 0, 0, 0, 0, 0],
     's': [0, 1, 0, 0, 0, 0, 0],
+    'sec': [0, 1, 0, 0, 0, 0, 0],
     'us': [0, 1, 0, 0, 0, 0, 0],
 }
 
@@ -70,6 +74,10 @@ UNIT_TO_SCALAR = {
     'cm^2': (1, 10000),
     'gauss': (1, 1000),
     'meter': (1, 1),
+    'meter/sec': (1, 1),
+    'meter/sec/sec': (1, 1),
+    'millisecond': (1, 1000),
+    'milliseconds': (1, 1000),
     'm': (1, 1),
     'mgauss': (1, 10000000),
     'mm': (1, 1000),
@@ -77,15 +85,14 @@ UNIT_TO_SCALAR = {
     'm/s': (1, 1),
     'm/s/s': (1, 1),
     's': (1, 1),
+    'sec': (1, 1),
     'us': (1, 1000000),
 }
 
 # Stores the return type of functions.
-# TODO: can I provide better type information?
 _fn_name_to_return_type: Dict[str, DatatypeRef] = {}
 
 # Stores the types of variables.
-# TODO: can I provide better type information?
 _var_name_to_type: Dict[str, DatatypeRef] = {}
 
 # Stores if a type has any unit information associated with it.
@@ -109,6 +116,12 @@ Rational: DatatypeSortRef
 # A function that associates a function argument with a type.
 ArgType: FuncDeclRef
 
+# Global variable: the current TU's assert_and_check statements.
+tu_solver: Solver
+
+# Global variable: all the booleans that need assumed in this TU.
+tu_assertions: List[BoolRef] = []
+
 # Global variable: the Z3 solving context.
 solver: Solver
 
@@ -122,13 +135,17 @@ _use_power_of_ten: bool = False
 _enable_scalar_prefixes: bool = True
 
 # Stores member access strings with prior known types.
-_member_access_with_prior_types: Set[str] = set([])
+_member_access_with_prior_types: Set[str] = set()
+
+# Stores FQNs of frame accesses;
+_member_frame_accesses: Set[str] = set()
 
 # Functions to ignore.
 _IGNORE_FUNCS = {
     'AP_Logger_Backend::Write_Message',
     'calloc',
     'malloc',
+    'operator[]',
     'printf',
     'puts',
     'is_zero',
@@ -148,7 +165,7 @@ _IGNORE_MEMBERS = {
 
 
 def main():
-    global _enable_scalar_prefixes, _use_power_of_ten
+    global _enable_scalar_prefixes, _use_power_of_ten, tu_assertions, tu_solver, solver
 
     parser = argparse.ArgumentParser(
         description='checks source code for unit conversion errors',
@@ -179,6 +196,7 @@ def main():
     )
     parser.add_argument(
         '--power-of-10',
+        action=argparse.BooleanOptionalAction,
         dest='power_of_ten',
         help='use a power of 10 representation of unit scalars',
         required=False,
@@ -187,11 +205,20 @@ def main():
     )
     parser.add_argument(
         '--disable-scalar-prefixes',
+        action=argparse.BooleanOptionalAction,
         dest='disable_scalar_prefixes',
         help='do not use scalar prefixes. can speed up analysis.',
         required=False,
         type=bool,
         default=False,
+    )
+    parser.add_argument(
+        '--serialize-analysis',
+        dest='serialize_analysis_path',
+        help='path to save analysis results to',
+        required=False,
+        type=str,
+        default=None,
     )
     parsed_args = parser.parse_args()
 
@@ -199,6 +226,7 @@ def main():
     _enable_scalar_prefixes = not parsed_args.disable_scalar_prefixes
 
     initialize_z3()
+    tu_solver = solver
 
     with open(parsed_args.prior_types_path, 'r') as prior_types_fd:
         load_prior_types(prior_types_fd)
@@ -210,16 +238,51 @@ def main():
         parsed_args.compilation_database_path,
     )
 
+    analysis_dir: Optional[str] = parsed_args.serialize_analysis_path
+    all_assertions = tu_assertions
+
     start = time.time()
     count = 0
-    for tu in translation_units(compilation_database):
+    for tu in translation_units(compilation_database, analysis_dir):
+        if analysis_dir:
+            serialized_tu = read_tu(analysis_dir, tu)
+            modified_time = os.path.getmtime(tu.spelling)
+            if serialized_tu.serialization_time >= modified_time:
+                log(
+                    LogLevel.INFO,
+                    f'restoring {tu.spelling} from previous state...'
+                )
+                all_assertions += [Const(s, BoolSort())
+                                   for s in serialized_tu.assertions]
+                tmp_solver = Solver()
+                tmp_solver.from_string(serialized_tu.solver)
+                solver.add(tmp_solver.assertions())
+                continue
+        if isinstance(tu, SerializedTU):
+            all_assertions += [Const(s, BoolSort())
+                               for s in tu.assertions]
+            tmp_solver = Solver()
+            tmp_solver.from_string(tu.solver)
+            solver.add(tmp_solver.assertions())
+            continue
+
+        print(tu.spelling)
         count += 1
         log(
             LogLevel.INFO,
             f'{count} / {len(compilation_database.getAllCompileCommands())}',
         )
         cursor: cindex.Cursor = tu.cursor
+        tu_solver = Solver()
+        tu_assertions = []
         walk_ast(cursor, walker, {'Seen': set([])})
+
+        if analysis_dir:
+            serialize_tu(analysis_dir, tu, tu_solver, tu_assertions)
+
+        all_assertions += tu_assertions
+        solver.add(tu_solver.assertions())
+
     end = time.time()
     print(f'Parsing elapsed time: {end - start} seconds', flush=True)
 
@@ -231,7 +294,7 @@ def main():
     #     print(assertion)
 
     start = time.time()
-    status = solver.check()
+    status = solver.check(all_assertions)
     end = time.time()
     print(f'Z3 elapsed time: {end - start} seconds', flush=True)
     if status != sat:
@@ -242,10 +305,15 @@ def main():
 
     # for m in solver.model():
     #     print(f'{m} = {solver.model()[m]}')
+    print(f'Ignored {_ignored} of {_num_exprs}')
+
+
+_ignored = 0
+_num_exprs = 0
 
 
 def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
-    global _counter
+    global _counter, _ignored
     if cursor.location.file is not None:
         home = os.getenv('HOME')
         filename: str = cursor.location.file.name
@@ -259,15 +327,16 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
     if cursor.kind == cindex.CursorKind.FUNCTION_DECL or cursor.kind == cindex.CursorKind.CXX_METHOD:
         data['CurrentFn'] = get_fq_name(cursor)
-        data['next_id'] = 0
-        data['param_names_to_id'] = {}
+        data['ActiveConstraints'] = {}
+        data['NextId'] = 0
+        data['ParamNamesToId'] = {}
         return WalkResult.RECURSE
     elif cursor.kind == cindex.CursorKind.PARM_DECL:
-        if data.get('param_names_to_id') is None:
-            data['param_names_to_id'] = {}
-            data['next_id'] = 0
-        data['param_names_to_id'][cursor.spelling] = data['next_id']
-        data['next_id'] += 1
+        if data.get('ParamNamesToId') is None:
+            data['ParamNamesToId'] = {}
+            data['NextId'] = 0
+        data['ParamNamesToId'][cursor.spelling] = data['NextId']
+        data['NextId'] += 1
         return WalkResult.CONTINUE
     elif cursor.kind == cindex.CursorKind.VAR_DECL:
         # We have an uninitialized variable. Skip it for now.
@@ -292,16 +361,22 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
         return WalkResult.CONTINUE
     elif is_assignment_operator(cursor):
+        if get_lhs(cursor).spelling == 'operator[]':
+            _ignored += 1
+            return WalkResult.CONTINUE
+
         lhs_type = type_expr(get_lhs(cursor), data)
         if lhs_type is None:
             log(
                 LogLevel.WARNING,
                 f'unrecognized lhs type @ {cursor.location.file} line {cursor.location.line}',
             )
+            _ignored += 1
             return WalkResult.CONTINUE
 
         rhs_type = type_expr(get_rhs(cursor), data)
         if rhs_type is None:
+            _ignored += 1
             log(
                 LogLevel.WARNING,
                 f'unrecognized rhs type @ {cursor.location.file} line {cursor.location.line}',
@@ -310,7 +385,8 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
         assert_and_check(
             Or(
-                lhs_type == rhs_type,
+                # lhs_type == rhs_type,
+                types_equal(lhs_type, rhs_type),
                 And(
                     is_dimensionless(lhs_type),
                     is_dimensionless(rhs_type),
@@ -327,11 +403,17 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
         fq_fn_name = get_fq_name(cursor.referenced)
         if fq_fn_name in _IGNORE_FUNCS:
+            log(
+                LogLevel.WARNING,
+                f'Skipping function {fq_fn_name}'
+            )
+            _ignored += 1
             return WalkResult.CONTINUE
 
         func_name = String(fq_fn_name)
         for arg, arg_no in zip(get_arguments(cursor), range(0, 1000)):
             if arg is None:
+                _ignored += 1
                 log(
                     LogLevel.WARNING,
                     f'no argument cursor found in {cursor.location.file} on line {cursor.location.line}',
@@ -340,17 +422,35 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
             arg_type = type_expr(arg, data)
             if arg_type is None:
+                _ignored += 1
                 log(
                     LogLevel.WARNING,
                     f'unknown argument type in {cursor.location.file} on line {cursor.location.line}',
                 )
                 return WalkResult.RECURSE
             assert_and_check(
-                type_expr(arg, data) == ArgType(func_name, arg_no),
+                #type_expr(arg, data) == ArgType(func_name, arg_no),
+                types_equal(type_expr(arg, data), ArgType(func_name, arg_no)),
                 f'Call to {func_name.as_string()} in {cursor.location.file} on line {cursor.location.line} column {cursor.location.column} ({_counter})',
             )
             _counter += 1
         return WalkResult.RECURSE
+    elif cursor.kind == cindex.CursorKind.IF_STMT:
+        constraint = extract_conditional_constraints(cursor)
+        if constraint is None:
+            return WalkResult.RECURSE
+
+        data['ActiveConstraints'][constraint[0]] = constraint[1]
+        walk_ast(cursor, walker, data)
+
+        if has_return_statement(cursor):
+            data['ActiveConstraints'][
+                constraint[0]
+            ] = invert_frame(constraint[1])
+        else:
+            del data['ActiveConstraints'][constraint[0]]
+
+        return WalkResult.CONTINUE
     return WalkResult.RECURSE
 
 
@@ -360,7 +460,8 @@ def kind_printer(cursor: cindex.Cursor, _) -> WalkResult:
 
 
 def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[DatatypeRef]:
-    global _counter
+    global _counter, _ignored, _num_exprs
+    _num_exprs += 1
     if cursor.kind == cindex.CursorKind.CALL_EXPR:
         if cursor.referenced is None:
             log(
@@ -371,21 +472,27 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
 
         fq_fn_name = get_fq_name(cursor.referenced)
         if fq_fn_name in _IGNORE_FUNCS:
+            _ignored += 1
             return
 
         reference_typename = f'{get_fq_name(cursor.referenced)}_return_type'
         if _fn_name_to_return_type.get(reference_typename) is None:
-            _fn_name_to_return_type[reference_typename] = Const(
+            t = Const(
                 reference_typename,
                 Type,
+            )
+            _fn_name_to_return_type[reference_typename] = t
+            assert_and_check(
+                Type.is_constant(t) == False,
+                'return type is not a constant',
             )
 
         return _fn_name_to_return_type.get(reference_typename)
     elif cursor.kind == cindex.CursorKind.VARIABLE_REF or cursor.kind == cindex.CursorKind.DECL_REF_EXPR:
-        if context.get('CurrentFn') and cursor.spelling in context.get('param_names_to_id', {}):
+        if context.get('CurrentFn') and cursor.spelling in context.get('ParamNamesToId', {}):
             return ArgType(
                 String(context['CurrentFn']),
-                context['param_names_to_id'][cursor.spelling],
+                context['ParamNamesToId'][cursor.spelling],
             )
         if cursor.referenced is None:
             return
@@ -469,6 +576,10 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
                     ],
                 ),
                 Type.frame(lhs_type),
+                And(
+                    Type.is_constant(lhs_type),
+                    Type.is_constant(rhs_type),
+                ),
             )
             _counter += 1
             return product_type
@@ -481,8 +592,9 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
                 *UNIT_TO_BASE_UNIT_VECTOR['literal'],
                 *([0] * MAX_FUNCTION_PARAMETERS),
             ),
-            #FreshConst(Unit, 'literal_unit'),
+            # FreshConst(Unit, 'literal_unit'),
             FreshConst(Frames, 'literal_frames'),
+            True,
         )
         return literal_type
     elif cursor.kind == cindex.CursorKind.FLOATING_LITERAL:
@@ -492,12 +604,21 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
                 *UNIT_TO_BASE_UNIT_VECTOR['literal'],
                 *([0] * MAX_FUNCTION_PARAMETERS),
             ),
-            #FreshConst(Unit, 'literal_unit'),
+            # FreshConst(Unit, 'literal_unit'),
             FreshConst(Frames, 'literal_frames'),
+            True,
         )
     elif cursor.kind == cindex.CursorKind.MEMBER_REF_EXPR or cursor.kind == cindex.CursorKind.ARRAY_SUBSCRIPT_EXPR:
+        frame_constraint = None
+        if cursor.kind == cindex.CursorKind.MEMBER_REF_EXPR:
+            accessed_object = get_next_decl_ref_expr(cursor)
+            if accessed_object is not None:
+                obj_name = get_fq_name(accessed_object)
+                frame_constraint = context['ActiveConstraints'].get(obj_name)
+
         expr_repr = get_fq_member_expr(cursor)
         if expr_repr in _IGNORE_MEMBERS:
+            _ignored += 1
             return
         t = _member_access_to_type.get(expr_repr)
         if t is None:
@@ -505,6 +626,13 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             _member_access_to_type[
                 get_fq_member_expr(cursor)
             ] = t
+
+        if frame_constraint is not None:
+            return Type.type(
+                Type.unit(t),
+                frame_constraint,
+                False,
+            )
         return t
     elif cursor.kind == cindex.CursorKind.UNARY_OPERATOR:
         operator = get_unary_op(cursor)
@@ -519,6 +647,37 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
     # else:
     #     print(
     #         f'type_expr(): unrecognized cursor: {cursor.kind} in {cursor.location.file} on line {cursor.location.line}')
+
+
+def extract_conditional_constraints(if_stmt: cindex.Cursor) -> Optional[Tuple[str, DatatypeRef]]:
+    body_expr = get_lhs(if_stmt)
+    operator = get_binary_op(body_expr)
+    if operator == '==' or operator == '!=':
+        constrained_object = maybe_get_constrained_object(
+            body_expr,
+            _member_frame_accesses,
+        )
+        if constrained_object is None:
+            return
+
+        constraint_literal = maybe_get_constraint_literal(body_expr)
+        if constraint_literal is None:
+            return
+
+        if constraint_literal > NUM_FRAMES:
+            log(LogLevel.WARNING, f'Unrecognized frame: {constraint_literal}')
+            return
+
+        if operator == '==':
+            framev = [False] * NUM_FRAMES
+            framev[constraint_literal] = True
+        elif operator == '!=':
+            framev = [True] * NUM_FRAMES
+            framev[constraint_literal] = False
+
+        frame = Frames.frames(framev)
+
+        return (constrained_object, frame)
 
 
 def scalar_multiply(s1: DatatypeRef, s2: DatatypeRef) -> DatatypeRef:
@@ -560,10 +719,25 @@ def is_dimensionless(t: DatatypeRef) -> BoolRef:
     )
 
 
-def translation_units(compile_commands: cindex.CompilationDatabase) -> Iterator[cindex.TranslationUnit]:
+def translation_units(compile_commands: cindex.CompilationDatabase, cache_path: Optional[str]) -> Iterator[typing.Union[cindex.TranslationUnit, SerializedTU]]:
     '''Returns an iterator over a translation unit for each file in the compilation database.'''
     compile_command: cindex.CompileCommand
     for compile_command in compile_commands.getAllCompileCommands():
+        if cache_path:
+            full_path = os.path.join(
+                compile_command.directory,
+                compile_command.filename,
+            )
+            serialized_tu = read_tu(
+                cache_path,
+                full_path,
+            )
+            modified_time = os.path.getmtime(full_path)
+            if serialized_tu.serialization_time >= modified_time:
+                log(LogLevel.INFO, f'Using cached analysis for {full_path}')
+                yield serialized_tu
+                continue
+
         log(
             LogLevel.INFO,
             f'parsing {compile_command.filename}'
@@ -606,7 +780,28 @@ def create_scalar_instance(num: int = None, pair: Tuple[int, int] = None) -> Dat
             return Rational.rational(pair[0], pair[1])
     else:
         raise RuntimeError(
-            'No arguments provided to create_scalar_instance().')
+            'No arguments provided to create_scalar_instance().',
+        )
+
+
+def invert_frame(frame: DatatypeRef) -> DatatypeRef:
+    global _counter
+    f = FreshConst(Frames, 'inverted_frame')
+    assert_and_check(
+        And(
+            *[Frames.__dict__[f'frame_{i}'](f) != Frames.__dict__[f'frame_{i}'](frame)
+              for i in range(NUM_FRAMES)],
+        ),
+        f'frame inverted {_counter}',
+    )
+    _counter += 1
+    # solver.add(
+    #     And(
+    #         *[Frames.__dict__[f'frame_{i}'](f) != Frames.__dict__[f'frame_{i}'](frame)
+    #           for i in range(NUM_FRAMES)],
+    #     ),
+    # )
+    return f
 
 
 def declare_types():
@@ -614,8 +809,9 @@ def declare_types():
 
     scalar_dt: DatatypeSortRef
     if _use_power_of_ten:
-        #scalar_dt = RealSort()
+        # scalar_dt = RealSort()
         scalar_dt = IntSort()
+        Rational = IntSort()
     else:
         Rational = Datatype('Rational')
         Rational.declare(
@@ -654,8 +850,21 @@ def declare_types():
         'type',
         ('unit', Unit),
         ('frame', Frames),
+        ('is_constant', BoolSort()),
     )
     Type = Type.create()
+
+
+def types_equal(t1: DatatypeRef, t2: DatatypeRef) -> BoolRef:
+    '''Returns if the 2 types are equal (ignoring is_constant).'''
+    return Or(
+        And(
+            Type.unit(t1) == Type.unit(t2),
+            Type.frame(t1) == Type.frame(t2),
+        ),
+        Type.is_constant(t1),
+        Type.is_constant(t2),
+    )
 
 
 def initialize_z3():
@@ -689,7 +898,10 @@ def set_to_z3_set(set: Set[AstRef], sort: SortRef) -> ArrayRef:
 
 def assert_and_check(stmt: Any, msg: str):
     # solver.push()
-    solver.assert_and_track(stmt, msg)
+    b = Const(msg, BoolSort())
+    tu_solver.add(Implies(b, stmt))
+    tu_assertions.append(b)
+    # solver.assert_and_track(stmt, msg)
     # if solver.check() == unsat:
     #     for problem in solver.unsat_core():
     #         log(
@@ -768,9 +980,21 @@ def parse_variable_description(description: Dict[str, Any]):
         variable_type == Type.type(
             variable_unit,
             variable_frames,
+            False,
         ),
         f'{name} known from prior type file',
     )
+    # assert_and_check(
+    #     types_equal(
+    #         variable_type,
+    #         Type.type(
+    #             variable_unit,
+    #             variable_frames,
+    #             False,
+    #         ),
+    #     ),
+    #     f'{name} known from prior type file',
+    # )
 
 
 def load_message_definitions(io: TextIO):
@@ -789,6 +1013,8 @@ def parse_cmasi(xml: ET.ElementTree):
         struct_name = elt.attrib['Name']
         for field in elt:
             unit_name = field.attrib.get('Units')
+            if unit_name is None or unit_name.lower() == 'none':
+                continue
             if unit_name not in UNIT_TO_BASE_UNIT_VECTOR:
                 log(
                     LogLevel.WARNING,
@@ -810,7 +1036,7 @@ def parse_cmasi(xml: ET.ElementTree):
             #         *([0] * MAX_FUNCTION_PARAMETERS),
             #     ),
             # )
-            solver.assert_and_track(
+            tu_solver.assert_and_track(
                 return_unit == create_unit(
                     create_scalar_instance(pair=scalar),
                     *UNIT_TO_BASE_UNIT_VECTOR[unit_name],
@@ -818,10 +1044,11 @@ def parse_cmasi(xml: ET.ElementTree):
                 ),
                 f'{getter_name} return unit known from CMASI definition',
             )
-            solver.assert_and_track(
+            tu_solver.assert_and_track(
                 return_type == Type.type(
                     return_unit,
                     return_frames,
+                    False,
                 ),
                 f'{getter_name} known from CMASI definition',
             )
@@ -834,6 +1061,10 @@ def parse_mavlink(xml: ET.ElementTree):
         for field in message.findall('field'):
             unit_name = field.attrib.get('units')
             if not unit_name:
+                is_frame_field = field.attrib.get('enum') == 'MAV_FRAME'
+                if is_frame_field:
+                    _member_frame_accesses.add(
+                        f'{typename}.{field.attrib["name"]}')
                 continue
             elif unit_name not in UNIT_TO_BASE_UNIT_VECTOR:
                 log(
@@ -855,6 +1086,7 @@ def parse_mavlink(xml: ET.ElementTree):
                     *([0] * MAX_FUNCTION_PARAMETERS),
                 ),
                 Frames.frames(*[True for _ in range(NUM_FRAMES)]),
+                False,
             )
 
 
