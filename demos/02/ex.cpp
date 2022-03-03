@@ -63,7 +63,7 @@ struct mavlink_system_time_t : public parent {
 
 struct mavlink_set_home_position_t {
   int altitude;
-}
+};
 
 struct c : public parent {
   int x;
@@ -92,7 +92,7 @@ int main() {
   f(z * 100);
 
   // Error, because z is multiplied by 100 2x.
-  //n2::f(z * 100);
+  // n2::f(z * 100);
 
   // This is okay. We'll infer the return type of g().
   alt_in_cm = g();
