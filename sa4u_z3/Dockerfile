@@ -3,7 +3,7 @@ FROM python:3.10
 RUN apt-get update                      \
     && apt install -y                   \
            build-essential              \
-	       software-properties-common   \
+           software-properties-common   \
     && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -                                     \
     && add-apt-repository "deb http://apt.llvm.org/focal/     llvm-toolchain-focal-14    main"                  \
     && apt-get update                                                                                           \
