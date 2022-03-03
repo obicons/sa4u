@@ -246,11 +246,10 @@ def main():
 
 def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
     global _counter
-
     if cursor.location.file is not None:
         home = os.getenv('HOME')
         filename: str = cursor.location.file.name
-        if not filename.startswith(home):
+        if not filename.startswith(home) and not filename.startswith('/src/'):
             return WalkResult.CONTINUE
 
     cursor_descr = f'{cursor.location.line}_{cursor.location.column}_{cursor.get_usr()}'
