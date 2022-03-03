@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python3 /sa4u-src/main.py $@
