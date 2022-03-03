@@ -8,6 +8,11 @@ import {
 	DidChangeConfigurationNotification,
 	TextDocumentSyncKind,
 	InitializeResult,
+	CodeAction,
+	Command,
+	CodeActionKind,
+	TextDocumentEdit,
+	TextEdit,
 } from 'vscode-languageserver/node';
 
 import {
@@ -15,6 +20,7 @@ import {
 } from 'vscode-languageserver-textdocument';
 
 import { exec, ExecException } from 'child_process';
+import { promisify } from 'util';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -40,10 +46,14 @@ connection.onInitialize((params: InitializeParams) => {
 
 	const result: InitializeResult = {
 		capabilities: {
+			codeActionProvider: true,
 			textDocumentSync: TextDocumentSyncKind.Incremental,
 			// Tell the client that this server supports code completion.
 			completionProvider: {
-				resolveProvider: true
+				resolveProvider: true,
+			},
+			executeCommandProvider: {
+				commands: ['sa4u.fix']
 			}
 		}
 	};
@@ -108,33 +118,94 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	path = path.substring(0,path.lastIndexOf("/")+1);
 	path = path.replace(/(^\w+:|^)\/\//, '');
 	path = path.replace(/:/, '');
-	exec(`docker container run --rm -v ${path}:/src/ sa4u -c /src/ -p /src/ex_prior.json -m /src/CMASI.xml`,
-	(_error: ExecException | null, stdout: string, _stderr: string) => {
-			const incorrectStoreRegex = /Incorrect store to variable (.*) in (.*) line ([0-9]+)\. (.*)/;
-			const arrayout = stdout.split("\n");
-			const diagnostics: Diagnostic[] = [];
-			arrayout.forEach(line => {
-				const maybeMatchArray: RegExpMatchArray | null = line.match(incorrectStoreRegex);
-				if (maybeMatchArray == null)
-					return;
+	const diagnostics: Diagnostic[] = [];
+	const execPromise = promisify(exec);
+	const sa4uPromise = execPromise(`docker container run --rm -v ${path}:/src/ sa4u -c /src/ -p /src/ex_prior.json -m /src/CMASI.xml`);
+	const sa4uZ3Promise = execPromise(`docker container run --rm --mount type=bind,source="${path}",target="/src/" sa4u-z3 -c /src/ -p /src/ex_prior.json -m /src/CMASI.xml`);
+	const sa4uOutput = await sa4uPromise;
+	const sa4uZ3Output = await sa4uZ3Promise;
+	const createDiagnostics = (input:{stdout:string, stderr:string}, regex:RegExp, isZ3:boolean) => {
+		const arrayout = input.stdout.split("\n");
+		arrayout.forEach(line => {
+			const maybeMatchArray: RegExpMatchArray | null = line.match(regex);
+			if (maybeMatchArray == null)
+				return;
+			if (isZ3) {
 				const [_, var_name, file_name, line_no, message] = maybeMatchArray;
-				
+			
 				const diagnostic: Diagnostic = {
 					severity: DiagnosticSeverity.Error,
 					range: {
-						start: {line: parseInt(line_no)-1, character: 0},//textDocument.positionAt(m.index),
-						end: {line: parseInt(line_no), character: 0},//textDocument.positionAt(m.index + m[0].length)
+						start: {line: parseInt(line_no)-1, character: 0},
+						end: {line: parseInt(line_no), character: 0},
 					},
 					message: `Incorrect store to ${var_name}. ${message}`,
 					source: `${file_name}`
 				};
 				diagnostics.push(diagnostic);
-				
-			});
-			connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
-		}
-	);
+			} else {
+				const [_, var_name, file_name, line_no] = maybeMatchArray;
+			
+				const diagnostic: Diagnostic = {
+					severity: DiagnosticSeverity.Error,
+					range: {
+						start: {line: parseInt(line_no)-1, character: 0},
+						end: {line: parseInt(line_no), character: 0},
+					},
+					message: `Incorrect store to ${var_name}.`,
+					source: `${file_name}`,
+					data: {title: `Multiply ${var_name} by 100.`, change: ' * 100'}
+				};
+				diagnostics.push(diagnostic);
+			}
+		});
+	};
+	createDiagnostics(sa4uOutput, /Incorrect store to variable (.*) in (.*) line ([0-9]+)\. (.*)/, false);
+	createDiagnostics(sa4uZ3Output, /Variable (.*) declared in (.*) on line ([0-9]+) \((.*)\)/, true);
+	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
+
+connection.onCodeAction((params) => {
+	const textDocument = documents.get(params.textDocument.uri);
+	if (textDocument === undefined) {
+		return undefined;
+	}
+	const codeActions: CodeAction[] = [];
+	for (let i=0; i<params.context.diagnostics.length; i++) {
+		const diagnostic = params.context.diagnostics[i];
+		if (params.range.start.line == diagnostic.range.start.line && params.range.start.character == diagnostic.range.start.character && params.range.end.line == diagnostic.range.end.line && params.range.end.character == diagnostic.range.end.character) {
+			if(diagnostic.data){
+				const data = (Object)(diagnostic.data);
+				const title = data.title;
+				codeActions.push(CodeAction.create(title, Command.create(title, 'sa4u.fix', textDocument.uri, data.change, diagnostic.range), CodeActionKind.QuickFix));
+			}
+		}
+	}
+	return codeActions;
+});
+
+connection.onExecuteCommand(async (params) => {
+	if (params.arguments ===  undefined) {
+		return;
+	}
+	if(params.command === 'sa4u.fix') {
+		const textDocument = documents.get(params.arguments[0]);
+		if (textDocument === undefined) {
+			return;
+		}
+		const newText = params.arguments[1];
+		if(typeof newText === 'string'){
+			connection.workspace.applyEdit({
+				documentChanges: [
+					TextDocumentEdit.create({ uri: textDocument.uri, version: textDocument.version }, [
+						TextEdit.insert(textDocument.positionAt(textDocument.offsetAt({line: params.arguments[2].end.line, character: params.arguments[2].end.character})-3), newText)
+					])
+				]
+			});
+		}
+		//save the file
+	}
+});
 
 connection.onDidChangeWatchedFiles(_change => {
 	// Monitored files have change in VSCode
