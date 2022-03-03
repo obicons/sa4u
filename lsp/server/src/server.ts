@@ -12,7 +12,7 @@ import {
 	Command,
 	CodeActionKind,
 	TextDocumentEdit,
-	TextEdit,
+	TextEdit
 } from 'vscode-languageserver/node';
 
 import {
@@ -130,6 +130,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 			const maybeMatchArray: RegExpMatchArray | null = line.match(regex);
 			if (maybeMatchArray == null)
 				return;
+      
 			if (isZ3) {
 				const [_, var_name, file_name, line_no, message] = maybeMatchArray;
 			
@@ -170,6 +171,7 @@ connection.onCodeAction((params) => {
 	if (textDocument === undefined) {
 		return undefined;
 	}
+
 	const codeActions: CodeAction[] = [];
 	for (let i=0; i<params.context.diagnostics.length; i++) {
 		const diagnostic = params.context.diagnostics[i];
