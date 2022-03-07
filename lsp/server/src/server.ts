@@ -12,8 +12,7 @@ import {
 	Command,
 	CodeActionKind,
 	TextDocumentEdit,
-	TextEdit,
-	Position,
+	TextEdit
 } from 'vscode-languageserver/node';
 
 import {
@@ -22,6 +21,7 @@ import {
 
 import { exec, ExecException } from 'child_process';
 import { promisify } from 'util';
+
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 const connection = createConnection(ProposedFeatures.all);
@@ -122,32 +122,48 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	const execPromise = promisify(exec);
 	const sa4uPromise = execPromise(`docker container run --rm -v ${path}:/src/ sa4u -c /src/ -p /src/ex_prior.json -m /src/CMASI.xml`);
 	const sa4uZ3Promise = execPromise(`docker container run --rm --mount type=bind,source="${path}",target="/src/" sa4u-z3 -c /src/ -p /src/ex_prior.json -m /src/CMASI.xml`);
-	const sa4uOuput = await sa4uPromise;
-	const sa4uZ3Ouput = await sa4uZ3Promise;
-	const createDiagnostics = (input:{stdout:string, stderr:string}, regex:RegExp) => {
+	const sa4uOutput = await sa4uPromise;
+	const sa4uZ3Output = await sa4uZ3Promise;
+	const createDiagnostics = (input:{stdout:string, stderr:string}, regex:RegExp, isZ3:boolean) => {
 		const arrayout = input.stdout.split("\n");
 		arrayout.forEach(line => {
 			const maybeMatchArray: RegExpMatchArray | null = line.match(regex);
 			if (maybeMatchArray == null)
 				return;
-			const [_, var_name, file_name, line_no, message] = maybeMatchArray;
-				
-			const diagnostic: Diagnostic = {
-				severity: DiagnosticSeverity.Error,
-				range: {
-					start: {line: parseInt(line_no)-1, character: 0},
-					end: {line: parseInt(line_no), character: 0},
-				},
-				message: `Incorrect store to ${var_name}. ${message}`,
-				source: `${file_name}`,
-				data: {title: `Multiply ${var_name} by 100.`, change: ' * 100'}
-			};
-			diagnostics.push(diagnostic);		
+      
+			if (isZ3) {
+				const [_, var_name, file_name, line_no, message] = maybeMatchArray;
+			
+				const diagnostic: Diagnostic = {
+					severity: DiagnosticSeverity.Error,
+					range: {
+						start: {line: parseInt(line_no)-1, character: 0},
+						end: {line: parseInt(line_no), character: 0},
+					},
+					message: `Incorrect store to ${var_name}. ${message}`,
+					source: `${file_name}`
+				};
+				diagnostics.push(diagnostic);
+			} else {
+				const [_, var_name, file_name, line_no] = maybeMatchArray;
+			
+				const diagnostic: Diagnostic = {
+					severity: DiagnosticSeverity.Error,
+					range: {
+						start: {line: parseInt(line_no)-1, character: 0},
+						end: {line: parseInt(line_no), character: 0},
+					},
+					message: `Incorrect store to ${var_name}.`,
+					source: `${file_name}`,
+					data: {title: `Multiply ${var_name} by 100.`, change: ' * 100'}
+				};
+				diagnostics.push(diagnostic);
+			}
 		});
 	};
-	createDiagnostics(sa4uOuput, /Incorrect store to variable (.*) in (.*) line ([0-9]+)\. (.*)/);
-	createDiagnostics(sa4uZ3Ouput, /Variable (.*) declared in (.*) on line ([0-9]+) \((.*)\)/);
-	connection.sendDiagnostics({ uri: textDocument.uri, version: textDocument.version, diagnostics });
+	createDiagnostics(sa4uOutput, /Incorrect store to variable (.*) in (.*) line ([0-9]+)\. (.*)/, false);
+	createDiagnostics(sa4uZ3Output, /Variable (.*) declared in (.*) on line ([0-9]+) \((.*)\)/, true);
+	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
 
 connection.onCodeAction((params) => {
@@ -155,11 +171,19 @@ connection.onCodeAction((params) => {
 	if (textDocument === undefined) {
 		return undefined;
 	}
-	const data = (Object)(params.context.diagnostics[0].data);
-	const title = data.title;
-	if (params.context.diagnostics[0].data) {
-		return [CodeAction.create(title, Command.create(title, 'sa4u.fix', textDocument.uri, data.change, params.context.diagnostics[0].range), CodeActionKind.QuickFix)];
+
+	const codeActions: CodeAction[] = [];
+	for (let i=0; i<params.context.diagnostics.length; i++) {
+		const diagnostic = params.context.diagnostics[i];
+		if (params.range.start.line == diagnostic.range.start.line && params.range.start.character == diagnostic.range.start.character && params.range.end.line == diagnostic.range.end.line && params.range.end.character == diagnostic.range.end.character) {
+			if(diagnostic.data){
+				const data = (Object)(diagnostic.data);
+				const title = data.title;
+				codeActions.push(CodeAction.create(title, Command.create(title, 'sa4u.fix', textDocument.uri, data.change, diagnostic.range), CodeActionKind.QuickFix));
+			}
+		}
 	}
+	return codeActions;
 });
 
 connection.onExecuteCommand(async (params) => {
