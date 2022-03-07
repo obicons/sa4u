@@ -21,6 +21,7 @@ import {
 
 import { exec, ExecException } from 'child_process';
 import { promisify } from 'util';
+import { stringify } from 'querystring';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -48,10 +49,6 @@ connection.onInitialize((params: InitializeParams) => {
 		capabilities: {
 			codeActionProvider: true,
 			textDocumentSync: TextDocumentSyncKind.Incremental,
-			// Tell the client that this server supports code completion.
-			completionProvider: {
-				resolveProvider: true,
-			},
 			executeCommandProvider: {
 				commands: ['sa4u.fix']
 			}
@@ -120,49 +117,83 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	path = path.replace(/:/, '');
 	const diagnostics: Diagnostic[] = [];
 	const execPromise = promisify(exec);
-	const sa4uPromise = execPromise(`docker container run --rm -v ${path}:/src/ sa4u -c /src/ -p /src/ex_prior.json -m /src/CMASI.xml`);
+	//const sa4uPromise = execPromise(`docker container run --rm -v ${path}:/src/ sa4u -c /src/ -p /src/ex_prior.json -m /src/CMASI.xml`);
 	const sa4uZ3Promise = execPromise(`docker container run --rm --mount type=bind,source="${path}",target="/src/" sa4u-z3 -c /src/ -p /src/ex_prior.json -m /src/CMASI.xml`);
-	const sa4uOutput = await sa4uPromise;
+	//const sa4uOutput = await sa4uPromise;
 	const sa4uZ3Output = await sa4uZ3Promise;
-	const createDiagnostics = (input:{stdout:string, stderr:string}, regex:RegExp, isZ3:boolean) => {
-		const arrayout = input.stdout.split("\n");
-		arrayout.forEach(line => {
-			const maybeMatchArray: RegExpMatchArray | null = line.match(regex);
-			if (maybeMatchArray == null)
-				return;
-      
-			if (isZ3) {
-				const [_, var_name, file_name, line_no, message] = maybeMatchArray;
-			
-				const diagnostic: Diagnostic = {
+
+	const createDiagnostics = (line: string) => {
+		const parsers = [
+			{
+				regex: /Incorrect store to variable (.*) in (.*) line ([0-9]+)\. (.*)/,
+				parse: ([_, varName, filename, lineNo]: string[]) => ({
 					severity: DiagnosticSeverity.Error,
 					range: {
-						start: {line: parseInt(line_no)-1, character: 0},
-						end: {line: parseInt(line_no), character: 0},
+						start: {line: parseInt(lineNo)-1, character: 0},
+						end: {line: parseInt(lineNo), character: 0},
 					},
-					message: `Incorrect store to ${var_name}. ${message}`,
-					source: `${file_name}`
-				};
-				diagnostics.push(diagnostic);
-			} else {
-				const [_, var_name, file_name, line_no] = maybeMatchArray;
-			
-				const diagnostic: Diagnostic = {
-					severity: DiagnosticSeverity.Error,
-					range: {
-						start: {line: parseInt(line_no)-1, character: 0},
-						end: {line: parseInt(line_no), character: 0},
-					},
-					message: `Incorrect store to ${var_name}.`,
-					source: `${file_name}`,
-					data: {title: `Multiply ${var_name} by 100.`, change: ' * 100'}
-				};
-				diagnostics.push(diagnostic);
+					message: `Incorrect store to ${varName}.`,
+					source: `${filename}`,
+					data: {title: `Multiply ${varName} by 100.`, change: ' * 100'}
+				}),
+			},
+			{
+				regex: /Variable (.*) declared in (.*) on line ([0-9]+) \((.*)\)/,
+				parse: ([_, varName, filename, line]: string[]) => ({
+						severity: DiagnosticSeverity.Error,
+						range: {
+							start: {line: parseInt(line)-1, character: 0},
+							end: {line: parseInt(line), character: 0},
+						},
+						message: `Incorrect store to ${varName}.`,
+						source: `${filename}`,
+						data: {title: `Multiply ${varName} by 100.`, change: ' * 100'},
+				}),
+			},
+			{
+				regex: /Assignment to (.*) in (.*) on line ([0-9]+)/,
+				parse: ([_, varName, filename, line]: string[]) => ({
+						severity: DiagnosticSeverity.Error,
+						range: {
+							start: {line: parseInt(line)-1, character: 0},
+							end: {line: parseInt(line), character: 0},
+						},
+						message: `Stores to ${varName}.`,
+						source: `${filename}`,
+						data: {title: `Multiply ${varName} by 100.`, change: ' * 100'},
+				}),
+			},
+			{
+				regex: /Call to (.*) in (.*) on line ([0-9]+)/,
+				parse: ([_, functionName, filename, line]: string[]) => ({
+						severity: DiagnosticSeverity.Error,
+						range: {
+							start: {line: parseInt(line)-1, character: 0},
+							end: {line: parseInt(line), character: 0},
+						},
+						message: `Calls to ${functionName}.`,
+						source: `${filename}`,
+				}),
+			},
+		];
+
+		for (const parser of parsers) {
+			const maybeMatch = line.match(parser.regex);
+			if (maybeMatch) {
+				diagnostics.push(parser.parse(maybeMatch));
+				break;
 			}
-		});
+		}
 	};
-	createDiagnostics(sa4uOutput, /Incorrect store to variable (.*) in (.*) line ([0-9]+)\. (.*)/, false);
-	createDiagnostics(sa4uZ3Output, /Variable (.*) declared in (.*) on line ([0-9]+) \((.*)\)/, true);
+
+	const outputs = [
+		//sa4uOutput,
+		sa4uZ3Output,
+	];
+	for (const tool of outputs) {
+		tool.stdout.split('\n').forEach(line => createDiagnostics(line));
+	}
+
 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
 
