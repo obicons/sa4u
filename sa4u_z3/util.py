@@ -2,7 +2,7 @@ import ctypes
 import sys
 import clang.cindex as cindex
 import enum
-from typing import Any, Callable, Dict, List, Iterator, TypeVar
+from typing import Any, Callable, Dict, List, Iterator, Optional, Set, TypeVar
 
 
 class WalkResult(enum.Enum):
@@ -198,3 +198,49 @@ def log(level: LogLevel, *args):
     }
     print(level_to_str[level], sep='', end=' ', file=sys.stderr)
     print(*args, flush=True, file=sys.stderr)
+
+
+def has_return_statement(cursor: cindex.Cursor) -> bool:
+    '''Returns if the cursor has a return statement.'''
+    def has_return_statement_walker(cursor: cindex.Cursor, data: Dict[Any, Any]):
+        if cursor.kind == cindex.CursorKind.RETURN_STMT:
+            data['HasReturn'] = True
+            return WalkResult.BREAK
+        return WalkResult.RECURSE
+
+    data = {}
+    walk_ast(cursor, has_return_statement_walker, data)
+    return data.get('HasReturn', False)
+
+
+def get_next_decl_ref_expr(cursor: cindex.Cursor) -> Optional[cindex.Cursor]:
+    def walker(cursor: cindex.Cursor, data: Dict[str, cindex.Cursor]) -> WalkResult:
+        if data.get('Decl') is None and cursor.kind == cindex.CursorKind.DECL_REF_EXPR:
+            data['Decl'] = cursor
+            return WalkResult.BREAK
+        return WalkResult.RECURSE
+
+    data = {}
+    walk_ast(cursor, walker, data)
+    return data.get('Decl')
+
+
+def maybe_get_constrained_object(cursor: cindex.Cursor, frame_accesses: Set[str]) -> Optional[str]:
+    '''Returns the name of the object whose frame is constrained if cursor constrains a frame.'''
+    the_member_access = get_lhs(cursor)
+    if the_member_access.kind != cindex.CursorKind.MEMBER_REF_EXPR:
+        the_member_access = get_rhs(cursor)
+
+    if the_member_access.kind == cindex.CursorKind.MEMBER_REF_EXPR:
+        access = get_fq_member_expr(the_member_access)
+        if access in frame_accesses:
+            return get_fq_name(get_next_decl_ref_expr(the_member_access))
+
+
+def maybe_get_constraint_literal(cursor: cindex.Cursor) -> Optional[int]:
+    the_literal = get_lhs(cursor)
+    if the_literal.kind != cindex.CursorKind.INTEGER_LITERAL:
+        the_literal = get_rhs(cursor)
+
+    if the_literal.kind == cindex.CursorKind.INTEGER_LITERAL:
+        return get_integer_literal(the_literal)

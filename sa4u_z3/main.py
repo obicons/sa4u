@@ -1,6 +1,5 @@
 import argparse
 import ccsyspath
-from pyexpat import model
 import clang.cindex as cindex
 import json
 import os.path
@@ -81,11 +80,9 @@ UNIT_TO_SCALAR = {
 }
 
 # Stores the return type of functions.
-# TODO: can I provide better type information?
 _fn_name_to_return_type: Dict[str, DatatypeRef] = {}
 
 # Stores the types of variables.
-# TODO: can I provide better type information?
 _var_name_to_type: Dict[str, DatatypeRef] = {}
 
 # Stores if a type has any unit information associated with it.
@@ -122,7 +119,10 @@ _use_power_of_ten: bool = False
 _enable_scalar_prefixes: bool = True
 
 # Stores member access strings with prior known types.
-_member_access_with_prior_types: Set[str] = set([])
+_member_access_with_prior_types: Set[str] = set()
+
+# Stores FQNs of frame accesses;
+_member_frame_accesses: Set[str] = set()
 
 # Functions to ignore.
 _IGNORE_FUNCS = {
@@ -259,15 +259,16 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
     if cursor.kind == cindex.CursorKind.FUNCTION_DECL or cursor.kind == cindex.CursorKind.CXX_METHOD:
         data['CurrentFn'] = get_fq_name(cursor)
-        data['next_id'] = 0
-        data['param_names_to_id'] = {}
+        data['ActiveConstraints'] = {}
+        data['NextId'] = 0
+        data['ParamNamesToId'] = {}
         return WalkResult.RECURSE
     elif cursor.kind == cindex.CursorKind.PARM_DECL:
-        if data.get('param_names_to_id') is None:
-            data['param_names_to_id'] = {}
-            data['next_id'] = 0
-        data['param_names_to_id'][cursor.spelling] = data['next_id']
-        data['next_id'] += 1
+        if data.get('ParamNamesToId') is None:
+            data['ParamNamesToId'] = {}
+            data['NextId'] = 0
+        data['ParamNamesToId'][cursor.spelling] = data['NextId']
+        data['NextId'] += 1
         return WalkResult.CONTINUE
     elif cursor.kind == cindex.CursorKind.VAR_DECL:
         # We have an uninitialized variable. Skip it for now.
@@ -351,6 +352,22 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
             )
             _counter += 1
         return WalkResult.RECURSE
+    elif cursor.kind == cindex.CursorKind.IF_STMT:
+        constraint = extract_conditional_constraints(cursor)
+        if constraint is None:
+            return WalkResult.RECURSE
+
+        data['ActiveConstraints'][constraint[0]] = constraint[1]
+        walk_ast(cursor, walker, data)
+
+        if has_return_statement(cursor):
+            data['ActiveConstraints'][
+                constraint[0]
+            ] = invert_frame(constraint[1])
+        else:
+            del data['ActiveConstraints'][constraint[0]]
+
+        return WalkResult.CONTINUE
     return WalkResult.RECURSE
 
 
@@ -382,10 +399,10 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
 
         return _fn_name_to_return_type.get(reference_typename)
     elif cursor.kind == cindex.CursorKind.VARIABLE_REF or cursor.kind == cindex.CursorKind.DECL_REF_EXPR:
-        if context.get('CurrentFn') and cursor.spelling in context.get('param_names_to_id', {}):
+        if context.get('CurrentFn') and cursor.spelling in context.get('ParamNamesToId', {}):
             return ArgType(
                 String(context['CurrentFn']),
-                context['param_names_to_id'][cursor.spelling],
+                context['ParamNamesToId'][cursor.spelling],
             )
         if cursor.referenced is None:
             return
@@ -496,6 +513,13 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             FreshConst(Frames, 'literal_frames'),
         )
     elif cursor.kind == cindex.CursorKind.MEMBER_REF_EXPR or cursor.kind == cindex.CursorKind.ARRAY_SUBSCRIPT_EXPR:
+        frame_constraint = None
+        if cursor.kind == cindex.CursorKind.MEMBER_REF_EXPR:
+            accessed_object = get_next_decl_ref_expr(cursor)
+            if accessed_object is not None:
+                obj_name = get_fq_name(accessed_object)
+                frame_constraint = context['ActiveConstraints'].get(obj_name)
+
         expr_repr = get_fq_member_expr(cursor)
         if expr_repr in _IGNORE_MEMBERS:
             return
@@ -505,6 +529,12 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             _member_access_to_type[
                 get_fq_member_expr(cursor)
             ] = t
+
+        if frame_constraint is not None:
+            return Type.type(
+                Type.unit(t),
+                frame_constraint,
+            )
         return t
     elif cursor.kind == cindex.CursorKind.UNARY_OPERATOR:
         operator = get_unary_op(cursor)
@@ -519,6 +549,37 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
     # else:
     #     print(
     #         f'type_expr(): unrecognized cursor: {cursor.kind} in {cursor.location.file} on line {cursor.location.line}')
+
+
+def extract_conditional_constraints(if_stmt: cindex.Cursor) -> Optional[Tuple[str, DatatypeRef]]:
+    body_expr = get_lhs(if_stmt)
+    operator = get_binary_op(body_expr)
+    if operator == '==' or operator == '!=':
+        constrained_object = maybe_get_constrained_object(
+            body_expr,
+            _member_frame_accesses,
+        )
+        if constrained_object is None:
+            return
+
+        constraint_literal = maybe_get_constraint_literal(body_expr)
+        if constraint_literal is None:
+            return
+
+        if constraint_literal > NUM_FRAMES:
+            log(LogLevel.WARNING, f'Unrecognized frame: {constraint_literal}')
+            return
+
+        if operator == '==':
+            framev = [False] * NUM_FRAMES
+            framev[constraint_literal] = True
+        elif operator == '!=':
+            framev = [True] * NUM_FRAMES
+            framev[constraint_literal] = False
+
+        frame = Frames.frames(framev)
+
+        return (constrained_object, frame)
 
 
 def scalar_multiply(s1: DatatypeRef, s2: DatatypeRef) -> DatatypeRef:
@@ -606,7 +667,19 @@ def create_scalar_instance(num: int = None, pair: Tuple[int, int] = None) -> Dat
             return Rational.rational(pair[0], pair[1])
     else:
         raise RuntimeError(
-            'No arguments provided to create_scalar_instance().')
+            'No arguments provided to create_scalar_instance().',
+        )
+
+
+def invert_frame(frame: DatatypeRef) -> DatatypeRef:
+    f = FreshConst(Frames, 'inverted_frame')
+    solver.add(
+        And(
+            *[Frames.__dict__[f'frame_{i}'](f) != Frames.__dict__[f'frame_{i}'](frame)
+              for i in range(NUM_FRAMES)],
+        ),
+    )
+    return f
 
 
 def declare_types():
@@ -834,6 +907,10 @@ def parse_mavlink(xml: ET.ElementTree):
         for field in message.findall('field'):
             unit_name = field.attrib.get('units')
             if not unit_name:
+                is_frame_field = field.attrib.get('enum') == 'MAV_FRAME'
+                if is_frame_field:
+                    _member_frame_accesses.add(
+                        f'{typename}.{field.attrib["name"]}')
                 continue
             elif unit_name not in UNIT_TO_BASE_UNIT_VECTOR:
                 log(

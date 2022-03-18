@@ -73,6 +73,11 @@ struct c : public parent {
   }
 };
 
+struct mavlink_obstacle_distance_t {
+  unsigned char frame;
+  int min_distance;
+};
+
 int main() {
   using namespace afrl;
   using namespace n1;
@@ -134,4 +139,19 @@ int main() {
 
   // Error: type(arr[0]) != type(arr[1])
   //arr[1] = alt_in_cm * 100;
+
+  mavlink_obstacle_distance_t dist;
+  if (dist.frame == 0) {
+    // This is okay, since we know the frame of dist.
+    alt_in_cm = dist.min_distance;
+  }
+
+  // This is not okay, since dist could have any frame.
+  // alt_in_cm = dist.min_distance;
+
+  // This is okay, since it proves that dist.frame must be correct.
+  if (dist.frame != 0) {
+    return;
+  }
+  alt_in_cm = dist.min_distance;
 }
