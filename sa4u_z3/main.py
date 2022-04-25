@@ -4,6 +4,7 @@ import clang.cindex as cindex
 import json
 import os.path
 import time
+import typing
 import xml.etree.ElementTree as ET
 from typing import Any, Dict, Iterator, Optional, Set, TextIO, Tuple
 from util import *
@@ -37,7 +38,6 @@ MAV_FRAME_TO_ID = {
 NUM_FRAMES = len(list(MAV_FRAME_TO_ID.keys()))
 
 # The maximum number of parameters one of our functions can accept.
-# MAX_FUNCTION_PARAMETERS = 42
 MAX_FUNCTION_PARAMETERS = 0
 
 # Maps unit names to their base vector.
@@ -51,11 +51,16 @@ UNIT_TO_BASE_UNIT_VECTOR = {
     'm': [1, 0, 0, 0, 0, 0, 0],
     'mgauss': [0, -2, 0, -1, 0, 0, 1],
     'meter': [1, 0, 0, 0, 0, 0, 0],
+    'meter/sec': [1, -1, 0, 0, 0, 0, 0],
+    'meter/sec/sec': [1, -2, 0, 0, 0, 0, 0],
+    'millisecond': [0, 1, 0, 0, 0, 0, 0],
+    'milliseconds': [0, 1, 0, 0, 0, 0, 0],
     'mm': [1, 0, 0, 0, 0, 0, 0],
     'ms': [0, 1, 0, 0, 0, 0, 0],
     'm/s': [1, -1, 0, 0, 0, 0, 0],
     'm/s/s': [1, -2, 0, 0, 0, 0, 0],
     's': [0, 1, 0, 0, 0, 0, 0],
+    'sec': [0, 1, 0, 0, 0, 0, 0],
     'us': [0, 1, 0, 0, 0, 0, 0],
 }
 
@@ -69,6 +74,10 @@ UNIT_TO_SCALAR = {
     'cm^2': (1, 10000),
     'gauss': (1, 1000),
     'meter': (1, 1),
+    'meter/sec': (1, 1),
+    'meter/sec/sec': (1, 1),
+    'millisecond': (1, 1000),
+    'milliseconds': (1, 1000),
     'm': (1, 1),
     'mgauss': (1, 10000000),
     'mm': (1, 1000),
@@ -76,6 +85,7 @@ UNIT_TO_SCALAR = {
     'm/s': (1, 1),
     'm/s/s': (1, 1),
     's': (1, 1),
+    'sec': (1, 1),
     'us': (1, 1000000),
 }
 
@@ -105,6 +115,12 @@ Rational: DatatypeSortRef
 
 # A function that associates a function argument with a type.
 ArgType: FuncDeclRef
+
+# Global variable: the current TU's assert_and_check statements.
+tu_solver: Solver
+
+# Global variable: all the booleans that need assumed in this TU.
+tu_assertions: List[BoolRef] = []
 
 # Global variable: the Z3 solving context.
 solver: Solver
@@ -148,7 +164,7 @@ _IGNORE_MEMBERS = {
 
 
 def main():
-    global _enable_scalar_prefixes, _use_power_of_ten
+    global _enable_scalar_prefixes, _use_power_of_ten, tu_assertions, tu_solver, solver
 
     parser = argparse.ArgumentParser(
         description='checks source code for unit conversion errors',
@@ -179,6 +195,7 @@ def main():
     )
     parser.add_argument(
         '--power-of-10',
+        action=argparse.BooleanOptionalAction,
         dest='power_of_ten',
         help='use a power of 10 representation of unit scalars',
         required=False,
@@ -187,11 +204,20 @@ def main():
     )
     parser.add_argument(
         '--disable-scalar-prefixes',
+        action=argparse.BooleanOptionalAction,
         dest='disable_scalar_prefixes',
         help='do not use scalar prefixes. can speed up analysis.',
         required=False,
         type=bool,
         default=False,
+    )
+    parser.add_argument(
+        '--serialize-analysis',
+        dest='serialize_analysis_path',
+        help='path to save analysis results to',
+        required=False,
+        type=str,
+        default=None,
     )
     parsed_args = parser.parse_args()
 
@@ -199,6 +225,7 @@ def main():
     _enable_scalar_prefixes = not parsed_args.disable_scalar_prefixes
 
     initialize_z3()
+    tu_solver = solver
 
     with open(parsed_args.prior_types_path, 'r') as prior_types_fd:
         load_prior_types(prior_types_fd)
@@ -210,16 +237,51 @@ def main():
         parsed_args.compilation_database_path,
     )
 
+    analysis_dir: Optional[str] = parsed_args.serialize_analysis_path
+    all_assertions = tu_assertions
+
     start = time.time()
     count = 0
-    for tu in translation_units(compilation_database):
+    for tu in translation_units(compilation_database, analysis_dir):
+        # if analysis_dir:
+        #     serialized_tu = read_tu(analysis_dir, tu)
+        #     modified_time = os.path.getmtime(tu.spelling)
+        #     if serialized_tu.serialization_time >= modified_time:
+        #         log(
+        #             LogLevel.INFO,
+        #             f'restoring {tu.spelling} from previous state...'
+        #         )
+        #         all_assertions += [Const(s, BoolSort())
+        #                            for s in serialized_tu.assertions]
+        #         tmp_solver = Solver()
+        #         tmp_solver.from_string(serialized_tu.solver)
+        #         solver.add(tmp_solver.assertions())
+        #         continue
+        if isinstance(tu, SerializedTU):
+            all_assertions += [Const(s, BoolSort())
+                               for s in tu.assertions]
+            tmp_solver = Solver()
+            tmp_solver.from_string(tu.solver)
+            solver.add(tmp_solver.assertions())
+            continue
+
+        print(tu.spelling)
         count += 1
         log(
             LogLevel.INFO,
             f'{count} / {len(compilation_database.getAllCompileCommands())}',
         )
         cursor: cindex.Cursor = tu.cursor
+        tu_solver = Solver()
+        tu_assertions = []
         walk_ast(cursor, walker, {'Seen': set([])})
+
+        if analysis_dir:
+            serialize_tu(analysis_dir, tu, tu_solver, tu_assertions)
+
+        all_assertions += tu_assertions
+        solver.add(tu_solver.assertions())
+
     end = time.time()
     print(f'Parsing elapsed time: {end - start} seconds', flush=True)
 
@@ -231,7 +293,7 @@ def main():
     #     print(assertion)
 
     start = time.time()
-    status = solver.check()
+    status = solver.check(all_assertions)
     end = time.time()
     print(f'Z3 elapsed time: {end - start} seconds', flush=True)
     if status != sat:
@@ -498,7 +560,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
                 *UNIT_TO_BASE_UNIT_VECTOR['literal'],
                 *([0] * MAX_FUNCTION_PARAMETERS),
             ),
-            #FreshConst(Unit, 'literal_unit'),
+            # FreshConst(Unit, 'literal_unit'),
             FreshConst(Frames, 'literal_frames'),
         )
         return literal_type
@@ -509,7 +571,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
                 *UNIT_TO_BASE_UNIT_VECTOR['literal'],
                 *([0] * MAX_FUNCTION_PARAMETERS),
             ),
-            #FreshConst(Unit, 'literal_unit'),
+            # FreshConst(Unit, 'literal_unit'),
             FreshConst(Frames, 'literal_frames'),
         )
     elif cursor.kind == cindex.CursorKind.MEMBER_REF_EXPR or cursor.kind == cindex.CursorKind.ARRAY_SUBSCRIPT_EXPR:
@@ -621,10 +683,25 @@ def is_dimensionless(t: DatatypeRef) -> BoolRef:
     )
 
 
-def translation_units(compile_commands: cindex.CompilationDatabase) -> Iterator[cindex.TranslationUnit]:
+def translation_units(compile_commands: cindex.CompilationDatabase, cache_path: Optional[str]) -> Iterator[typing.Union[cindex.TranslationUnit, SerializedTU]]:
     '''Returns an iterator over a translation unit for each file in the compilation database.'''
     compile_command: cindex.CompileCommand
     for compile_command in compile_commands.getAllCompileCommands():
+        if cache_path:
+            full_path = os.path.join(
+                compile_command.directory,
+                compile_command.filename,
+            )
+            serialized_tu = read_tu(
+                cache_path,
+                full_path,
+            )
+            modified_time = os.path.getmtime(full_path)
+            if serialized_tu.serialization_time >= modified_time:
+                log(LogLevel.INFO, f'Using cached analysis for {full_path}')
+                yield serialized_tu
+                continue
+
         log(
             LogLevel.INFO,
             f'parsing {compile_command.filename}'
@@ -672,13 +749,22 @@ def create_scalar_instance(num: int = None, pair: Tuple[int, int] = None) -> Dat
 
 
 def invert_frame(frame: DatatypeRef) -> DatatypeRef:
+    global _counter
     f = FreshConst(Frames, 'inverted_frame')
-    solver.add(
+    assert_and_check(
         And(
             *[Frames.__dict__[f'frame_{i}'](f) != Frames.__dict__[f'frame_{i}'](frame)
               for i in range(NUM_FRAMES)],
         ),
+        f'frame inverted {_counter}',
     )
+    _counter += 1
+    # solver.add(
+    #     And(
+    #         *[Frames.__dict__[f'frame_{i}'](f) != Frames.__dict__[f'frame_{i}'](frame)
+    #           for i in range(NUM_FRAMES)],
+    #     ),
+    # )
     return f
 
 
@@ -687,8 +773,9 @@ def declare_types():
 
     scalar_dt: DatatypeSortRef
     if _use_power_of_ten:
-        #scalar_dt = RealSort()
+        # scalar_dt = RealSort()
         scalar_dt = IntSort()
+        Rational = IntSort()
     else:
         Rational = Datatype('Rational')
         Rational.declare(
@@ -762,7 +849,10 @@ def set_to_z3_set(set: Set[AstRef], sort: SortRef) -> ArrayRef:
 
 def assert_and_check(stmt: Any, msg: str):
     # solver.push()
-    solver.assert_and_track(stmt, msg)
+    b = Const(msg, BoolSort())
+    tu_solver.add(Implies(b, stmt))
+    tu_assertions.append(b)
+    # solver.assert_and_track(stmt, msg)
     # if solver.check() == unsat:
     #     for problem in solver.unsat_core():
     #         log(
@@ -862,6 +952,8 @@ def parse_cmasi(xml: ET.ElementTree):
         struct_name = elt.attrib['Name']
         for field in elt:
             unit_name = field.attrib.get('Units')
+            if unit_name is None or unit_name.lower() == 'none':
+                continue
             if unit_name not in UNIT_TO_BASE_UNIT_VECTOR:
                 log(
                     LogLevel.WARNING,
@@ -883,7 +975,7 @@ def parse_cmasi(xml: ET.ElementTree):
             #         *([0] * MAX_FUNCTION_PARAMETERS),
             #     ),
             # )
-            solver.assert_and_track(
+            tu_solver.assert_and_track(
                 return_unit == create_unit(
                     create_scalar_instance(pair=scalar),
                     *UNIT_TO_BASE_UNIT_VECTOR[unit_name],
@@ -891,7 +983,7 @@ def parse_cmasi(xml: ET.ElementTree):
                 ),
                 f'{getter_name} return unit known from CMASI definition',
             )
-            solver.assert_and_track(
+            tu_solver.assert_and_track(
                 return_type == Type.type(
                     return_unit,
                     return_frames,
