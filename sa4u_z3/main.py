@@ -145,6 +145,7 @@ _IGNORE_FUNCS = {
     'AP_Logger_Backend::Write_Message',
     'calloc',
     'malloc',
+    'operator[]',
     'printf',
     'puts',
     'is_zero',
@@ -243,20 +244,20 @@ def main():
     start = time.time()
     count = 0
     for tu in translation_units(compilation_database, analysis_dir):
-        # if analysis_dir:
-        #     serialized_tu = read_tu(analysis_dir, tu)
-        #     modified_time = os.path.getmtime(tu.spelling)
-        #     if serialized_tu.serialization_time >= modified_time:
-        #         log(
-        #             LogLevel.INFO,
-        #             f'restoring {tu.spelling} from previous state...'
-        #         )
-        #         all_assertions += [Const(s, BoolSort())
-        #                            for s in serialized_tu.assertions]
-        #         tmp_solver = Solver()
-        #         tmp_solver.from_string(serialized_tu.solver)
-        #         solver.add(tmp_solver.assertions())
-        #         continue
+        if analysis_dir:
+            serialized_tu = read_tu(analysis_dir, tu)
+            modified_time = os.path.getmtime(tu.spelling)
+            if serialized_tu.serialization_time >= modified_time:
+                log(
+                    LogLevel.INFO,
+                    f'restoring {tu.spelling} from previous state...'
+                )
+                all_assertions += [Const(s, BoolSort())
+                                   for s in serialized_tu.assertions]
+                tmp_solver = Solver()
+                tmp_solver.from_string(serialized_tu.solver)
+                solver.add(tmp_solver.assertions())
+                continue
         if isinstance(tu, SerializedTU):
             all_assertions += [Const(s, BoolSort())
                                for s in tu.assertions]
@@ -304,10 +305,15 @@ def main():
 
     # for m in solver.model():
     #     print(f'{m} = {solver.model()[m]}')
+    print(f'Ignored {_ignored} of {_num_exprs}')
+
+
+_ignored = 0
+_num_exprs = 0
 
 
 def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
-    global _counter
+    global _counter, _ignored
     if cursor.location.file is not None:
         home = os.getenv('HOME')
         filename: str = cursor.location.file.name
@@ -355,16 +361,22 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
         return WalkResult.CONTINUE
     elif is_assignment_operator(cursor):
+        if get_lhs(cursor).spelling == 'operator[]':
+            _ignored += 1
+            return WalkResult.CONTINUE
+
         lhs_type = type_expr(get_lhs(cursor), data)
         if lhs_type is None:
             log(
                 LogLevel.WARNING,
                 f'unrecognized lhs type @ {cursor.location.file} line {cursor.location.line}',
             )
+            _ignored += 1
             return WalkResult.CONTINUE
 
         rhs_type = type_expr(get_rhs(cursor), data)
         if rhs_type is None:
+            _ignored += 1
             log(
                 LogLevel.WARNING,
                 f'unrecognized rhs type @ {cursor.location.file} line {cursor.location.line}',
@@ -373,7 +385,8 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
         assert_and_check(
             Or(
-                lhs_type == rhs_type,
+                # lhs_type == rhs_type,
+                types_equal(lhs_type, rhs_type),
                 And(
                     is_dimensionless(lhs_type),
                     is_dimensionless(rhs_type),
@@ -390,11 +403,17 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
         fq_fn_name = get_fq_name(cursor.referenced)
         if fq_fn_name in _IGNORE_FUNCS:
+            log(
+                LogLevel.WARNING,
+                f'Skipping function {fq_fn_name}'
+            )
+            _ignored += 1
             return WalkResult.CONTINUE
 
         func_name = String(fq_fn_name)
         for arg, arg_no in zip(get_arguments(cursor), range(0, 1000)):
             if arg is None:
+                _ignored += 1
                 log(
                     LogLevel.WARNING,
                     f'no argument cursor found in {cursor.location.file} on line {cursor.location.line}',
@@ -403,13 +422,15 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
             arg_type = type_expr(arg, data)
             if arg_type is None:
+                _ignored += 1
                 log(
                     LogLevel.WARNING,
                     f'unknown argument type in {cursor.location.file} on line {cursor.location.line}',
                 )
                 return WalkResult.RECURSE
             assert_and_check(
-                type_expr(arg, data) == ArgType(func_name, arg_no),
+                #type_expr(arg, data) == ArgType(func_name, arg_no),
+                types_equal(type_expr(arg, data), ArgType(func_name, arg_no)),
                 f'Call to {func_name.as_string()} in {cursor.location.file} on line {cursor.location.line} column {cursor.location.column} ({_counter})',
             )
             _counter += 1
@@ -439,7 +460,8 @@ def kind_printer(cursor: cindex.Cursor, _) -> WalkResult:
 
 
 def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[DatatypeRef]:
-    global _counter
+    global _counter, _ignored, _num_exprs
+    _num_exprs += 1
     if cursor.kind == cindex.CursorKind.CALL_EXPR:
         if cursor.referenced is None:
             log(
@@ -450,13 +472,19 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
 
         fq_fn_name = get_fq_name(cursor.referenced)
         if fq_fn_name in _IGNORE_FUNCS:
+            _ignored += 1
             return
 
         reference_typename = f'{get_fq_name(cursor.referenced)}_return_type'
         if _fn_name_to_return_type.get(reference_typename) is None:
-            _fn_name_to_return_type[reference_typename] = Const(
+            t = Const(
                 reference_typename,
                 Type,
+            )
+            _fn_name_to_return_type[reference_typename] = t
+            assert_and_check(
+                Type.is_constant(t) == False,
+                'return type is not a constant',
             )
 
         return _fn_name_to_return_type.get(reference_typename)
@@ -548,6 +576,10 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
                     ],
                 ),
                 Type.frame(lhs_type),
+                And(
+                    Type.is_constant(lhs_type),
+                    Type.is_constant(rhs_type),
+                ),
             )
             _counter += 1
             return product_type
@@ -562,6 +594,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             ),
             # FreshConst(Unit, 'literal_unit'),
             FreshConst(Frames, 'literal_frames'),
+            True,
         )
         return literal_type
     elif cursor.kind == cindex.CursorKind.FLOATING_LITERAL:
@@ -573,6 +606,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             ),
             # FreshConst(Unit, 'literal_unit'),
             FreshConst(Frames, 'literal_frames'),
+            True,
         )
     elif cursor.kind == cindex.CursorKind.MEMBER_REF_EXPR or cursor.kind == cindex.CursorKind.ARRAY_SUBSCRIPT_EXPR:
         frame_constraint = None
@@ -584,6 +618,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
 
         expr_repr = get_fq_member_expr(cursor)
         if expr_repr in _IGNORE_MEMBERS:
+            _ignored += 1
             return
         t = _member_access_to_type.get(expr_repr)
         if t is None:
@@ -596,6 +631,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             return Type.type(
                 Type.unit(t),
                 frame_constraint,
+                False,
             )
         return t
     elif cursor.kind == cindex.CursorKind.UNARY_OPERATOR:
@@ -814,8 +850,21 @@ def declare_types():
         'type',
         ('unit', Unit),
         ('frame', Frames),
+        ('is_constant', BoolSort()),
     )
     Type = Type.create()
+
+
+def types_equal(t1: DatatypeRef, t2: DatatypeRef) -> BoolRef:
+    '''Returns if the 2 types are equal (ignoring is_constant).'''
+    return Or(
+        And(
+            Type.unit(t1) == Type.unit(t2),
+            Type.frame(t1) == Type.frame(t2),
+        ),
+        Type.is_constant(t1),
+        Type.is_constant(t2),
+    )
 
 
 def initialize_z3():
@@ -931,9 +980,21 @@ def parse_variable_description(description: Dict[str, Any]):
         variable_type == Type.type(
             variable_unit,
             variable_frames,
+            False,
         ),
         f'{name} known from prior type file',
     )
+    # assert_and_check(
+    #     types_equal(
+    #         variable_type,
+    #         Type.type(
+    #             variable_unit,
+    #             variable_frames,
+    #             False,
+    #         ),
+    #     ),
+    #     f'{name} known from prior type file',
+    # )
 
 
 def load_message_definitions(io: TextIO):
@@ -987,6 +1048,7 @@ def parse_cmasi(xml: ET.ElementTree):
                 return_type == Type.type(
                     return_unit,
                     return_frames,
+                    False,
                 ),
                 f'{getter_name} known from CMASI definition',
             )
@@ -1024,6 +1086,7 @@ def parse_mavlink(xml: ET.ElementTree):
                     *([0] * MAX_FUNCTION_PARAMETERS),
                 ),
                 Frames.frames(*[True for _ in range(NUM_FRAMES)]),
+                False,
             )
 
 
