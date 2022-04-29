@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as path from 'path';
-import { workspace, ExtensionContext } from 'vscode';
+import { workspace, ExtensionContext, window, WorkspaceEdit, CodeAction } from 'vscode';
 
 import {
 	LanguageClient,
@@ -40,6 +40,7 @@ export function activate(context: ExtensionContext) {
 		// Register the server for plain text documents
 		documentSelector: [{ scheme: 'file', language: 'cpp' }],
 		synchronize: {
+			configurationSection: 'SA4U',
 			// Notify the server about file changes to '.clientrc files contained in the workspace
 			fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
 		}
@@ -52,6 +53,12 @@ export function activate(context: ExtensionContext) {
 		serverOptions,
 		clientOptions
 	);
+
+	client.onReady().then(() => {
+		client.onNotification("ServerError", (output: string) => {
+			window.showErrorMessage(output);
+		});
+	});
 
 	// Start the client. This will also launch the server
 	client.start();
