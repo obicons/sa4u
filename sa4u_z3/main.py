@@ -32,10 +32,11 @@ MAV_FRAME_TO_ID = {
     'MAV_FRAME_BODY_FRD': 12,
     'MAV_FRAME_LOCAL_FRD': 20,
     'MAV_FRAME_LOCAL_FLU': 21,
+    'UNIX': 22,
 }
 
 # The number of frames there are.
-NUM_FRAMES = len(list(MAV_FRAME_TO_ID.keys()))
+NUM_FRAMES = 23  # len(list(MAV_FRAME_TO_ID.keys()))
 
 # The maximum number of parameters one of our functions can accept.
 MAX_FUNCTION_PARAMETERS = 0
@@ -143,6 +144,8 @@ _member_frame_accesses: Set[str] = set()
 # Functions to ignore.
 _IGNORE_FUNCS = {
     'AP_Logger_Backend::Write_Message',
+    'AP_Proximity_Backend::database_push',
+    'AP_Proximity_Backend::ignore_reading',
     'calloc',
     'malloc',
     'operator[]',
@@ -294,6 +297,7 @@ def main():
     #     print(assertion)
 
     start = time.time()
+    solver.set(timeout=5 * 60 * 1000)
     status = solver.check(all_assertions)
     end = time.time()
     print(f'Z3 elapsed time: {end - start} seconds', flush=True)
@@ -303,9 +307,10 @@ def main():
         for failure in core:
             print(f'  {failure}')
 
+    # print('===MODEL===')
     # for m in solver.model():
     #     print(f'{m} = {solver.model()[m]}')
-    print(f'Ignored {_ignored} of {_num_exprs}')
+    # print(f'Ignored {_ignored} of {_num_exprs}')
 
 
 _ignored = 0
@@ -429,8 +434,8 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
                 )
                 return WalkResult.RECURSE
             assert_and_check(
-                #type_expr(arg, data) == ArgType(func_name, arg_no),
-                types_equal(type_expr(arg, data), ArgType(func_name, arg_no)),
+                type_expr(arg, data) == ArgType(func_name, arg_no),
+                # types_equal(type_expr(arg, data), ArgType(func_name, arg_no)),
                 f'Call to {func_name.as_string()} in {cursor.location.file} on line {cursor.location.line} column {cursor.location.column} ({_counter})',
             )
             _counter += 1
@@ -440,6 +445,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
         if constraint is None:
             return WalkResult.RECURSE
 
+        data['HadConstraint'] = True
         data['ActiveConstraints'][constraint[0]] = constraint[1]
         walk_ast(cursor, walker, data)
 
@@ -487,6 +493,30 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
                 'return type is not a constant',
             )
 
+        func_name = String(fq_fn_name)
+        for arg, arg_no in zip(get_arguments(cursor), range(0, 1000)):
+            if arg is None:
+                _ignored += 1
+                log(
+                    LogLevel.WARNING,
+                    f'no argument cursor found in {cursor.location.file} on line {cursor.location.line}',
+                )
+                continue
+
+            arg_type = type_expr(arg, context)
+            if arg_type is None:
+                _ignored += 1
+                log(
+                    LogLevel.WARNING,
+                    f'unknown argument type in {cursor.location.file} on line {cursor.location.line}',
+                )
+                break
+            assert_and_check(
+                type_expr(arg, context) == ArgType(func_name, arg_no),
+                # types_equal(type_expr(arg, data), ArgType(func_name, arg_no)),
+                f'Call to {func_name.as_string()} in {cursor.location.file} on line {cursor.location.line} column {cursor.location.column} ({_counter})',
+            )
+
         return _fn_name_to_return_type.get(reference_typename)
     elif cursor.kind == cindex.CursorKind.VARIABLE_REF or cursor.kind == cindex.CursorKind.DECL_REF_EXPR:
         if context.get('CurrentFn') and cursor.spelling in context.get('ParamNamesToId', {}):
@@ -522,8 +552,10 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             assert_and_check(
                 Or(
                     lhs_type == rhs_type,
-                    is_dimensionless(lhs_type),
-                    is_dimensionless(rhs_type),
+                    And(
+                        is_dimensionless(lhs_type),
+                        is_dimensionless(rhs_type),
+                    ),
                 ),
                 f'Applied {operator} with incompatible types @ {loc.file} line {loc.line} column {loc.column} ({_counter})',
             )
@@ -620,6 +652,16 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
         if expr_repr in _IGNORE_MEMBERS:
             _ignored += 1
             return
+
+        for access in _member_frame_accesses:
+            typename = access.split('.')[0]
+            expr_repr_type = expr_repr.split('.')[0]
+            if typename == expr_repr_type and context['ActiveConstraints'] == {}:
+                log(
+                    LogLevel.ERROR,
+                    f'No constraints active for member access @ {cursor.location.file} line {cursor.location.line}',
+                )
+
         t = _member_access_to_type.get(expr_repr)
         if t is None:
             t = FreshConst(Type, 'member accessed')
@@ -976,14 +1018,16 @@ def parse_variable_description(description: Dict[str, Any]):
         ),
         f'{name} frame known from prior type file',
     )
+    var_type = Type.type(
+        variable_unit,
+        variable_frames,
+        False,
+    )
     assert_and_check(
-        variable_type == Type.type(
-            variable_unit,
-            variable_frames,
-            False,
-        ),
+        variable_type == var_type,
         f'{name} known from prior type file',
     )
+    _member_access_to_type[name] = var_type
     # assert_and_check(
     #     types_equal(
     #         variable_type,

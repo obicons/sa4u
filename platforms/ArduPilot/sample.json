@@ -649,6 +649,17 @@
 		}
 	},
 	{
+		"VariableName": "JitterCorrection::link_offset_usec",
+		"SemanticInfo": {
+			"Units": [
+				"us"
+			],
+			"CoordinateFrames": [
+				"GLOBAL"
+			]
+		}
+	},
+	{
 		"VariableName": "Aircraft::last_time_us",
 		"SemanticInfo": {
 			"Units": [
