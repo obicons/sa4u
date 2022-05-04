@@ -12,15 +12,15 @@ import {
 	Command,
 	CodeActionKind,
 	TextDocumentEdit,
-	TextEdit
+	TextEdit,
+	WorkspaceFolder
 } from 'vscode-languageserver/node';
 
 import {
 	TextDocument
 } from 'vscode-languageserver-textdocument';
 
-import { exec, ExecException } from 'child_process';
-import { promisify } from 'util';
+import { exec, execSync } from 'child_process';
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 const connection = createConnection(ProposedFeatures.all);
@@ -31,7 +31,10 @@ const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let messDef:string;
+
+let startedSA4U_Z3 = false;
 connection.onInitialize((params: InitializeParams) => {
+
 	const capabilities = params.capabilities;
 
 	// Does the client support the `workspace/configuration` request?
@@ -63,13 +66,13 @@ connection.onInitialize((params: InitializeParams) => {
 });
 
 connection.onInitialized(() => {
+	
 	if (hasConfigurationCapability) {
 		// Register for all configuration changes.
 		connection.client.register(DidChangeConfigurationNotification.type, undefined);
 		connection.workspace.getConfiguration('SA4U').then((value) => {
 			if (value.messageDefinition) {
 				messDef = value.messageDefinition;
-				documents.all().forEach(validateTextDocument);
 			}
 		});
 	}
@@ -78,56 +81,26 @@ connection.onInitialized(() => {
 			connection.console.log('Workspace folder change event received.');
 		});
 	}
-});
-
-// The example settings
-interface ExampleSettings {
-	maxNumberOfProblems: number;
-}
-
-// Cache the settings of all open documents
-const documentSettings: Map<string, Thenable<ExampleSettings>> = new Map();
-
-connection.onDidChangeConfiguration(change => {
-	if (hasConfigurationCapability) {
-		// Reset all cached document settings
-		documentSettings.clear();
-		if (change.settings.SA4U){
-			messDef = change.settings.SA4U.messageDefinition;
-			documents.all().forEach(validateTextDocument);
+	connection.workspace.getConfiguration();
+	connection.workspace.getWorkspaceFolders().then((folders:null|WorkspaceFolder[]|void) => {
+		if (folders) {
+			folders.forEach((folder) => {
+				dockerContainer(folder);
+			});
 		}
-	}
+	});
+	documents.all().forEach((doc)=>validateTextDocument(doc));
 });
 
-// Only keep settings for open documents
-documents.onDidClose(e => {
-	documentSettings.delete(e.document.uri);
-});
-
-// The content of a text document has changed. This event is emitted
-// when the text document first opened or when its content has changed.
-documents.onDidSave(change => {
-	validateTextDocument(change.document);
-});
-
-// Validate documents whenever they're opened.
-documents.onDidOpen(e => {
-	validateTextDocument(e.document);
-});
-
-async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	let path = decodeURIComponent(textDocument.uri);
-	path = path.substring(0,path.lastIndexOf("/")+1);
+async function dockerContainer (folder: WorkspaceFolder) {
+	let path = decodeURIComponent(folder.uri);
+	const filePath = path;
 	path = path.replace(/(^\w+:|^)\/\//, '');
 	path = path.replace(/:/, '');
-	const diagnostics: Diagnostic[] = [];
-	const execPromise = promisify(exec);
-	//const sa4uPromise = execPromise(`docker container run --rm -v ${path}:/src/ sa4u -c /src/ -p /src/ex_prior.json -m /src/CMASI.xml`);
+	const diagnosticsMap = new Map<string, Diagnostic[]>();
 	try {
-		const sa4uZ3Promise = execPromise(`docker container run --rm --mount type=bind,source="${path}",target="/src/" sa4u-z3 -c /src/ -p /src/ex_prior.json -m /src/${messDef}`);
-		//const sa4uOutput = await sa4uPromise;
-		const sa4uZ3Output = await sa4uZ3Promise;
-
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		const readline = require('readline');
 		const createDiagnostics = (line: string) => {
 			const parsers = [
 				/*{
@@ -180,27 +153,108 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 			for (const parser of parsers) {
 				const maybeMatch = line.match(parser.regex);
 				if (maybeMatch) {
-					diagnostics.push(parser.parse(maybeMatch));
-					break;
+					const encoded = encodeURI(filePath+parser.parse(maybeMatch).source.replace(/\/src/, ''));
+					if (!diagnosticsMap.has(encoded))
+						diagnosticsMap.set(encoded, []);
+					diagnosticsMap.get(encoded)?.push(parser.parse(maybeMatch));
 				}
 			}
 		};
+		const child = exec(`docker container run --rm --mount type=bind,source="${path}",target="/src/" --name sa4u_z3_server_${path.replace(/([^A-Za-z0-9]+)/g, '')} sa4u-z3 -d True -c /src/ -p /src/ex_prior.json -m /src/${messDef}`);
+		const rl = readline.createInterface({input: child.stdout});
+		rl.on('line', (line: any)=>{
+			console.log(line);
+			if (line.match(/---END RUN---/)) {
+				diagnosticsMap.forEach((value, key) => {
+					connection.sendDiagnostics({ uri: key, diagnostics: value});
+					diagnosticsMap.set(key, []);
+				});
+			} else {
+				createDiagnostics(line);
+			}
+		});
+		startedSA4U_Z3 = true;
+	} catch (e) {
+		console.log(e);
+	}
+}
 
-		const outputs = [
-			//sa4uOutput,
-			sa4uZ3Output,
-		];
-		for (const tool of outputs) {
-			tool.stdout.split('\n').forEach(line => createDiagnostics(line));
+connection.onShutdown(() => {
+	connection.workspace.getWorkspaceFolders().then((folders:null|WorkspaceFolder[]|void) => {
+		if (folders) {
+			folders.forEach((folder) => {
+				let path = decodeURIComponent(folder.uri);
+				path = path.replace(/(^\w+:|^)\/\//, '');
+				path = path.replace(/:/, '');
+				execSync(`docker container kill sa4u_z3_server_${path.replace(/([^A-Za-z0-9]+)/g, '')}`);
+			});
 		}
+	});
+});
 
-		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
-	} catch (e: unknown) {
-		const error = e as {stderr:string, stdout:string};
-		if (error.stderr) {
-			connection.sendNotification("ServerError", error.stderr);
+
+// Make docker container and run it
+
+// The example settings
+interface ExampleSettings {
+	maxNumberOfProblems: number;
+}
+
+// Cache the settings of all open documents
+const documentSettings: Map<string, Thenable<ExampleSettings>> = new Map();
+
+connection.onDidChangeConfiguration(change => {
+	if (hasConfigurationCapability) {
+		// Reset all cached document settings
+		documentSettings.clear();
+		if (change.settings.SA4U) {
+			messDef = change.settings.SA4U.messageDefinition;
+			if (startedSA4U_Z3) {
+				startedSA4U_Z3 = false;
+				connection.workspace.getWorkspaceFolders().then((folders:null|WorkspaceFolder[]|void) => {
+					if (folders) {
+						folders.forEach((folder) => {
+							let path = decodeURIComponent(folder.uri);
+							path = path.replace(/(^\w+:|^)\/\//, '');
+							path = path.replace(/:/, '');
+							execSync(`docker container kill sa4u_z3_server_${path.replace(/([^A-Za-z0-9]+)/g, '')}`);
+							dockerContainer(folder);
+						});
+					}
+				});
+			}
 		}
 	}
+});
+
+// Only keep settings for open documents
+documents.onDidClose(e => {
+	documentSettings.delete(e.document.uri);
+});
+
+// The content of a text document has changed. This event is emitted
+// when the text document first opened or when its content has changed.
+documents.onDidSave(change => {
+	validateTextDocument(change.document);
+});
+
+// Validate documents whenever they're opened.
+documents.onDidOpen(e => {
+	if (startedSA4U_Z3) 
+		validateTextDocument(e.document);
+});
+
+async function validateTextDocument(textDocument: TextDocument): Promise<void> {
+	connection.workspace.getWorkspaceFolders().then((folders:null|WorkspaceFolder[]|void) => {
+		if (folders) {
+			folders.forEach((folder) => {
+				let path = decodeURIComponent(folder.uri);
+				path = path.replace(/(^\w+:|^)\/\//, '');
+				path = path.replace(/:/, '');
+				execSync(`docker container kill -s=HUP sa4u_z3_server_${path.replace(/([^A-Za-z0-9]+)/g, '')}`);
+			});
+		}
+	});
 }
 
 connection.onCodeAction((params) => {
@@ -208,9 +262,9 @@ connection.onCodeAction((params) => {
 	if (textDocument === undefined) {
 		return undefined;
 	}
-	const data = (Object)(params.context.diagnostics[0].data);
-	const title = data.title;
-	if (params.context.diagnostics[0].data) {
+	if (typeof params.context.diagnostics[0] !== 'undefined' && typeof params.context.diagnostics[0].data !== 'undefined') {
+		const data = (Object)(params.context.diagnostics[0].data);
+		const title = data.title;
 		return [CodeAction.create(title, Command.create(title, 'sa4u.fix', textDocument.uri, data.change, params.context.diagnostics[0].range), CodeActionKind.QuickFix)];
 	}
 });
@@ -219,13 +273,13 @@ connection.onExecuteCommand(async (params) => {
 	if (params.arguments ===  undefined) {
 		return;
 	}
-	if(params.command === 'sa4u.fix') {
+	if (params.command === 'sa4u.fix') {
 		const textDocument = documents.get(params.arguments[0]);
 		if (textDocument === undefined) {
 			return;
 		}
 		const newText = params.arguments[1];
-		if(typeof newText === 'string'){
+		if (typeof newText === 'string') {
 			connection.workspace.applyEdit({
 				documentChanges: [
 					TextDocumentEdit.create({ uri: textDocument.uri, version: textDocument.version }, [

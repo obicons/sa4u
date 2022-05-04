@@ -6,6 +6,7 @@ import os.path
 import time
 import typing
 import xml.etree.ElementTree as ET
+import signal
 from typing import Any, Dict, Iterator, Optional, Set, TextIO, Tuple
 from util import *
 from z3 import *
@@ -147,10 +148,17 @@ _IGNORE_FUNCS = {
     'AP_Proximity_Backend::database_push',
     'AP_Proximity_Backend::ignore_reading',
     'calloc',
+    '::::_MAV_RETURN_uint8_t',
+    '::::_MAV_RETURN_uint16_t',
+    '::::_MAV_RETURN_uint32_t',
+    '::::_MAV_RETURN_uint64_t',
     'malloc',
+    '::::mav_array_memcpy',
+    '::::::memcpy',
     'operator[]',
     'printf',
     'puts',
+    '::px4_usleep',
     'is_zero',
     'is_positive',
 }
@@ -166,9 +174,22 @@ _IGNORE_MEMBERS = {
     'mavlink_mission_item_t.z',
 }
 
+# Ignore these source directories.
+_IGNORE_DIRS = {
+    '.',
+    'conversion',
+    'matrix',
+    'v2.0',
+}
+
+# Control to run the type checking
+_run = False
+
+# Amount of time to sleep between checks for run
+_time_to_sleep = 10
 
 def main():
-    global _enable_scalar_prefixes, _use_power_of_ten, tu_assertions, tu_solver, solver
+    global _enable_scalar_prefixes, _use_power_of_ten, tu_assertions, tu_solver, solver, _run, _time_to_sleep
 
     parser = argparse.ArgumentParser(
         description='checks source code for unit conversion errors',
@@ -198,6 +219,15 @@ def main():
         type=str,
     )
     parser.add_argument(
+        '-d',
+        '--run-as-daemon',
+        dest='run_as_daemon',
+        help='run as daemon',
+        required=False,
+        type=bool,
+        default=False,
+    )
+    parser.add_argument(
         '--power-of-10',
         action=argparse.BooleanOptionalAction,
         dest='power_of_ten',
@@ -225,107 +255,129 @@ def main():
     )
     parsed_args = parser.parse_args()
 
+    signal.signal(signal.SIGHUP, HUP_signal_handler)
+    
     _use_power_of_ten = parsed_args.power_of_ten
     _enable_scalar_prefixes = not parsed_args.disable_scalar_prefixes
 
     initialize_z3()
     tu_solver = solver
+    
+    while True:
+        _run = False
 
-    with open(parsed_args.prior_types_path, 'r') as prior_types_fd:
-        load_prior_types(prior_types_fd)
+        with open(parsed_args.prior_types_path, 'r') as prior_types_fd:
+            load_prior_types(prior_types_fd)
 
-    with open(parsed_args.message_definition_path, 'r') as message_def_fd:
-        load_message_definitions(message_def_fd)
+        with open(parsed_args.message_definition_path, 'r') as message_def_fd:
+            load_message_definitions(message_def_fd)
 
-    compilation_database: cindex.CompilationDatabase = cindex.CompilationDatabase.fromDirectory(
-        parsed_args.compilation_database_path,
-    )
+        compilation_database: cindex.CompilationDatabase = cindex.CompilationDatabase.fromDirectory(
+            parsed_args.compilation_database_path,
+        )
 
-    analysis_dir: Optional[str] = parsed_args.serialize_analysis_path
-    all_assertions = tu_assertions
+        analysis_dir: Optional[str] = parsed_args.serialize_analysis_path
+        all_assertions = tu_assertions
 
-    start = time.time()
-    count = 0
-    for tu in translation_units(compilation_database, analysis_dir):
-        if analysis_dir:
-            serialized_tu = read_tu(analysis_dir, tu)
-            modified_time = os.path.getmtime(tu.spelling)
-            if serialized_tu.serialization_time >= modified_time:
-                log(
-                    LogLevel.INFO,
-                    f'restoring {tu.spelling} from previous state...'
-                )
+        start = time.time()
+        count = 0
+
+        # TODO: finish moving cache logic into translation_units` here
+        for tu in translation_units(compilation_database, analysis_dir):
+            if analysis_dir:
+                serialized_tu = read_tu(analysis_dir, tu)
+                modified_time = os.path.getmtime(tu.spelling)
+                if serialized_tu.serialization_time >= modified_time:
+                    log(
+                        LogLevel.INFO,
+                        f'restoring {tu.spelling} from previous state...'
+                    )
+                    all_assertions += [Const(s, BoolSort())
+                                    for s in serialized_tu.assertions]
+                    tmp_solver = Solver()
+                    tmp_solver.from_string(serialized_tu.solver)
+                    solver.add(tmp_solver.assertions())
+                    continue
+            if isinstance(tu, SerializedTU):
                 all_assertions += [Const(s, BoolSort())
-                                   for s in serialized_tu.assertions]
+                                for s in tu.assertions]
                 tmp_solver = Solver()
-                tmp_solver.from_string(serialized_tu.solver)
+                tmp_solver.from_string(tu.solver)
                 solver.add(tmp_solver.assertions())
                 continue
-        if isinstance(tu, SerializedTU):
-            all_assertions += [Const(s, BoolSort())
-                               for s in tu.assertions]
-            tmp_solver = Solver()
-            tmp_solver.from_string(tu.solver)
-            solver.add(tmp_solver.assertions())
-            continue
 
-        print(tu.spelling)
-        count += 1
-        log(
-            LogLevel.INFO,
-            f'{count} / {len(compilation_database.getAllCompileCommands())}',
-        )
-        cursor: cindex.Cursor = tu.cursor
-        tu_solver = Solver()
-        tu_assertions = []
-        walk_ast(cursor, walker, {'Seen': set([])})
+            print(tu.spelling)
+            count += 1
+            log(
+                LogLevel.INFO,
+                f'{count} / {len(compilation_database.getAllCompileCommands())}',
+            )
+            cursor: cindex.Cursor = tu.cursor
+            tu_solver = Solver()
+            tu_assertions = []
+            walk_ast(cursor, walker, {'Seen': set([])})
 
-        if analysis_dir:
-            serialize_tu(analysis_dir, tu, tu_solver, tu_assertions)
+            if analysis_dir:
+                serialize_tu(analysis_dir, tu, tu_solver, tu_assertions)
 
-        all_assertions += tu_assertions
-        solver.add(tu_solver.assertions())
+            all_assertions += tu_assertions
+            solver.add(tu_solver.assertions())
 
-    end = time.time()
-    print(f'Parsing elapsed time: {end - start} seconds', flush=True)
+        end = time.time()
+        print(f'Parsing elapsed time: {end - start} seconds', flush=True)
 
-    # with open('smt_out', 'w') as fd:
-    #     print(solver.to_smt2(), file=fd)
-    #     exit(1)
+        # with open('smt_out', 'w') as fd:
+        #     print(solver.to_smt2(), file=fd)
+        #     exit(1)
 
-    # for assertion in solver.assertions():
-    #     print(assertion)
+        # for assertion in solver.assertions():
+        #     print(assertion)
 
-    start = time.time()
-    solver.set(timeout=5 * 60 * 1000)
-    status = solver.check(all_assertions)
-    end = time.time()
-    print(f'Z3 elapsed time: {end - start} seconds', flush=True)
-    if status != sat:
-        print('ERROR!')
-        core = solver.unsat_core()
-        for failure in core:
-            print(f'  {failure}')
-
-    # print('===MODEL===')
-    # for m in solver.model():
-    #     print(f'{m} = {solver.model()[m]}')
-    # print(f'Ignored {_ignored} of {_num_exprs}')
+        start = time.time()
+        solver.set(timeout=5 * 60 * 1000)
+        status = solver.check(all_assertions)
+        end = time.time()
+        print(f'Z3 elapsed time: {end - start} seconds', flush=True)
+        if status != sat:
+            print('ERROR!')
+            core = solver.unsat_core()
+            for failure in core:
+                print(f'  {failure}')
+        #elif status == sat:
+        #    print('===MODEL===')
+        #    for m in solver.model():
+        #        print(f'{m} = {solver.model()[m]}')
+        #    print(f'Ignored {_ignored} of {_num_exprs}')
+        if not parsed_args.run_as_daemon:
+            break;
+        print(f'---END RUN---', flush=True)
+        signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGHUP})
+        if not _run:
+            signal.sigwait({signal.SIGHUP})
 
 
 _ignored = 0
 _num_exprs = 0
 
+def HUP_signal_handler(sig_num: int, _frame):
+    global _run 
+    _run = True
+
 
 def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
     global _counter, _ignored
+    filename: str = ''
     if cursor.location.file is not None:
         home = os.getenv('HOME')
-        filename: str = cursor.location.file.name
+        filename = cursor.location.file.name
         if not filename.startswith(home) and not filename.startswith('/src/'):
             return WalkResult.CONTINUE
 
-    cursor_descr = f'{cursor.location.line}_{cursor.location.column}_{cursor.get_usr()}'
+        dirname = os.path.basename(os.path.dirname(filename))
+        if dirname in _IGNORE_DIRS:
+            return WalkResult.CONTINUE
+
+    cursor_descr = f'{filename}_{cursor.location.line}_{cursor.location.column}_{cursor.get_usr()}'
     if cursor_descr in data['Seen']:
         return WalkResult.CONTINUE
     data['Seen'].add(cursor_descr)
@@ -335,6 +387,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
         data['ActiveConstraints'] = {}
         data['NextId'] = 0
         data['ParamNamesToId'] = {}
+        log(LogLevel.INFO, f'IN {data["CurrentFn"]}')
         return WalkResult.RECURSE
     elif cursor.kind == cindex.CursorKind.PARM_DECL:
         if data.get('ParamNamesToId') is None:
@@ -344,6 +397,9 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
         data['NextId'] += 1
         return WalkResult.CONTINUE
     elif cursor.kind == cindex.CursorKind.VAR_DECL:
+        if 'CurrentFn' in data:
+            log(LogLevel.INFO, f'DECL IN {data["CurrentFn"]}')
+
         # We have an uninitialized variable. Skip it for now.
         if len(list(cursor.get_children())) == 0:
             return WalkResult.CONTINUE
