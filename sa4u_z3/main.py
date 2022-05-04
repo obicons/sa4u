@@ -5,8 +5,8 @@ import json
 import os.path
 import time
 import typing
-import xml.etree.ElementTree as ET
-import signal
+import xml.etree.ElementTree 
+from ty import signal
 from typing import Any, Dict, Iterator, Optional, Set, TextIO, Tuple
 from util import *
 from z3 import *
@@ -393,6 +393,32 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
         if data.get('ParamNamesToId') is None:
             data['ParamNamesToId'] = {}
             data['NextId'] = 0
+        data['ParamNamesToId'][cursor.spelling] = data['NextId']
+        data['NextId'] += 1
+        return WalkResult.CONTINUE
+    elif cursor.kind == cindex.CursorKind.VAR_DECL:
+        if 'CurrentFn' in data:
+            log(LogLevel.INFO, f'DECL IN {data["CurrentFn"]}')
+
+        data['CurrentFn'] = get_fq_name(cursor)
+        data['ActiveConstraints'] = {}
+        data['NextId'] = 0
+        data['ParamNamesToId'] = {}
+        log(LogLevel.INFO, f'IN {data["CurrentFn"]}')
+        return WalkResult.RECURSE
+    elif cursor.kind == cindex.CursorKind.PARM_DECL:
+        if data.get('ParamNamesToId') is None:
+            data['ParamNamesToId'] = {}
+            data['NextId'] = 0
+        data['ParamNamesToId'][cursor.spelling] = data['NextId']
+        data['NextId'] += 1
+        return WalkResult.CONTINUE
+    elif cursor.kind == cindex.CursorKind.VAR_DECL:
+        if 'CurrentFn' in data:
+            log(LogLevel.INFO, f'DECL IN {data["CurrentFn"]}')
+
+        data['ParamNamesToId'] = {}
+        data['NextId'] = 0
         data['ParamNamesToId'][cursor.spelling] = data['NextId']
         data['NextId'] += 1
         return WalkResult.CONTINUE
