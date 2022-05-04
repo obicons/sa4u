@@ -147,10 +147,17 @@ _IGNORE_FUNCS = {
     'AP_Proximity_Backend::database_push',
     'AP_Proximity_Backend::ignore_reading',
     'calloc',
+    '::::_MAV_RETURN_uint8_t',
+    '::::_MAV_RETURN_uint16_t',
+    '::::_MAV_RETURN_uint32_t',
+    '::::_MAV_RETURN_uint64_t',
     'malloc',
+    '::::mav_array_memcpy',
+    '::::::memcpy',
     'operator[]',
     'printf',
     'puts',
+    '::px4_usleep',
     'is_zero',
     'is_positive',
 }
@@ -164,6 +171,14 @@ _IGNORE_MEMBERS = {
     'mavlink_mission_item_t.x',
     'mavlink_mission_item_t.y',
     'mavlink_mission_item_t.z',
+}
+
+# Ignore these source directories.
+_IGNORE_DIRS = {
+    '.',
+    'conversion',
+    'matrix',
+    'v2.0',
 }
 
 
@@ -306,11 +321,11 @@ def main():
         core = solver.unsat_core()
         for failure in core:
             print(f'  {failure}')
-
-    # print('===MODEL===')
-    # for m in solver.model():
-    #     print(f'{m} = {solver.model()[m]}')
-    # print(f'Ignored {_ignored} of {_num_exprs}')
+    elif status == sat:
+        print('===MODEL===')
+        for m in solver.model():
+            print(f'{m} = {solver.model()[m]}')
+        print(f'Ignored {_ignored} of {_num_exprs}')
 
 
 _ignored = 0
@@ -319,13 +334,18 @@ _num_exprs = 0
 
 def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
     global _counter, _ignored
+    filename: str = ''
     if cursor.location.file is not None:
         home = os.getenv('HOME')
-        filename: str = cursor.location.file.name
+        filename = cursor.location.file.name
         if not filename.startswith(home) and not filename.startswith('/src/'):
             return WalkResult.CONTINUE
 
-    cursor_descr = f'{cursor.location.line}_{cursor.location.column}_{cursor.get_usr()}'
+        dirname = os.path.basename(os.path.dirname(filename))
+        if dirname in _IGNORE_DIRS:
+            return WalkResult.CONTINUE
+
+    cursor_descr = f'{filename}_{cursor.location.line}_{cursor.location.column}_{cursor.get_usr()}'
     if cursor_descr in data['Seen']:
         return WalkResult.CONTINUE
     data['Seen'].add(cursor_descr)
@@ -335,6 +355,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
         data['ActiveConstraints'] = {}
         data['NextId'] = 0
         data['ParamNamesToId'] = {}
+        log(LogLevel.INFO, f'IN {data["CurrentFn"]}')
         return WalkResult.RECURSE
     elif cursor.kind == cindex.CursorKind.PARM_DECL:
         if data.get('ParamNamesToId') is None:
@@ -344,6 +365,9 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
         data['NextId'] += 1
         return WalkResult.CONTINUE
     elif cursor.kind == cindex.CursorKind.VAR_DECL:
+        if 'CurrentFn' in data:
+            log(LogLevel.INFO, f'DECL IN {data["CurrentFn"]}')
+
         # We have an uninitialized variable. Skip it for now.
         if len(list(cursor.get_children())) == 0:
             return WalkResult.CONTINUE
