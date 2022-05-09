@@ -213,6 +213,15 @@ def main():
         type=str,
     )
     parser.add_argument(
+        '-d',
+        '--run-as-daemon',
+        dest='run_as_daemon',
+        help='run as daemon',
+        required=False,
+        type=bool,
+        default=False,
+    )
+    parser.add_argument(
         '--power-of-10',
         action=argparse.BooleanOptionalAction,
         dest='power_of_ten',
@@ -261,71 +270,77 @@ def main():
 
     start = time.time()
     count = 0
-    for tu in translation_units(compilation_database, analysis_dir):
-        if analysis_dir:
-            serialized_tu = read_tu(analysis_dir, tu)
-            modified_time = os.path.getmtime(tu.spelling)
-            if serialized_tu.serialization_time >= modified_time:
-                log(
-                    LogLevel.INFO,
-                    f'restoring {tu.spelling} from previous state...'
-                )
+
+    while True:
+        # TODO: finish moving cache logic into translation_units` here
+        for tu in translation_units(compilation_database, analysis_dir):
+            if analysis_dir:
+                serialized_tu = read_tu(analysis_dir, tu)
+                modified_time = os.path.getmtime(tu.spelling)
+                if serialized_tu.serialization_time >= modified_time:
+                    log(
+                        LogLevel.INFO,
+                        f'restoring {tu.spelling} from previous state...'
+                    )
+                    all_assertions += [Const(s, BoolSort())
+                                    for s in serialized_tu.assertions]
+                    tmp_solver = Solver()
+                    tmp_solver.from_string(serialized_tu.solver)
+                    solver.add(tmp_solver.assertions())
+                    continue
+            if isinstance(tu, SerializedTU):
                 all_assertions += [Const(s, BoolSort())
-                                   for s in serialized_tu.assertions]
+                                for s in tu.assertions]
                 tmp_solver = Solver()
-                tmp_solver.from_string(serialized_tu.solver)
+                tmp_solver.from_string(tu.solver)
                 solver.add(tmp_solver.assertions())
                 continue
-        if isinstance(tu, SerializedTU):
-            all_assertions += [Const(s, BoolSort())
-                               for s in tu.assertions]
-            tmp_solver = Solver()
-            tmp_solver.from_string(tu.solver)
-            solver.add(tmp_solver.assertions())
-            continue
 
-        print(tu.spelling)
-        count += 1
-        log(
-            LogLevel.INFO,
-            f'{count} / {len(compilation_database.getAllCompileCommands())}',
-        )
-        cursor: cindex.Cursor = tu.cursor
-        tu_solver = Solver()
-        tu_assertions = []
-        walk_ast(cursor, walker, {'Seen': set([])})
+            print(tu.spelling)
+            count += 1
+            log(
+                LogLevel.INFO,
+                f'{count} / {len(compilation_database.getAllCompileCommands())}',
+            )
+            cursor: cindex.Cursor = tu.cursor
+            tu_solver = Solver()
+            tu_assertions = []
+            walk_ast(cursor, walker, {'Seen': set([])})
 
-        if analysis_dir:
-            serialize_tu(analysis_dir, tu, tu_solver, tu_assertions)
+            if analysis_dir:
+                serialize_tu(analysis_dir, tu, tu_solver, tu_assertions)
 
-        all_assertions += tu_assertions
-        solver.add(tu_solver.assertions())
+            all_assertions += tu_assertions
+            solver.add(tu_solver.assertions())
 
-    end = time.time()
-    print(f'Parsing elapsed time: {end - start} seconds', flush=True)
+        end = time.time()
+        print(f'Parsing elapsed time: {end - start} seconds', flush=True)
 
-    # with open('smt_out', 'w') as fd:
-    #     print(solver.to_smt2(), file=fd)
-    #     exit(1)
+        # with open('smt_out', 'w') as fd:
+        #     print(solver.to_smt2(), file=fd)
+        #     exit(1)
 
-    # for assertion in solver.assertions():
-    #     print(assertion)
+        # for assertion in solver.assertions():
+        #     print(assertion)
 
-    start = time.time()
-    solver.set(timeout=5 * 60 * 1000)
-    status = solver.check(all_assertions)
-    end = time.time()
-    print(f'Z3 elapsed time: {end - start} seconds', flush=True)
-    if status != sat:
-        print('ERROR!')
-        core = solver.unsat_core()
-        for failure in core:
-            print(f'  {failure}')
-    elif status == sat:
-        print('===MODEL===')
-        for m in solver.model():
-            print(f'{m} = {solver.model()[m]}')
-        print(f'Ignored {_ignored} of {_num_exprs}')
+        start = time.time()
+        solver.set(timeout=5 * 60 * 1000)
+        status = solver.check(all_assertions)
+        end = time.time()
+        print(f'Z3 elapsed time: {end - start} seconds', flush=True)
+        if status != sat:
+            print('ERROR!')
+            core = solver.unsat_core()
+            for failure in core:
+                print(f'  {failure}')
+        #elif status == sat:
+        #    print('===MODEL===')
+        #    for m in solver.model():
+        #        print(f'{m} = {solver.model()[m]}')
+        #    print(f'Ignored {_ignored} of {_num_exprs}')
+        if not parsed_args.run_as_daemon:
+            break;
+        time.sleep(10)
 
 
 _ignored = 0
