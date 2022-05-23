@@ -192,6 +192,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		];
 		for (const tool of outputs) {
 			tool.stdout.split('\n').forEach(line => createDiagnostics(line));
+			//console.log(tool.stdout);
 		}
 
 		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
@@ -208,9 +209,9 @@ connection.onCodeAction((params) => {
 	if (textDocument === undefined) {
 		return undefined;
 	}
-	const data = (Object)(params.context.diagnostics[0].data);
-	const title = data.title;
-	if (params.context.diagnostics[0].data) {
+	if (typeof params.context.diagnostics[0] !== 'undefined' && typeof params.context.diagnostics[0].data !== 'undefined') {
+		const data = (Object)(params.context.diagnostics[0].data);
+		const title = data.title;
 		return [CodeAction.create(title, Command.create(title, 'sa4u.fix', textDocument.uri, data.change, params.context.diagnostics[0].range), CodeActionKind.QuickFix)];
 	}
 });
