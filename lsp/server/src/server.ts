@@ -20,10 +20,7 @@ import {
 	TextDocument
 } from 'vscode-languageserver-textdocument';
 
-import { ChildProcess, exec, ExecException, execSync } from 'child_process';
-import { promisify } from 'util';
-import {workspace} from 'vscode';
-import {spawn} from 'child_process';
+import { exec, execSync } from 'child_process';
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 const connection = createConnection(ProposedFeatures.all);
@@ -34,21 +31,10 @@ const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let messDef:string;
-const dockerContainerProcesses:ChildProcess[] = [];
 
-const startedSA4U_Z3 = false;
+let startedSA4U_Z3 = false;
 connection.onInitialize((params: InitializeParams) => {
-	/*
-	connection.workspace.getWorkspaceFolders().then((folders) => { 
-		console.log(folders);
-		if (folders && folders.length > 0) {
-			let path = decodeURIComponent(folders[0].uri);
-			path = path.substring(0,path.lastIndexOf("/")+1);
-			path = path.replace(/(^\w+:|^)\/\//, '');
-			path = path.replace(/:/, '');
-		}
-	});
-	*/
+
 	const capabilities = params.capabilities;
 
 	// Does the client support the `workspace/configuration` request?
@@ -87,7 +73,6 @@ connection.onInitialized(() => {
 		connection.workspace.getConfiguration('SA4U').then((value) => {
 			if (value.messageDefinition) {
 				messDef = value.messageDefinition;
-				documents.all().forEach(validateTextDocument);
 			}
 		});
 	}
@@ -96,6 +81,7 @@ connection.onInitialized(() => {
 			connection.console.log('Workspace folder change event received.');
 		});
 	}
+	connection.workspace.getConfiguration();
 	connection.workspace.getWorkspaceFolders().then((folders:null|WorkspaceFolder[]|void) => {
 		if (folders) {
 			folders.forEach((folder) => {
@@ -103,6 +89,7 @@ connection.onInitialized(() => {
 			});
 		}
 	});
+	documents.all().forEach((doc)=>validateTextDocument(doc));
 });
 
 async function dockerContainer (folder: WorkspaceFolder) {
@@ -165,9 +152,9 @@ async function dockerContainer (folder: WorkspaceFolder) {
 
 			for (const parser of parsers) {
 				const maybeMatch = line.match(parser.regex);
-				if (maybeMatch){
+				if (maybeMatch) {
 					const encoded = encodeURI(filePath+parser.parse(maybeMatch).source.replace(/\/src/, ''));
-					if(!diagnosticsMap.has(encoded))
+					if (!diagnosticsMap.has(encoded))
 						diagnosticsMap.set(encoded, []);
 					diagnosticsMap.get(encoded)?.push(parser.parse(maybeMatch));
 				}
@@ -178,7 +165,7 @@ async function dockerContainer (folder: WorkspaceFolder) {
 		rl.on('line', (line: any)=>{
 			console.log(line);
 			if (line.match(/---END RUN---/)) {
-				diagnosticsMap.forEach((value, key)=>{
+				diagnosticsMap.forEach((value, key) => {
 					connection.sendDiagnostics({ uri: key, diagnostics: value});
 					diagnosticsMap.set(key, []);
 				});
@@ -186,27 +173,7 @@ async function dockerContainer (folder: WorkspaceFolder) {
 				createDiagnostics(line);
 			}
 		});
-		/*
-		const line = rl.question('');
-		await line;
-		const rlPromise = util.promisify((cb) => { rl.question('', (line) => cb(undefined,line));});
-		
-		// eslint-disable-next-line no-constant-condition
-		while(true){
-			const line = await rlPromise;
-
-			if(line.match(/---END---/)){
-				break;
-			} else if (line.match(/---END RUN---/)) {
-				diagnosticsMap.forEach((value, key)=>{
-					connection.sendDiagnostics({ uri: key, diagnostics: value});
-				});
-			} else {
-				createDiagnostics(line);
-			}
-				//console.log(tool.stdout);
-		}
-		*/
+		startedSA4U_Z3 = true;
 	} catch (e) {
 		console.log(e);
 	}
@@ -240,9 +207,22 @@ connection.onDidChangeConfiguration(change => {
 	if (hasConfigurationCapability) {
 		// Reset all cached document settings
 		documentSettings.clear();
-		if (change.settings.SA4U){
+		if (change.settings.SA4U) {
 			messDef = change.settings.SA4U.messageDefinition;
-			documents.all().forEach(validateTextDocument);
+			if (startedSA4U_Z3) {
+				startedSA4U_Z3 = false;
+				connection.workspace.getWorkspaceFolders().then((folders:null|WorkspaceFolder[]|void) => {
+					if (folders) {
+						folders.forEach((folder) => {
+							let path = decodeURIComponent(folder.uri);
+							path = path.replace(/(^\w+:|^)\/\//, '');
+							path = path.replace(/:/, '');
+							execSync(`docker container kill sa4u_z3_server_${path.replace(/([^A-Za-z0-9]+)/g, '')}`);
+							dockerContainer(folder);
+						});
+					}
+				});
+			}
 		}
 	}
 });
@@ -260,11 +240,12 @@ documents.onDidSave(change => {
 
 // Validate documents whenever they're opened.
 documents.onDidOpen(e => {
-	validateTextDocument(e.document);
+	if (startedSA4U_Z3) 
+		validateTextDocument(e.document);
 });
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	/*connection.workspace.getWorkspaceFolders().then((folders:null|WorkspaceFolder[]|void) => {
+	connection.workspace.getWorkspaceFolders().then((folders:null|WorkspaceFolder[]|void) => {
 		if (folders) {
 			folders.forEach((folder) => {
 				let path = decodeURIComponent(folder.uri);
@@ -273,7 +254,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 				execSync(`docker container kill -s=HUP sa4u_z3_server_${path.replace(/([^A-Za-z0-9]+)/g, '')}`);
 			});
 		}
-	});*/
+	});
 }
 
 connection.onCodeAction((params) => {
@@ -292,13 +273,13 @@ connection.onExecuteCommand(async (params) => {
 	if (params.arguments ===  undefined) {
 		return;
 	}
-	if(params.command === 'sa4u.fix') {
+	if (params.command === 'sa4u.fix') {
 		const textDocument = documents.get(params.arguments[0]);
 		if (textDocument === undefined) {
 			return;
 		}
 		const newText = params.arguments[1];
-		if(typeof newText === 'string'){
+		if (typeof newText === 'string') {
 			connection.workspace.applyEdit({
 				documentChanges: [
 					TextDocumentEdit.create({ uri: textDocument.uri, version: textDocument.version }, [

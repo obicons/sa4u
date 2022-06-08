@@ -263,7 +263,7 @@ def main():
     initialize_z3()
     tu_solver = solver
     
-    while(True):
+    while True:
         _run = False
 
         with open(parsed_args.prior_types_path, 'r') as prior_types_fd:
@@ -350,9 +350,10 @@ def main():
         #    print(f'Ignored {_ignored} of {_num_exprs}')
         if not parsed_args.run_as_daemon:
             break;
-        print(f'---END RUN---')
-        while not _run:
-            time.sleep(_time_to_sleep)
+        print(f'---END RUN---', flush=True)
+        signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGHUP})
+        if not _run:
+            signal.sigwait({signal.SIGHUP})
 
 
 _ignored = 0
