@@ -6,6 +6,7 @@ import os.path
 import time
 import typing
 import xml.etree.ElementTree as ET
+import signal
 from typing import Any, Dict, Iterator, Optional, Set, TextIO, Tuple
 from util import *
 from z3 import *
@@ -181,9 +182,14 @@ _IGNORE_DIRS = {
     'v2.0',
 }
 
+# Control to run the type checking
+_run = False
+
+# Amount of time to sleep between checks for run
+_time_to_sleep = 10
 
 def main():
-    global _enable_scalar_prefixes, _use_power_of_ten, tu_assertions, tu_solver, solver
+    global _enable_scalar_prefixes, _use_power_of_ten, tu_assertions, tu_solver, solver, _run, _time_to_sleep
 
     parser = argparse.ArgumentParser(
         description='checks source code for unit conversion errors',
@@ -249,29 +255,33 @@ def main():
     )
     parsed_args = parser.parse_args()
 
+    signal.signal(signal.SIGHUP, HUP_signal_handler)
+    
     _use_power_of_ten = parsed_args.power_of_ten
     _enable_scalar_prefixes = not parsed_args.disable_scalar_prefixes
 
     initialize_z3()
     tu_solver = solver
-
-    with open(parsed_args.prior_types_path, 'r') as prior_types_fd:
-        load_prior_types(prior_types_fd)
-
-    with open(parsed_args.message_definition_path, 'r') as message_def_fd:
-        load_message_definitions(message_def_fd)
-
-    compilation_database: cindex.CompilationDatabase = cindex.CompilationDatabase.fromDirectory(
-        parsed_args.compilation_database_path,
-    )
-
-    analysis_dir: Optional[str] = parsed_args.serialize_analysis_path
-    all_assertions = tu_assertions
-
-    start = time.time()
-    count = 0
-
+    
     while True:
+        _run = False
+
+        with open(parsed_args.prior_types_path, 'r') as prior_types_fd:
+            load_prior_types(prior_types_fd)
+
+        with open(parsed_args.message_definition_path, 'r') as message_def_fd:
+            load_message_definitions(message_def_fd)
+
+        compilation_database: cindex.CompilationDatabase = cindex.CompilationDatabase.fromDirectory(
+            parsed_args.compilation_database_path,
+        )
+
+        analysis_dir: Optional[str] = parsed_args.serialize_analysis_path
+        all_assertions = tu_assertions
+
+        start = time.time()
+        count = 0
+
         # TODO: finish moving cache logic into translation_units` here
         for tu in translation_units(compilation_database, analysis_dir):
             if analysis_dir:
@@ -340,11 +350,18 @@ def main():
         #    print(f'Ignored {_ignored} of {_num_exprs}')
         if not parsed_args.run_as_daemon:
             break;
-        time.sleep(10)
+        print(f'---END RUN---', flush=True)
+        signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGHUP})
+        if not _run:
+            signal.sigwait({signal.SIGHUP})
 
 
 _ignored = 0
 _num_exprs = 0
+
+def HUP_signal_handler(sig_num: int, _frame):
+    global _run 
+    _run = True
 
 
 def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:

@@ -21,4 +21,4 @@ ADD . /sa4u-src/
 RUN cp /sa4u-src/sa4u /bin/ \
     && chmod +x /bin/sa4u
 
-ENTRYPOINT ["/bin/sa4u"]
+ENTRYPOINT [ "python3", "main.py" ]
