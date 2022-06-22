@@ -186,6 +186,7 @@ _IGNORE_DIRS = {
 # ensure only one run can be in queue at a time
 _run_lock = threading.BoundedSemaphore(1)
 
+
 def main():
     global _enable_scalar_prefixes, _use_power_of_ten, tu_assertions, tu_solver, solver, _run_lock
 
@@ -254,16 +255,16 @@ def main():
     parsed_args = parser.parse_args()
 
     signal.signal(signal.SIGHUP, HUP_signal_handler)
-    
+
     _use_power_of_ten = parsed_args.power_of_ten
     _enable_scalar_prefixes = not parsed_args.disable_scalar_prefixes
 
-    initialize_z3()
-    tu_solver = solver
-    
     while True:
         _run_lock.acquire()
         print("---Started---", flush=True)
+
+        initialize_z3()
+        tu_solver = solver
 
         with open(parsed_args.prior_types_path, 'r') as prior_types_fd:
             load_prior_types(prior_types_fd)
@@ -281,25 +282,10 @@ def main():
         start = time.time()
         count = 0
 
-        # TODO: finish moving cache logic into translation_units` here
         for tu in translation_units(compilation_database, analysis_dir):
-            if analysis_dir:
-                serialized_tu = read_tu(analysis_dir, tu)
-                modified_time = os.path.getmtime(tu.spelling)
-                if serialized_tu.serialization_time >= modified_time:
-                    log(
-                        LogLevel.INFO,
-                        f'restoring {tu.spelling} from previous state...'
-                    )
-                    all_assertions += [Const(s, BoolSort())
-                                    for s in serialized_tu.assertions]
-                    tmp_solver = Solver()
-                    tmp_solver.from_string(serialized_tu.solver)
-                    solver.add(tmp_solver.assertions())
-                    continue
             if isinstance(tu, SerializedTU):
                 all_assertions += [Const(s, BoolSort())
-                                for s in tu.assertions]
+                                   for s in tu.assertions]
                 tmp_solver = Solver()
                 tmp_solver.from_string(tu.solver)
                 solver.add(tmp_solver.assertions())
@@ -342,18 +328,19 @@ def main():
             core = solver.unsat_core()
             for failure in core:
                 print(f'  {failure}')
-        #elif status == sat:
+        # elif status == sat:
         #    print('===MODEL===')
         #    for m in solver.model():
         #        print(f'{m} = {solver.model()[m]}')
         #    print(f'Ignored {_ignored} of {_num_exprs}')
         if not parsed_args.run_as_daemon:
-            break;
+            break
         print(f'---END RUN---', flush=True)
 
 
 _ignored = 0
 _num_exprs = 0
+
 
 def HUP_signal_handler(sig_num: int, _frame):
     global _run_lock
@@ -362,6 +349,7 @@ def HUP_signal_handler(sig_num: int, _frame):
     except ValueError:
         pass
     print("In HUP signal handler...", flush=True)
+
 
 def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
     global _counter, _ignored
