@@ -10,6 +10,9 @@ import z3
 from typing import Any, Callable, Dict, List, Iterator, Optional, Set, Tuple, TypeVar
 
 
+_tu_filename_to_stu: Dict[str, 'SerializedTU'] = {}
+
+
 @dataclass
 class SerializedTU:
     serialization_time: int
@@ -264,18 +267,29 @@ def _translation_unit_to_filename(tu: cindex.TranslationUnit) -> str:
 
 def serialize_tu(path: str, tu: cindex.TranslationUnit, tu_solver: z3.Solver, tu_assertions: List[z3.BoolRef]):
     '''Saves the translation unit's solver to a file.'''
-    with open(os.path.join(path, _translation_unit_to_filename(tu) + '.json'), 'w') as f:
+    tu_pathname = os.path.join(
+        path, _translation_unit_to_filename(tu) + '.json')
+    with open(tu_pathname, 'w') as f:
         serialized_obj = {
             'Assertions': [str(a) for a in tu_assertions],
             'SerializationTime': int(time.time()),
             'Solver': tu_solver.to_smt2(),
         }
         json.dump(serialized_obj, f)
+        _tu_filename_to_stu[tu_pathname] = SerializedTU(
+            serialized_obj['SerializationTime'],
+            serialized_obj['Assertions'],
+            serialized_obj['Solver'],
+        )
 
 
 def read_tu(path: str, file_path: str) -> SerializedTU:
+    tu_pathname = os.path.join(path, file_path.replace('/', '_') + '.json')
+    if tu_pathname in _tu_filename_to_stu:
+        return _tu_filename_to_stu[tu_pathname]
+
     try:
-        with open(os.path.join(path, file_path.replace('/', '_') + '.json')) as f:
+        with open(tu_pathname) as f:
             data = json.load(f)
             return SerializedTU(data['SerializationTime'], data['Assertions'], data['Solver'])
     except Exception:
