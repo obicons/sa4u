@@ -21,6 +21,9 @@ import {
 } from 'vscode-languageserver-textdocument';
 
 import { exec, execSync } from 'child_process';
+import { promisify } from 'util';
+import { readFile } from 'fs';
+import { privateEncrypt } from 'crypto';
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 const connection = createConnection(ProposedFeatures.all);
@@ -92,7 +95,27 @@ connection.onInitialized(() => {
 	documents.all().forEach((doc)=>validateTextDocument(doc));
 });
 
-async function dockerContainer (folder: WorkspaceFolder) {
+class SA4UConfig {
+	compilationDir: string
+	constructor(compilationDir: string) {
+		this.compilationDir = '/src/' + compilationDir;
+	}
+}
+
+// TODO: it would be nice to automatically discover the compile_commands.json file.
+const readFileAsync = promisify(readFile);
+
+async function getSA4UConfig(projectRootDir: string) {
+	try {
+		const configJSON = JSON.parse((await readFileAsync(projectRootDir + "/" + ".sa4u.json")).toString());
+		return new SA4UConfig(configJSON['CompilationDir']);
+	} catch (err) {
+		console.warn('unable to read SA4U config: ' + err);
+		return new SA4UConfig('');
+	}
+}
+
+async function dockerContainer(folder: WorkspaceFolder) {
 	let path = decodeURIComponent(folder.uri);
 	const filePath = path;
 	path = path.replace(/(^\w+:|^)\/\//, '');
@@ -160,7 +183,10 @@ async function dockerContainer (folder: WorkspaceFolder) {
 				}
 			}
 		};
-		const child = exec(`docker container run --rm --mount type=bind,source="${path}",target="/src/" --name sa4u_z3_server_${path.replace(/([^A-Za-z0-9]+)/g, '')} sa4u-z3 -d True -c /src/ -p /src/ex_prior.json -m /src/${messDef}`);
+		const sa4uConfig = await getSA4UConfig(path);
+		console.log('using compile dir: ' + sa4uConfig.compilationDir);
+
+		const child = exec(`docker container run --rm --mount type=bind,source="${path}",target="/src/" --name sa4u_z3_server_${path.replace(/([^A-Za-z0-9]+)/g, '')} sa4u-z3 -d True -c "${sa4uConfig.compilationDir}" -p /src/ex_prior.json -m /src/${messDef}`);
 		const rl = readline.createInterface({input: child.stdout});
 		rl.on('line', (line: any)=>{
 			console.log(line);
