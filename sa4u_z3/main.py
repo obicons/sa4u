@@ -236,6 +236,16 @@ def main():
         default=False,
     )
     parser.add_argument(
+        '-i',
+        '--ignore-files',
+        dest='ignore_files',
+        help='files that sa4u does not need to analyze',
+        action='append',
+        required=False,
+        type=str,
+        default=None,
+    )
+    parser.add_argument(
         '--disable-scalar-prefixes',
         action=argparse.BooleanOptionalAction,
         dest='disable_scalar_prefixes',
