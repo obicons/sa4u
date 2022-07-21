@@ -31,6 +31,9 @@ const connection = createConnection(ProposedFeatures.all);
 // Create a simple text document manager.
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
+// Docker image to use for analysis.
+const dockerImageName = "sa4u/sa4u:0.7.0";
+
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let messDef:string;
@@ -186,7 +189,7 @@ async function dockerContainer(folder: WorkspaceFolder) {
 		const sa4uConfig = await getSA4UConfig(path);
 		console.log('using compile dir: ' + sa4uConfig.compilationDir);
 
-		const child = exec(`docker container run --rm --mount type=bind,source="${path}",target="/src/" --name sa4u_z3_server_${path.replace(/([^A-Za-z0-9]+)/g, '')} sa4u-z3 -d True -c "${sa4uConfig.compilationDir}" -p /src/ex_prior.json -m /src/${messDef}`);
+		const child = exec(`docker container run --mount type=bind,source="${path}",target="/src/" --name sa4u_z3_server_${path.replace(/([^A-Za-z0-9]+)/g, '')} ${dockerImageName} -d True -c "${sa4uConfig.compilationDir}" -p /src/ex_prior.json -m /src/${messDef} --serialize-analysis /src/.sa4u/cache/`);
 		const rl = readline.createInterface({input: child.stdout});
 		rl.on('line', (line: any)=>{
 			console.log(line);
@@ -201,7 +204,7 @@ async function dockerContainer(folder: WorkspaceFolder) {
 		});
 		startedSA4U_Z3 = true;
 	} catch (e) {
-		console.log(e);
+		console.log('ERROR ' + e);
 	}
 }
 
@@ -266,7 +269,7 @@ documents.onDidSave(change => {
 
 // Validate documents whenever they're opened.
 documents.onDidOpen(e => {
-	if (startedSA4U_Z3) 
+	if (startedSA4U_Z3)
 		validateTextDocument(e.document);
 });
 

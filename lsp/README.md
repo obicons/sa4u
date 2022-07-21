@@ -1,14 +1,6 @@
-# LSP Example
+# SA4U
 
-Heavily documented sample code for https://code.visualstudio.com/api/language-extensions/language-server-extension-guide
-
-## Functionality
-
-This Language Server works for plain text file. It has the following language features:
-- Completions
-- Diagnostics regenerated on each file change or configuration change
-
-It also includes an End-to-End test.
+This is the SA4U editor plugin. It helps developers find unit type errors (UTEs) before they are triggered in production.
 
 ## Structure
 
@@ -24,7 +16,7 @@ It also includes an End-to-End test.
         └── server.ts // Language Server entry point
 ```
 
-## Running the Sample
+## Running the extension
 
 - Run `npm install` in this folder. This installs all necessary npm modules in both the client and server folder
 - Open VS Code on this folder.
