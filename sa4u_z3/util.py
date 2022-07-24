@@ -276,6 +276,7 @@ def serialize_tu(path: str, tu: cindex.TranslationUnit, tu_solver: z3.Solver, tu
             'Solver': tu_solver.to_smt2(),
         }
         json.dump(serialized_obj, f)
+        log(LogLevel.INFO, f"Writing to in-memory cache {tu_pathname}")
         _tu_filename_to_stu[tu_pathname] = SerializedTU(
             serialized_obj['SerializationTime'],
             serialized_obj['Assertions'],
@@ -286,11 +287,25 @@ def serialize_tu(path: str, tu: cindex.TranslationUnit, tu_solver: z3.Solver, tu
 def read_tu(path: str, file_path: str) -> SerializedTU:
     tu_pathname = os.path.join(path, file_path.replace('/', '_') + '.json')
     if tu_pathname in _tu_filename_to_stu:
+        log(LogLevel.INFO, f"Using in-memory cache for {tu_pathname}")
         return _tu_filename_to_stu[tu_pathname]
+    else:
+        log(LogLevel.INFO, f"No in-memory cache for {tu_pathname}")
 
     try:
         with open(tu_pathname) as f:
             data = json.load(f)
-            return SerializedTU(data['SerializationTime'], data['Assertions'], data['Solver'])
+            _tu_filename_to_stu[tu_pathname] = SerializedTU(
+                data['SerializationTime'], data['Assertions'], data['Solver'])
+            return _tu_filename_to_stu[tu_pathname]
     except Exception:
         return SerializedTU(0, [], [])
+
+
+def ensure_analysis_dir(dir: Optional[str]):
+    '''Ensures dir exists.'''
+    if dir is not None:
+        try:
+            os.mkdir(dir)
+        except FileExistsError:
+            pass
