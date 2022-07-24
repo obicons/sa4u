@@ -28,7 +28,7 @@ int main() {
   // Fine:
   set_alt_in_cm(z * 100);
   // Error:
-  // set_alt_in_cm(z);
+  set_alt_in_cm(z);
 
   alt_in_cm = get_value();
   // Error: inconsistent types
