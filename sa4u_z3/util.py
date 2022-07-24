@@ -7,7 +7,7 @@ import sys
 import os
 import time
 import z3
-from typing import Any, Callable, Dict, List, Iterator, Optional, Set, TypeVar
+from typing import Any, Callable, Dict, List, Iterator, Optional, Set, Tuple, TypeVar
 
 
 _tu_filename_to_stu: Dict[str, 'SerializedTU'] = {}
@@ -282,6 +282,7 @@ def serialize_tu(path: str, tu: cindex.TranslationUnit, tu_solver: z3.Solver, tu
             serialized_obj['SerializationTime'],
             serialized_obj['Assertions'],
             serialized_obj['Solver'],
+            tu.spelling,
         )
 
 
@@ -314,3 +315,17 @@ def ensure_analysis_dir(dir: Optional[str]):
             os.mkdir(dir)
         except FileExistsError:
             pass
+
+
+def get_ignore_lines(tu: cindex.TranslationUnit) -> List[Tuple[str, int]]:
+    '''Returns the locations that are to be ignored.'''
+    ignored_locations = []
+    for token in tu.cursor.get_tokens():
+        try:
+            if token.kind == cindex.TokenKind.COMMENT and token.spelling == '// @sa4u.ignore':
+                ignored_locations.append(
+                    (token.location.file.name, token.location.line + 1),
+                )
+        except Exception:
+            pass
+    return ignored_locations

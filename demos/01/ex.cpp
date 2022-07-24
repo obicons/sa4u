@@ -28,6 +28,11 @@ int main() {
   // Fine:
   set_alt_in_cm(z * 100);
   // Error:
+  // set_alt_in_cm(z);
+
+  // This is also an error, but now it's okay because we use an ignore
+  // directive.
+  // @sa4u.ignore
   set_alt_in_cm(z);
 
   alt_in_cm = get_value();

@@ -310,6 +310,8 @@ def main():
                 solver.add(tmp_solver.assertions())
                 continue
 
+            ignore_locations = get_ignore_lines(tu)
+
             print(tu.spelling)
             count += 1
             log(
@@ -319,7 +321,14 @@ def main():
             cursor: cindex.Cursor = tu.cursor
             tu_solver = Solver()
             tu_assertions = []
-            walk_ast(cursor, walker, {'Seen': set([])})
+            walk_ast(
+                cursor,
+                walker,
+                {
+                    'Seen': set([]),
+                    'IgnoreLocations': ignore_locations,
+                },
+            )
 
             if analysis_dir:
                 serialize_tu(analysis_dir, tu, tu_solver, tu_assertions)
@@ -373,8 +382,11 @@ def HUP_signal_handler(sig_num: int, _frame):
 def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
     global _counter, _ignored
     filename: str = ''
+    if _ignore_cursor(cursor, data['IgnoreLocations']):
+        return WalkResult.CONTINUE
+
     if cursor.location.file is not None:
-        home = os.getenv('HOME')
+        home = os.getenv('HOME') or ''
         filename = cursor.location.file.name
         if not filename.startswith(home) and not filename.startswith('/src/'):
             return WalkResult.CONTINUE
@@ -1194,6 +1206,14 @@ def parse_mavlink(xml: ET.ElementTree):
                 Frames.frames(*[True for _ in range(NUM_FRAMES)]),
                 False,
             )
+
+
+def _ignore_cursor(cursor: cindex.Cursor, ignore_locations: List[Tuple[str, int]]) -> bool:
+    if cursor.location is None:
+        return False
+
+    return any([l[0] == cursor.location.file.name and l[1] ==
+                cursor.location.line for l in ignore_locations])
 
 
 if __name__ == '__main__':
