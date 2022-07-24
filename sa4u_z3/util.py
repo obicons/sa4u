@@ -7,7 +7,7 @@ import sys
 import os
 import time
 import z3
-from typing import Any, Callable, Dict, List, Iterator, Optional, Set, Tuple, TypeVar
+from typing import Any, Callable, Dict, List, Iterator, Optional, Set, TypeVar
 
 
 _tu_filename_to_stu: Dict[str, 'SerializedTU'] = {}
@@ -18,6 +18,7 @@ class SerializedTU:
     serialization_time: int
     assertions: List[str]
     solver: List[Any]
+    spelling: str
 
 
 class WalkResult(enum.Enum):
@@ -296,10 +297,14 @@ def read_tu(path: str, file_path: str) -> SerializedTU:
         with open(tu_pathname) as f:
             data = json.load(f)
             _tu_filename_to_stu[tu_pathname] = SerializedTU(
-                data['SerializationTime'], data['Assertions'], data['Solver'])
+                data['SerializationTime'],
+                data['Assertions'],
+                data['Solver'],
+                file_path,
+            )
             return _tu_filename_to_stu[tu_pathname]
     except Exception:
-        return SerializedTU(0, [], [])
+        return SerializedTU(0, [], [], file_path)
 
 
 def ensure_analysis_dir(dir: Optional[str]):

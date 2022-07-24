@@ -268,6 +268,7 @@ def main():
 
     _use_power_of_ten = parsed_args.power_of_ten
     _enable_scalar_prefixes = not parsed_args.disable_scalar_prefixes
+    ignore_files = set(parsed_args.ignore_files or [])
 
     while True:
         _run_lock.acquire()
@@ -287,12 +288,20 @@ def main():
         )
 
         analysis_dir: Optional[str] = parsed_args.serialize_analysis_path
+        ensure_analysis_dir(analysis_dir)
         all_assertions = tu_assertions
 
         start = time.time()
         count = 0
 
         for tu in translation_units(compilation_database, analysis_dir):
+            if os.path.basename(tu.spelling) in ignore_files:
+                log(
+                    LogLevel.INFO,
+                    f'Skipping {tu.spelling} because it is to be ignored',
+                )
+                continue
+
             if isinstance(tu, SerializedTU):
                 all_assertions += [Const(s, BoolSort())
                                    for s in tu.assertions]
