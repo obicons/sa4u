@@ -548,12 +548,12 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
                 LogLevel.WARNING,
                 f'unknown call to {cursor.spelling} in {cursor.location.file} on line {cursor.location.line} column {cursor.location.column}',
             )
-            return
+            return None
 
         fq_fn_name = get_fq_name(cursor.referenced)
         if fq_fn_name in _IGNORE_FUNCS:
             _ignored += 1
-            return
+            return None
 
         reference_typename = f'{get_fq_name(cursor.referenced)}_return_type'
         if _fn_name_to_return_type.get(reference_typename) is None:
@@ -599,7 +599,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
                 context['ParamNamesToId'][cursor.spelling],
             )
         if cursor.referenced is None:
-            return
+            return None
 
         var_typename = f'{get_fq_name(cursor.referenced)}_type'
         if _var_name_to_type.get(var_typename) is None:
@@ -725,7 +725,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
         expr_repr = get_fq_member_expr(cursor)
         if expr_repr in _IGNORE_MEMBERS:
             _ignored += 1
-            return
+            return None
 
         for access in _member_frame_accesses:
             typename = access.split('.')[0]
@@ -774,15 +774,15 @@ def extract_conditional_constraints(if_stmt: cindex.Cursor) -> Optional[Tuple[st
             _member_frame_accesses,
         )
         if constrained_object is None:
-            return
+            return None
 
         constraint_literal = maybe_get_constraint_literal(body_expr)
         if constraint_literal is None:
-            return
+            return None
 
         if constraint_literal > NUM_FRAMES:
             log(LogLevel.WARNING, f'Unrecognized frame: {constraint_literal}')
-            return
+            return None
 
         if operator == '==':
             framev = [False] * NUM_FRAMES
@@ -794,6 +794,7 @@ def extract_conditional_constraints(if_stmt: cindex.Cursor) -> Optional[Tuple[st
         frame = Frames.frames(framev)
 
         return (constrained_object, frame)
+    return None
 
 
 def scalar_multiply(s1: DatatypeRef, s2: DatatypeRef) -> DatatypeRef:
@@ -1126,7 +1127,7 @@ def load_message_definitions(io: TextIO):
         raise ValueError('Unsupported definition file')
 
 
-def parse_cmasi(xml: ET.ElementTree):
+def parse_cmasi(xml: ET.Element):
     for elt in xml.findall('*/Struct'):
         struct_name = elt.attrib['Name']
         for field in elt:
@@ -1172,7 +1173,7 @@ def parse_cmasi(xml: ET.ElementTree):
             )
 
 
-def parse_mavlink(xml: ET.ElementTree):
+def parse_mavlink(xml: ET.Element):
     global _member_access_with_prior_types
     for message in xml.findall('*/message'):
         typename = f'mavlink_{message.attrib["name"].lower()}_t'
