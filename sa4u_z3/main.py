@@ -1,14 +1,14 @@
 import argparse
-import ccsyspath
 import clang.cindex as cindex
 import json
 import os.path
 import time
-import typing
 import xml.etree.ElementTree as ET
 import signal
 import threading
-from typing import Any, Dict, Iterator, Optional, Set, TextIO, Tuple
+from log import *
+from tu import *
+from typing import Any, Dict, Optional, Set, TextIO, Tuple
 from util import *
 from z3 import *
 
@@ -834,52 +834,6 @@ def is_dimensionless(t: DatatypeRef) -> BoolRef:
             for i in range(NUM_BASE_UNITS)
         ],
     )
-
-
-def translation_units(compile_commands: cindex.CompilationDatabase, cache_path: Optional[str]) -> Iterator[typing.Union[cindex.TranslationUnit, SerializedTU]]:
-    '''Returns an iterator over a translation unit for each file in the compilation database.'''
-    compile_command: cindex.CompileCommand
-    for compile_command in compile_commands.getAllCompileCommands():
-        if cache_path:
-            full_path = os.path.join(
-                compile_command.directory,
-                compile_command.filename,
-            )
-            serialized_tu = read_tu(
-                cache_path,
-                full_path,
-            )
-            modified_time = os.path.getmtime(full_path)
-            if serialized_tu.serialization_time >= modified_time:
-                log(LogLevel.INFO, f'Using cached analysis for {full_path}')
-                yield serialized_tu
-                continue
-
-        log(
-            LogLevel.INFO,
-            f'parsing {compile_command.filename}'
-        )
-        try:
-            if 'lua' in compile_command.filename:
-                continue
-            os.chdir(compile_command.directory)
-            translation_unit = cindex.TranslationUnit.from_source(
-                os.path.join(compile_command.directory,
-                             compile_command.filename),
-                args=[arg for arg in compile_command.arguments
-                      if arg != compile_command.filename] + ['-I' + inc.decode() for inc in ccsyspath.system_include_paths('clang')],
-            )
-            for diag in translation_unit.diagnostics:
-                log(
-                    LogLevel.WARNING,
-                    f'Parsing: {compile_command.filename}: {diag}'
-                )
-            yield translation_unit
-        except cindex.TranslationUnitLoadError:
-            log(
-                LogLevel.WARNING,
-                f'could not parse {os.path.join(compile_command.directory, compile_command.filename)}',
-            )
 
 
 def create_scalar_instance(num: int = None, pair: Tuple[int, int] = None) -> DatatypeRef:

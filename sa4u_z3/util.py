@@ -1,24 +1,10 @@
 import ctypes
-from dataclasses import dataclass
 import clang.cindex as cindex
 import enum
-import json
-import sys
 import os
-import time
-import z3
+from log import *
+from tu import *
 from typing import Any, Callable, Dict, List, Iterator, Optional, Set, Tuple, TypeVar
-
-
-_tu_filename_to_stu: Dict[str, 'SerializedTU'] = {}
-
-
-@dataclass
-class SerializedTU:
-    serialization_time: int
-    assertions: List[str]
-    solver: List[Any]
-    spelling: str
 
 
 class WalkResult(enum.Enum):
@@ -30,12 +16,6 @@ class WalkResult(enum.Enum):
 
     # Visit the node's children.
     RECURSE = 3
-
-
-class LogLevel(enum.Enum):
-    INFO = 1
-    WARNING = 2
-    ERROR = 3
 
 
 T = TypeVar('T')
@@ -112,7 +92,7 @@ def _get_lhs_helper(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
 
 def get_lhs(cursor: cindex.Cursor) -> cindex.Cursor:
-    data = {}
+    data: Dict[str, Any] = {}
     walk_ast(cursor, _get_lhs_helper, data)
     return data['result']
 
@@ -128,7 +108,7 @@ def _get_rhs_helper(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
 
 def get_rhs(cursor: cindex.Cursor) -> cindex.Cursor:
-    data = {}
+    data: Dict[str, Any] = {}
     walk_ast(cursor, _get_rhs_helper, data)
     return data['result']
 
@@ -206,16 +186,6 @@ def get_fq_member_expr(cursor: cindex.Cursor) -> str:
     return data[0]
 
 
-def log(level: LogLevel, *args):
-    level_to_str = {
-        LogLevel.INFO: 'INFO:',
-        LogLevel.WARNING: 'WARNING:',
-        LogLevel.ERROR: 'ERROR:',
-    }
-    print(level_to_str[level], sep='', end=' ', file=sys.stderr)
-    print(*args, flush=True, file=sys.stderr)
-
-
 def has_return_statement(cursor: cindex.Cursor) -> bool:
     '''Returns if the cursor has a return statement.'''
     def has_return_statement_walker(cursor: cindex.Cursor, data: Dict[Any, Any]):
@@ -224,7 +194,7 @@ def has_return_statement(cursor: cindex.Cursor) -> bool:
             return WalkResult.BREAK
         return WalkResult.RECURSE
 
-    data = {}
+    data: Dict[str, Any] = {}
     walk_ast(cursor, has_return_statement_walker, data)
     return data.get('HasReturn', False)
 
@@ -236,7 +206,7 @@ def get_next_decl_ref_expr(cursor: cindex.Cursor) -> Optional[cindex.Cursor]:
             return WalkResult.BREAK
         return WalkResult.RECURSE
 
-    data = {}
+    data: Dict[str, Any] = {}
     walk_ast(cursor, walker, data)
     return data.get('Decl')
 
@@ -252,6 +222,8 @@ def maybe_get_constrained_object(cursor: cindex.Cursor, frame_accesses: Set[str]
         if access in frame_accesses:
             return get_fq_name(get_next_decl_ref_expr(the_member_access))
 
+    return None
+
 
 def maybe_get_constraint_literal(cursor: cindex.Cursor) -> Optional[int]:
     the_literal = get_lhs(cursor)
@@ -261,51 +233,7 @@ def maybe_get_constraint_literal(cursor: cindex.Cursor) -> Optional[int]:
     if the_literal.kind == cindex.CursorKind.INTEGER_LITERAL:
         return get_integer_literal(the_literal)
 
-
-def _translation_unit_to_filename(tu: cindex.TranslationUnit) -> str:
-    return tu.spelling.replace('/', '_')
-
-
-def serialize_tu(path: str, tu: cindex.TranslationUnit, tu_solver: z3.Solver, tu_assertions: List[z3.BoolRef]):
-    '''Saves the translation unit's solver to a file.'''
-    tu_pathname = os.path.join(
-        path, _translation_unit_to_filename(tu) + '.json')
-    with open(tu_pathname, 'w') as f:
-        serialized_obj = {
-            'Assertions': [str(a) for a in tu_assertions],
-            'SerializationTime': int(time.time()),
-            'Solver': tu_solver.to_smt2(),
-        }
-        json.dump(serialized_obj, f)
-        log(LogLevel.INFO, f"Writing to in-memory cache {tu_pathname}")
-        _tu_filename_to_stu[tu_pathname] = SerializedTU(
-            serialized_obj['SerializationTime'],
-            serialized_obj['Assertions'],
-            serialized_obj['Solver'],
-            tu.spelling,
-        )
-
-
-def read_tu(path: str, file_path: str) -> SerializedTU:
-    tu_pathname = os.path.join(path, file_path.replace('/', '_') + '.json')
-    if tu_pathname in _tu_filename_to_stu:
-        log(LogLevel.INFO, f"Using in-memory cache for {tu_pathname}")
-        return _tu_filename_to_stu[tu_pathname]
-    else:
-        log(LogLevel.INFO, f"No in-memory cache for {tu_pathname}")
-
-    try:
-        with open(tu_pathname) as f:
-            data = json.load(f)
-            _tu_filename_to_stu[tu_pathname] = SerializedTU(
-                data['SerializationTime'],
-                data['Assertions'],
-                data['Solver'],
-                file_path,
-            )
-            return _tu_filename_to_stu[tu_pathname]
-    except Exception:
-        return SerializedTU(0, [], [], file_path)
+    return None
 
 
 def ensure_analysis_dir(dir: Optional[str]):
