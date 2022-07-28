@@ -1,3 +1,4 @@
+import logging
 import ccsyspath
 import clang.cindex as cindex
 import json
@@ -7,8 +8,9 @@ import queue
 import time
 import z3
 from dataclasses import dataclass
-from log import *
 from typing import Any, Dict, Iterator, List, Optional, Union
+
+logger = logging.getLogger()
 
 _tu_filename_to_stu: Dict[str, 'SerializedTU'] = {}
 
@@ -75,13 +77,10 @@ def _parse_tu(compile_command: cindex.CompileCommand, cache_path: Optional[str] 
         )
         modified_time = os.path.getmtime(full_path)
         if serialized_tu.serialization_time >= modified_time:
-            log(LogLevel.INFO, f'Using cached analysis for {full_path}')
+            logger.info(f'Using cached analysis for {full_path}')
             return serialized_tu
 
-    log(
-        LogLevel.INFO,
-        f'parsing {compile_command.filename}',
-    )
+    logger.info(f'parsing {compile_command.filename}')
     try:
         if 'lua' in compile_command.filename:
             return None
@@ -93,14 +92,10 @@ def _parse_tu(compile_command: cindex.CompileCommand, cache_path: Optional[str] 
                   if arg != compile_command.filename] + ['-I' + inc.decode() for inc in ccsyspath.system_include_paths('clang')],
         )
         for diag in translation_unit.diagnostics:
-            log(
-                LogLevel.WARNING,
-                f'Parsing: {compile_command.filename}: {diag}'
-            )
+            logger.warn(f'Parsing: {compile_command.filename}: {diag}')
         return translation_unit
     except cindex.TranslationUnitLoadError:
-        log(
-            LogLevel.WARNING,
+        logger.warn(
             f'could not parse {os.path.join(compile_command.directory, compile_command.filename)}',
         )
         return None
@@ -109,10 +104,10 @@ def _parse_tu(compile_command: cindex.CompileCommand, cache_path: Optional[str] 
 def read_tu(path: str, file_path: str) -> SerializedTU:
     tu_pathname = os.path.join(path, file_path.replace('/', '_') + '.json')
     if tu_pathname in _tu_filename_to_stu:
-        log(LogLevel.INFO, f"Using in-memory cache for {tu_pathname}")
+        logger.info(f"Using in-memory cache for {tu_pathname}")
         return _tu_filename_to_stu[tu_pathname]
     else:
-        log(LogLevel.INFO, f"No in-memory cache for {tu_pathname}")
+        logger.info(f"No in-memory cache for {tu_pathname}")
 
     try:
         with open(tu_pathname) as f:
@@ -139,7 +134,7 @@ def serialize_tu(path: str, tu: cindex.TranslationUnit, tu_solver: z3.Solver, tu
             'Solver': tu_solver.to_smt2(),
         }
         json.dump(serialized_obj, f)
-        log(LogLevel.INFO, f"Writing to in-memory cache {tu_pathname}")
+        logger.info(f"Writing to in-memory cache {tu_pathname}")
         _tu_filename_to_stu[tu_pathname] = SerializedTU(
             serialized_obj['SerializationTime'],
             serialized_obj['Assertions'],

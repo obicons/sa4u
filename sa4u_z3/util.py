@@ -2,7 +2,6 @@ import ctypes
 import clang.cindex as cindex
 import enum
 import os
-from log import *
 from tu import *
 from typing import Any, Callable, Dict, List, Iterator, Optional, Set, Tuple, TypeVar
 
