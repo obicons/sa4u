@@ -1,16 +1,18 @@
 import argparse
 import clang.cindex as cindex
 import json
+import logging
 import os.path
 import time
 import xml.etree.ElementTree as ET
 import signal
 import threading
-from log import *
 from tu import *
 from typing import Any, Dict, Optional, Set, TextIO, Tuple
 from util import *
 from z3 import *
+
+logger = logging.getLogger()
 
 # 0 is m, 1 is s, 2 is mole, 3 is amp, 4 is kelvin, 5 is cd, 6 is kg
 NUM_BASE_UNITS = 7
@@ -264,6 +266,11 @@ def main():
     )
     parsed_args = parser.parse_args()
 
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(levelname)s: %(message)s',
+    )
+
     signal.signal(signal.SIGHUP, HUP_signal_handler)
 
     _use_power_of_ten = parsed_args.power_of_ten
@@ -296,8 +303,7 @@ def main():
 
         for tu in translation_units(compilation_database, analysis_dir):
             if os.path.basename(tu.spelling) in ignore_files:
-                log(
-                    LogLevel.INFO,
+                logger.info(
                     f'Skipping {tu.spelling} because it is to be ignored',
                 )
                 continue
@@ -312,10 +318,8 @@ def main():
 
             ignore_locations = get_ignore_lines(tu)
 
-            print(tu.spelling)
             count += 1
-            log(
-                LogLevel.INFO,
+            logger.info(
                 f'{count} / {len(compilation_database.getAllCompileCommands())}',
             )
             cursor: cindex.Cursor = tu.cursor
@@ -405,7 +409,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
         data['ActiveConstraints'] = {}
         data['NextId'] = 0
         data['ParamNamesToId'] = {}
-        log(LogLevel.INFO, f'IN {data["CurrentFn"]}')
+        logger.debug(f'IN {data["CurrentFn"]}')
         return WalkResult.RECURSE
     elif cursor.kind == cindex.CursorKind.PARM_DECL:
         if data.get('ParamNamesToId') is None:
@@ -416,7 +420,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
         return WalkResult.CONTINUE
     elif cursor.kind == cindex.CursorKind.VAR_DECL:
         if 'CurrentFn' in data:
-            log(LogLevel.INFO, f'DECL IN {data["CurrentFn"]}')
+            logger.debug(f'DECL IN {data["CurrentFn"]}')
 
         # We have an uninitialized variable. Skip it for now.
         if len(list(cursor.get_children())) == 0:
@@ -446,8 +450,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
         lhs_type = type_expr(get_lhs(cursor), data)
         if lhs_type is None:
-            log(
-                LogLevel.WARNING,
+            logger.warn(
                 f'unrecognized lhs type @ {cursor.location.file} line {cursor.location.line}',
             )
             _ignored += 1
@@ -456,8 +459,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
         rhs_type = type_expr(get_rhs(cursor), data)
         if rhs_type is None:
             _ignored += 1
-            log(
-                LogLevel.WARNING,
+            logger.warn(
                 f'unrecognized rhs type @ {cursor.location.file} line {cursor.location.line}',
             )
             return WalkResult.CONTINUE
@@ -482,10 +484,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
         fq_fn_name = get_fq_name(cursor.referenced)
         if fq_fn_name in _IGNORE_FUNCS:
-            log(
-                LogLevel.WARNING,
-                f'Skipping function {fq_fn_name}'
-            )
+            logger.warn(f'Skipping function {fq_fn_name}')
             _ignored += 1
             return WalkResult.CONTINUE
 
@@ -493,8 +492,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
         for arg, arg_no in zip(get_arguments(cursor), range(0, 1000)):
             if arg is None:
                 _ignored += 1
-                log(
-                    LogLevel.WARNING,
+                logger.warn(
                     f'no argument cursor found in {cursor.location.file} on line {cursor.location.line}',
                 )
                 continue
@@ -502,8 +500,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
             arg_type = type_expr(arg, data)
             if arg_type is None:
                 _ignored += 1
-                log(
-                    LogLevel.WARNING,
+                logger.warn(
                     f'unknown argument type in {cursor.location.file} on line {cursor.location.line}',
                 )
                 return WalkResult.RECURSE
@@ -544,8 +541,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
     _num_exprs += 1
     if cursor.kind == cindex.CursorKind.CALL_EXPR:
         if cursor.referenced is None:
-            log(
-                LogLevel.WARNING,
+            logger.warn(
                 f'unknown call to {cursor.spelling} in {cursor.location.file} on line {cursor.location.line} column {cursor.location.column}',
             )
             return None
@@ -571,8 +567,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
         for arg, arg_no in zip(get_arguments(cursor), range(0, 1000)):
             if arg is None:
                 _ignored += 1
-                log(
-                    LogLevel.WARNING,
+                logger.warn(
                     f'no argument cursor found in {cursor.location.file} on line {cursor.location.line}',
                 )
                 continue
@@ -580,8 +575,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             arg_type = type_expr(arg, context)
             if arg_type is None:
                 _ignored += 1
-                log(
-                    LogLevel.WARNING,
+                logger.warn(
                     f'unknown argument type in {cursor.location.file} on line {cursor.location.line}',
                 )
                 break
@@ -606,8 +600,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             _var_name_to_type[var_typename] = Const(var_typename, Type)
         return _var_name_to_type[var_typename]
     elif cursor.kind == cindex.CursorKind.UNEXPOSED_EXPR:
-        log(
-            LogLevel.WARNING,
+        logger.warn(
             f'calling type_expr on UNEXPOSED_EXPR.',
         )
     elif cursor.kind == cindex.CursorKind.BINARY_OPERATOR:
@@ -618,10 +611,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             rhs_type = type_expr(get_rhs(cursor), context)
             loc: cindex.SourceLocation = cursor.location
             if lhs_type is None or rhs_type is None:
-                log(
-                    LogLevel.WARNING,
-                    f'untyped expression @ {loc.file} line {loc.line}',
-                )
+                logger.warn(f'untyped expression @ {loc.file} line {loc.line}')
                 return None
             assert_and_check(
                 Or(
@@ -641,8 +631,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             rhs_type = type_expr(get_rhs(cursor), context)
             loc: cindex.SourceLocation = cursor.location
             if lhs_type is None or rhs_type is None:
-                log(
-                    LogLevel.WARNING,
+                logger.warn(
                     f'untyped expression @ {loc.file} on line {loc.line}',
                 )
                 return None
@@ -731,8 +720,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             typename = access.split('.')[0]
             expr_repr_type = expr_repr.split('.')[0]
             if typename == expr_repr_type and context['ActiveConstraints'] == {}:
-                log(
-                    LogLevel.ERROR,
+                logger.error(
                     f'No constraints active for member access @ {cursor.location.file} line {cursor.location.line}',
                 )
 
@@ -781,7 +769,7 @@ def extract_conditional_constraints(if_stmt: cindex.Cursor) -> Optional[Tuple[st
             return None
 
         if constraint_literal > NUM_FRAMES:
-            log(LogLevel.WARNING, f'Unrecognized frame: {constraint_literal}')
+            logger.warn(f'Unrecognized frame: {constraint_literal}')
             return None
 
         if operator == '==':
@@ -968,18 +956,9 @@ def set_to_z3_set(set: Set[AstRef], sort: SortRef) -> ArrayRef:
 
 
 def assert_and_check(stmt: Any, msg: str):
-    # solver.push()
     b = Const(msg, BoolSort())
     tu_solver.add(Implies(b, stmt))
     tu_assertions.append(b)
-    # solver.assert_and_track(stmt, msg)
-    # if solver.check() == unsat:
-    #     for problem in solver.unsat_core():
-    #         log(
-    #             LogLevel.ERROR,
-    #             problem,
-    #         )
-    #     solver.pop()
 
 
 def get_scalar(unit: DatatypeRef) -> DatatypeRef:
@@ -1089,10 +1068,7 @@ def parse_cmasi(xml: ET.Element):
             if unit_name is None or unit_name.lower() == 'none':
                 continue
             if unit_name not in UNIT_TO_BASE_UNIT_VECTOR:
-                log(
-                    LogLevel.WARNING,
-                    f'unrecognized unit: {unit_name}. Skipping.',
-                )
+                logger.warn(f'unrecognized unit: {unit_name}. Skipping.')
                 continue
             field_name = field.attrib['Name'][0].upper(
             ) + field.attrib['Name'][1:]
@@ -1140,10 +1116,7 @@ def parse_mavlink(xml: ET.Element):
                         f'{typename}.{field.attrib["name"]}')
                 continue
             elif unit_name not in UNIT_TO_BASE_UNIT_VECTOR:
-                log(
-                    LogLevel.WARNING,
-                    f'unrecognized unit: {unit_name}',
-                )
+                logger.warn(f'unrecognized unit: {unit_name}')
                 continue
 
             _typename_has_unit[typename] = True
