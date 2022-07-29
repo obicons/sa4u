@@ -25,11 +25,54 @@
 			"type": "object",
 			"title": "SA4U",
 			"properties": {
-				"SA4U.messageDefinition": {
+				"SA4U.MessageDefinition": {
 					"scope": "resource",
 					"type": "string",
 					"default": "CMASI.xml",
-					"description": "Message Description XML."
+					"description": "Message Description XML.",
+					"order": 1
+				},
+				"SA4U.PriorTypes": {
+					"scope": "resource",
+					"type": "string",
+					"defualt": "compile_commands_dir",
+					"description": "SA4U prior types file",
+					"order": 3
+				},
+				"SA4U.IgnoreFiles": {
+					"scope": "resource",
+					"type": "string",
+					"editPresentation": "multilineText",
+					"description": "List of file paths in the directory to ignore. Expected input is /RelativeFilePath/File or AbsoluteFilePath/File",
+					"order": 4
+				},
+				"SA4U.CompilationDir": {
+					"scope": "resource",
+					"type": "string",
+					"defualt": "compile_commands_dir",
+					"description": "SA4U compile commands directory",
+					"order": 2
+				},
+				"SA4U.DebugMode": {
+					"scope": "resource",
+					"type": "boolean",
+					"default": false,
+					"description": "Debug Mode for Developing SA4U",
+					"order": 20
+				},
+				"SA4U.DebugModeDockerImage": {
+					"scope": "resource",
+					"type": "string",
+					"default": "",
+					"description": "SA4U image to use in debug mode.",
+					"order": 21
+				},
+				"SA4U.DebugModeMaintainContainerOnExit": {
+					"scope": "resource",
+					"type": "boolean",
+					"default": false,
+					"description": "Setup the container to remain after exiting",
+					"order": 21
 				}
 			}
 		}
