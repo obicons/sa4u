@@ -55,8 +55,11 @@ export function activate(context: ExtensionContext) {
 	);
 
 	client.onReady().then(() => {
-		client.onNotification("ServerError", (output: string) => {
+		client.onNotification('ServerError', (output: string) => {
 			window.showErrorMessage(output);
+		});
+		client.onNotification('UpdateConfig', (config: {param:string, value:string}) => {
+			workspace.getConfiguration().update(config.param, config.value);
 		});
 	});
 

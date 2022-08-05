@@ -272,6 +272,7 @@ def main():
     )
 
     signal.signal(signal.SIGHUP, HUP_signal_handler)
+    signal.signal(signal.SIGTERM, TERM_signal_handler)
 
     _use_power_of_ten = parsed_args.power_of_ten
     _enable_scalar_prefixes = not parsed_args.disable_scalar_prefixes
@@ -381,6 +382,10 @@ def HUP_signal_handler(sig_num: int, _frame):
     except ValueError:
         pass
     print("In HUP signal handler...", flush=True)
+
+
+def TERM_signal_handler(sig_num: int, _frame):
+    sys.exit()
 
 
 def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
