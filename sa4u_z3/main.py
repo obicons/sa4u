@@ -11,6 +11,7 @@ from tu import *
 from typing import Any, Dict, Optional, Set, TextIO, Tuple
 from util import *
 from z3 import *
+import multiprocessing
 
 logger = logging.getLogger()
 
@@ -300,46 +301,46 @@ def main():
         all_assertions = tu_assertions
 
         start = time.time()
-        count = 0
 
-        for tu in translation_units(compilation_database, analysis_dir):
-            if os.path.basename(tu.spelling) in ignore_files:
+        cindex_dict: Dict[str, cindex.CompileCommand] = filename_to_compile_cmd(parsed_args.compilation_database_path)
+
+        _NUM_PROCESSES = multiprocessing.cpu_count()
+        inputQueue: multiprocessing.Queue[Optional[cindex.CompileCommand]] = multiprocessing.Queue(len(cindex_dict))
+        outputQueue: multiprocessing.Queue[Optional[SerializedTU]] = multiprocessing.Queue(_NUM_PROCESSES)
+        processes: multiprocessing.Process = []
+
+        for i in range(_NUM_PROCESSES):
+            process = multiprocessing.Process(target=child_walkers, args=(inputQueue, outputQueue, parsed_args.compilation_database_path, analysis_dir))
+            process.start()
+            processes.append(process)
+
+        for cmd in cindex_dict:
+            if os.path.basename(cindex_dict[cmd].filename) in ignore_files:
                 logger.info(
-                    f'Skipping {tu.spelling} because it is to be ignored',
+                    f'Skipping {cindex_dict[cmd].filename} in {cindex_dict[cmd].directory} because it is to be ignored',
                 )
                 continue
 
-            if isinstance(tu, SerializedTU):
-                all_assertions += [Const(s, BoolSort())
-                                   for s in tu.assertions]
-                tmp_solver = Solver()
-                tmp_solver.from_string(tu.solver)
-                solver.add(tmp_solver.assertions())
+            stu = get_stored_stu(cindex_dict[cmd], analysis_dir)
+            if isinstance(stu, SerializedTU):
+                all_assertions += get_z3_assertions_from_stu(stu)
+            else:
+                inputQueue.put(os.path.join(cmd))
+        
+        for i in range(len(processes)):
+            inputQueue.put(None)
+
+        count: int = 0
+        while count != _NUM_PROCESSES:
+            output = outputQueue.get()
+            if output is None:
+                count += 1
                 continue
+            save_stu_to_memory(output)
+            all_assertions += get_z3_assertions_from_stu(output)
 
-            ignore_locations = get_ignore_lines(tu)
-
-            count += 1
-            logger.info(
-                f'{count} / {len(compilation_database.getAllCompileCommands())}',
-            )
-            cursor: cindex.Cursor = tu.cursor
-            tu_solver = Solver()
-            tu_assertions = []
-            walk_ast(
-                cursor,
-                walker,
-                {
-                    'Seen': set([]),
-                    'IgnoreLocations': ignore_locations,
-                },
-            )
-
-            if analysis_dir:
-                serialize_tu(analysis_dir, tu, tu_solver, tu_assertions)
-
-            all_assertions += tu_assertions
-            solver.add(tu_solver.assertions())
+        for process in processes:
+            process.join()
 
         end = time.time()
         print(f'Parsing elapsed time: {end - start} seconds', flush=True)
@@ -386,6 +387,60 @@ def HUP_signal_handler(sig_num: int, _frame):
 
 def TERM_signal_handler(sig_num: int, _frame):
     sys.exit()
+
+
+def get_z3_assertions_from_stu(tu: SerializedTU) -> List[BoolRef]:
+    global solver
+    tmp_solver = Solver()
+    tmp_solver.from_string(tu.solver)
+    solver.add(tmp_solver.assertions())
+    return [Const(s, BoolSort())
+            for s in tu.assertions]
+
+
+def child_walkers(input: multiprocessing.Queue, output: multiprocessing.Queue, compilation_database_path: str, analysis_dir: Optional[str] = None) -> None:
+    global tu_assertions, tu_solver
+    initialize_z3()
+    tu_solver = solver
+    cindex_dict = filename_to_compile_cmd(compilation_database_path)
+
+    for filePath in iter(input.get, None):
+        compile_command = cindex_dict[filePath]
+        try:
+            tu = parse_tu(compile_command, analysis_dir)
+        except:
+            print()
+        
+        ignore_locations = get_ignore_lines(tu)
+        cursor: cindex.Cursor = tu.cursor
+        tu_solver = Solver()
+        tu_assertions = []
+        walk_ast(
+            cursor,
+            walker,
+            {
+                'Seen': set([]),
+                'IgnoreLocations': ignore_locations,
+            },
+        )
+
+        stu = serialize_tu(tu, tu_solver, tu_assertions)
+
+        if analysis_dir:
+            write_tu(analysis_dir, stu)
+        
+        output.put(stu)
+    output.put(None)
+
+
+def filename_to_compile_cmd(compilation_database_path: str,) -> Dict[str, cindex.CompileCommand]:
+    compilation_database: cindex.CompilationDatabase = cindex.CompilationDatabase.fromDirectory(
+        compilation_database_path,
+    )
+    cindex_dict: Dict[str, cindex.CompileCommand] = {}
+    for cmd in compilation_database.getAllCompileCommands():
+        cindex_dict[os.path.join(cmd.directory, cmd.filename)] = cmd
+    return cindex_dict
 
 
 def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
