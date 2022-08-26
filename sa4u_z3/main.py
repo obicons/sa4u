@@ -302,15 +302,25 @@ def main():
 
         start = time.time()
 
-        cindex_dict: Dict[str, cindex.CompileCommand] = filename_to_compile_cmd(parsed_args.compilation_database_path)
+        cindex_dict: Dict[str, cindex.CompileCommand] = filename_to_compile_cmd(
+            parsed_args.compilation_database_path,
+        )
 
         _NUM_PROCESSES = multiprocessing.cpu_count()
-        inputQueue: multiprocessing.Queue[Optional[cindex.CompileCommand]] = multiprocessing.Queue(len(cindex_dict))
-        outputQueue: multiprocessing.Queue[Optional[SerializedTU]] = multiprocessing.Queue(_NUM_PROCESSES)
+        inputQueue: multiprocessing.Queue[Optional[cindex.CompileCommand]] = multiprocessing.Queue(
+            len(cindex_dict),
+        )
+        outputQueue: multiprocessing.Queue[Optional[SerializedTU]] = multiprocessing.Queue(
+            _NUM_PROCESSES,
+        )
         processes: multiprocessing.Process = []
 
         for i in range(_NUM_PROCESSES):
-            process = multiprocessing.Process(target=child_walkers, args=(inputQueue, outputQueue, parsed_args.compilation_database_path, analysis_dir))
+            process = multiprocessing.Process(
+                target=child_walkers,
+                args=(inputQueue, outputQueue, parsed_args.compilation_database_path,
+                      analysis_dir),
+            )
             process.start()
             processes.append(process)
 
@@ -326,7 +336,7 @@ def main():
                 all_assertions += get_z3_assertions_from_stu(stu)
             else:
                 inputQueue.put(os.path.join(cmd))
-        
+
         for i in range(len(processes)):
             inputQueue.put(None)
 
@@ -404,14 +414,16 @@ def child_walkers(input: multiprocessing.Queue, output: multiprocessing.Queue, c
     tu_solver = solver
     cindex_dict = filename_to_compile_cmd(compilation_database_path)
 
-    for filePath in iter(input.get, None):
-        compile_command = cindex_dict[filePath]
-        try:
-            tu = parse_tu(compile_command, analysis_dir)
-        except:
-            print()
-        
+    path: str
+    for path in iter(input.get, None):
+        compile_command = cindex_dict[path]
+        tu = parse_tu(compile_command, analysis_dir)
+        if tu is None:
+            continue
+
         ignore_locations = get_ignore_lines(tu)
+
+        # tu is always a TranslationUnit, since this runs in a new process.
         cursor: cindex.Cursor = tu.cursor
         tu_solver = Solver()
         tu_assertions = []
@@ -428,7 +440,7 @@ def child_walkers(input: multiprocessing.Queue, output: multiprocessing.Queue, c
 
         if analysis_dir:
             write_tu(analysis_dir, stu)
-        
+
         output.put(stu)
     output.put(None)
 
