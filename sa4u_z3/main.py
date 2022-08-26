@@ -545,7 +545,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
         lhs_type = type_expr(get_lhs(cursor), data)
         if lhs_type is None:
-            logger.warn(
+            logger.waring(
                 f'unrecognized lhs type @ {cursor.location.file} line {cursor.location.line}',
             )
             _ignored += 1
@@ -554,7 +554,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
         rhs_type = type_expr(get_rhs(cursor), data)
         if rhs_type is None:
             _ignored += 1
-            logger.warn(
+            logger.warning(
                 f'unrecognized rhs type @ {cursor.location.file} line {cursor.location.line}',
             )
             return WalkResult.CONTINUE
@@ -579,7 +579,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
         fq_fn_name = get_fq_name(cursor.referenced)
         if fq_fn_name in _IGNORE_FUNCS:
-            logger.warn(f'Skipping function {fq_fn_name}')
+            logger.warning(f'Skipping function {fq_fn_name}')
             _ignored += 1
             return WalkResult.CONTINUE
 
@@ -587,7 +587,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
         for arg, arg_no in zip(get_arguments(cursor), range(0, 1000)):
             if arg is None:
                 _ignored += 1
-                logger.warn(
+                logger.warning(
                     f'no argument cursor found in {cursor.location.file} on line {cursor.location.line}',
                 )
                 continue
@@ -595,7 +595,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
             arg_type = type_expr(arg, data)
             if arg_type is None:
                 _ignored += 1
-                logger.warn(
+                logger.warning(
                     f'unknown argument type in {cursor.location.file} on line {cursor.location.line}',
                 )
                 return WalkResult.RECURSE
@@ -636,7 +636,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
     _num_exprs += 1
     if cursor.kind == cindex.CursorKind.CALL_EXPR:
         if cursor.referenced is None:
-            logger.warn(
+            logger.warning(
                 f'unknown call to {cursor.spelling} in {cursor.location.file} on line {cursor.location.line} column {cursor.location.column}',
             )
             return None
@@ -662,7 +662,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
         for arg, arg_no in zip(get_arguments(cursor), range(0, 1000)):
             if arg is None:
                 _ignored += 1
-                logger.warn(
+                logger.warning(
                     f'no argument cursor found in {cursor.location.file} on line {cursor.location.line}',
                 )
                 continue
@@ -670,7 +670,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             arg_type = type_expr(arg, context)
             if arg_type is None:
                 _ignored += 1
-                logger.warn(
+                logger.warning(
                     f'unknown argument type in {cursor.location.file} on line {cursor.location.line}',
                 )
                 break
@@ -695,7 +695,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             _var_name_to_type[var_typename] = Const(var_typename, Type)
         return _var_name_to_type[var_typename]
     elif cursor.kind == cindex.CursorKind.UNEXPOSED_EXPR:
-        logger.warn(
+        logger.warning(
             f'calling type_expr on UNEXPOSED_EXPR.',
         )
     elif cursor.kind == cindex.CursorKind.BINARY_OPERATOR:
@@ -706,7 +706,9 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             rhs_type = type_expr(get_rhs(cursor), context)
             loc: cindex.SourceLocation = cursor.location
             if lhs_type is None or rhs_type is None:
-                logger.warn(f'untyped expression @ {loc.file} line {loc.line}')
+                logger.warning(
+                    f'untyped expression @ {loc.file} line {loc.line}',
+                )
                 return None
             assert_and_check(
                 Or(
@@ -726,7 +728,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             rhs_type = type_expr(get_rhs(cursor), context)
             loc: cindex.SourceLocation = cursor.location
             if lhs_type is None or rhs_type is None:
-                logger.warn(
+                logger.warning(
                     f'untyped expression @ {loc.file} on line {loc.line}',
                 )
                 return None
@@ -864,7 +866,7 @@ def extract_conditional_constraints(if_stmt: cindex.Cursor) -> Optional[Tuple[st
             return None
 
         if constraint_literal > NUM_FRAMES:
-            logger.warn(f'Unrecognized frame: {constraint_literal}')
+            logger.warning(f'Unrecognized frame: {constraint_literal}')
             return None
 
         if operator == '==':
@@ -1175,7 +1177,9 @@ async def _load_from_flex_module_api(api_url: str):
                 if unit_name is None or unit_name.lower() == 'none':
                     continue
                 elif unit_name not in UNIT_TO_BASE_UNIT_VECTOR:
-                    logger.warn(f'unrecognized unit: {unit_name}. Skipping.')
+                    logger.warning(
+                        f'unrecognized unit: {unit_name}. Skipping.',
+                    )
                     continue
                 field_name = field.name[0].upper() + field.name[1:]
                 getter_name = f'afrl::cmasi::{struct_definition.name}::get{field_name}'
@@ -1223,7 +1227,7 @@ def parse_cmasi(xml: ET.Element):
             if unit_name is None or unit_name.lower() == 'none':
                 continue
             if unit_name not in UNIT_TO_BASE_UNIT_VECTOR:
-                logger.warn(f'unrecognized unit: {unit_name}. Skipping.')
+                logger.warning(f'unrecognized unit: {unit_name}. Skipping.')
                 continue
             field_name = field.attrib['Name'][0].upper(
             ) + field.attrib['Name'][1:]
@@ -1271,7 +1275,7 @@ def parse_mavlink(xml: ET.Element):
                         f'{typename}.{field.attrib["name"]}')
                 continue
             elif unit_name not in UNIT_TO_BASE_UNIT_VECTOR:
-                logger.warn(f'unrecognized unit: {unit_name}')
+                logger.warning(f'unrecognized unit: {unit_name}')
                 continue
 
             _typename_has_unit[typename] = True
