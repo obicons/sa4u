@@ -133,10 +133,10 @@ def parse_tu(compile_command: cindex.CompileCommand, cache_path: Optional[str] =
                   if arg != compile_command.filename] + ['-I' + inc.decode() for inc in ccsyspath.system_include_paths('clang')],
         )
         for diag in translation_unit.diagnostics:
-            logger.warn(f'Parsing: {compile_command.filename}: {diag}')
+            logger.warning(f'Parsing: {compile_command.filename}: {diag}')
         return translation_unit
     except cindex.TranslationUnitLoadError:
-        logger.warn(
+        logger.warning(
             f'could not parse {os.path.join(compile_command.directory, compile_command.filename)}',
         )
         return None
