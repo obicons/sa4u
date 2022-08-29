@@ -444,25 +444,27 @@ def child_walkers(input: multiprocessing.Queue, output: multiprocessing.Queue, c
         if tu is None:
             continue
 
-        ignore_locations = get_ignore_lines(tu)
+        if isinstance(tu, cindex.TranslationUnit):
+            ignore_locations = get_ignore_lines(tu)
 
-        # tu is always a TranslationUnit, since this runs in a new process.
-        cursor: cindex.Cursor = tu.cursor
-        tu_solver = Solver()
-        tu_assertions = []
-        walk_ast(
-            cursor,
-            walker,
-            {
-                'Seen': set([]),
-                'IgnoreLocations': ignore_locations,
-            },
-        )
+            # tu is always a TranslationUnit, since this runs in a new process.
+            cursor: cindex.Cursor = tu.cursor
+            tu_solver = Solver()
+            tu_assertions = []
+            walk_ast(
+                cursor,
+                walker,
+                {
+                    'Seen': set([]),
+                    'IgnoreLocations': ignore_locations,
+                },
+            )
 
-        stu = serialize_tu(tu, tu_solver, tu_assertions)
-
-        if analysis_dir:
-            write_tu(analysis_dir, stu)
+            stu = serialize_tu(tu, tu_solver, tu_assertions)
+            if analysis_dir:
+                write_tu(analysis_dir, stu)
+        else:
+            stu = tu
 
         output.put(stu)
     output.put(None)
