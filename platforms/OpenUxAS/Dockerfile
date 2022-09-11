@@ -1,4 +1,3 @@
-
 FROM ubuntu:20.04
 
 RUN apt-get update && \
@@ -6,20 +5,21 @@ RUN apt-get update && \
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update                                                                                              \
-    && apt-get install -y                                                                                       \
-           build-essential                                                                                      \
-           cmake                                                                                                \
-           git                                                                                                  \
-           lsb-release                                                                                          \
-           wget                                                                                                 \
-           bear                                                                                                 \
-       software-properties-common                                                                               \
-           sudo                                                                                                 \
-    && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -                                \
-    && add-apt-repository "deb http://apt.llvm.org/focal/     llvm-toolchain-focal$LLVM_VERSION_STRING    main" \
-    && apt-get update                                                                                           \
-    && apt-get install -y libclang-14-dev                                                                       \
+RUN apt-get update                                                                              \
+    && apt-get install -y                                                                       \
+    build-essential                                                                             \
+    cmake                                                                                       \
+    git                                                                                         \
+    lsb-release                                                                                 \
+    wget                                                                                        \
+    bear                                                                                        \
+    python3                                                                                     \
+    software-properties-common                                                                  \
+    sudo                                                                                        \
+    && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -                \
+    && add-apt-repository "deb http://apt.llvm.org/focal/     llvm-toolchain-focal-14 main"     \
+    && apt-get update                                                                           \
+    && apt-get install -y libclang-14-dev                                                       \
     && rm -rf /var/lib/apt/lists/*
 
 RUN adduser ardupilot             \
@@ -29,9 +29,27 @@ WORKDIR /home/ardupilot/
 USER ardupilot
 ENV USER ardupilot
 
-RUN git clone https://github.com/afrl-rq/OpenUxAS           \
-    && cd OpenUxAS                                          \
-    && yes | bear ./anod build uxas                         \
-    && mv compile_commands.json compile_commands_uxas.json  \
-    && bear ./anod build amase                              \
-    && mv compile_commands.json compile_commands_amase.json
+# ADD OpenUxAS /home/ardupilot/OpenUxAS
+ARG UXAS_SHA="a41e69c9d923ae4795a99fd8201a32f6bc81f4e1"
+RUN git clone https://github.com/afrl-rq/OpenUxAS /home/ardupilot/OpenUxAS
+WORKDIR /home/ardupilot/OpenUxAS
+RUN git checkout ${UXAS_SHA}
+
+RUN sudo chown -R ardupilot:ardupilot /home/ardupilot/OpenUxAS
+RUN bash -c 'yes | bear ./anod build uxas || true'
+
+RUN sudo apt-get install -y python3.9
+RUN wget -O- 'https://bootstrap.pypa.io/get-pip.py' | python3.9
+
+ARG SA4U_SHA="17fa7f5b89b38dcd203451b5b524f663c473132a"
+RUN git clone https://github.com/obicons/sa4u /home/ardupilot/sa4u
+WORKDIR /home/ardupilot/sa4u/sa4u_z3
+RUN git checkout ${SA4U_SHA}
+RUN python3.9 -m pip install -r requirements.txt
+
+ADD CMASI.xml /home/ardupilot/CMASI.xml
+ADD types.json /home/ardupilot/types.json
+
+# && mv compile_commands.json compile_commands_uxas.json
+# && bear ./anod build amase                              \
+# && mv compile_commands.json compile_commands_amase.json \

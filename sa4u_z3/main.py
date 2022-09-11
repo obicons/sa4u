@@ -547,7 +547,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
         lhs_type = type_expr(get_lhs(cursor), data)
         if lhs_type is None:
-            logger.waring(
+            logger.warning(
                 f'unrecognized lhs type @ {cursor.location.file} line {cursor.location.line}',
             )
             _ignored += 1

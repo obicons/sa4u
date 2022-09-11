@@ -10,3 +10,6 @@
 [submodule "src/spdlog"]
 	path = src/spdlog
 	url = https://github.com/gabime/spdlog
+[submodule "platforms/OpenUxAS/OpenUxAS"]
+	path = platforms/OpenUxAS/OpenUxAS
+	url = https://github.com/afrl-rq/OpenUxAS
