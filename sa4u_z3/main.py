@@ -808,7 +808,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             accessed_object = get_next_decl_ref_expr(cursor)
             if accessed_object is not None:
                 obj_name = get_fq_name(accessed_object)
-                frame_constraint = context['ActiveConstraints'].get(obj_name)
+                frame_constraint = context.get('ActiveConstraints', {}).get(obj_name)
 
         expr_repr = get_fq_member_expr(cursor)
         if expr_repr in _IGNORE_MEMBERS:
