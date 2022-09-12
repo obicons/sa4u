@@ -789,6 +789,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             # FreshConst(Unit, 'literal_unit'),
             FreshConst(Frames, 'literal_frames'),
             True,
+            False,
         )
         return literal_type
     elif cursor.kind == cindex.CursorKind.FLOATING_LITERAL:
@@ -801,6 +802,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             # FreshConst(Unit, 'literal_unit'),
             FreshConst(Frames, 'literal_frames'),
             True,
+            False,
         )
     elif cursor.kind == cindex.CursorKind.MEMBER_REF_EXPR or cursor.kind == cindex.CursorKind.ARRAY_SUBSCRIPT_EXPR:
         frame_constraint = None
@@ -834,6 +836,7 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             return Type.type(
                 Type.unit(t),
                 frame_constraint,
+                False,
                 False,
             )
         return t
@@ -1009,6 +1012,7 @@ def declare_types():
         ('unit', Unit),
         ('frame', Frames),
         ('is_constant', BoolSort()),
+        ('is_void', BoolSort()),
     )
     Type = Type.create()
 
@@ -1022,6 +1026,10 @@ def types_equal(t1: DatatypeRef, t2: DatatypeRef) -> BoolRef:
         ),
         Type.is_constant(t1),
         Type.is_constant(t2),
+        And(
+            Type.is_void(t1),
+            Type.is_void(t2),
+        ),
     )
 
 
@@ -1129,6 +1137,7 @@ def parse_variable_description(description: Dict[str, Any]):
         variable_unit,
         variable_frames,
         False,
+        False,
     )
     assert_and_check(
         variable_type == var_type,
@@ -1204,6 +1213,7 @@ async def _load_from_flex_module_api(api_url: str):
                         return_unit,
                         return_frames,
                         False,
+                        False,
                     ),
                     f'{getter_name} known from CMASI definition',
                 )
@@ -1259,6 +1269,7 @@ def parse_cmasi(xml: ET.Element):
                     return_unit,
                     return_frames,
                     False,
+                    False,
                 ),
                 f'{getter_name} known from CMASI definition',
             )
@@ -1293,6 +1304,7 @@ def parse_mavlink(xml: ET.Element):
                     *([0] * MAX_FUNCTION_PARAMETERS),
                 ),
                 Frames.frames(*[True for _ in range(NUM_FRAMES)]),
+                False,
                 False,
             )
 
