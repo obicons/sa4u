@@ -774,6 +774,10 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
                     Type.is_constant(lhs_type),
                     Type.is_constant(rhs_type),
                 ),
+                And(
+                    Type.is_void(lhs_type),
+                    Type.is_void(rhs_type),
+                ),
             )
             _counter += 1
             return product_type
