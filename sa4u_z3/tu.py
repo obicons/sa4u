@@ -119,7 +119,9 @@ def save_stu_to_memory(stu: SerializedTU) -> None:
     _tu_filename_to_stu[cache_key] = stu
 
 
-def parse_tu(compile_command: cindex.CompileCommand, cache_path: Optional[str] = None) -> Optional[Union[cindex.TranslationUnit, SerializedTU]]:
+def parse_tu(compile_command: cindex.CompileCommand,
+             cache_path: Optional[str] = None,
+             compiler: str = 'clang') -> Optional[Union[cindex.TranslationUnit, SerializedTU]]:
     '''Parses the translation unit.'''
     logger.info(f'parsing {compile_command.filename}')
     try:
@@ -130,7 +132,7 @@ def parse_tu(compile_command: cindex.CompileCommand, cache_path: Optional[str] =
             os.path.join(compile_command.directory,
                          compile_command.filename),
             args=[arg for arg in compile_command.arguments
-                  if arg != compile_command.filename] + ['-I' + inc.decode() for inc in ccsyspath.system_include_paths('clang')],
+                  if arg != compile_command.filename] + ['-I' + inc.decode() for inc in ccsyspath.system_include_paths(compiler)],
         )
         for diag in translation_unit.diagnostics:
             logger.warning(f'Parsing: {compile_command.filename}: {diag}')

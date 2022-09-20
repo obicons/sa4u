@@ -156,6 +156,9 @@ _IGNORE_FUNCS = {
     'AP_Proximity_Backend::database_push',
     'AP_Proximity_Backend::ignore_reading',
     'calloc',
+    'dup2',
+    'exit',
+    'list_new',
     '::::_MAV_RETURN_uint8_t',
     '::::_MAV_RETURN_uint16_t',
     '::::_MAV_RETURN_uint32_t',
@@ -163,12 +166,20 @@ _IGNORE_FUNCS = {
     'malloc',
     '::::mav_array_memcpy',
     '::::::memcpy',
+    'object_free',
+    'object_new',
     'operator[]',
     'printf',
+    'sprintf',
+    'strlen',
     'puts',
     '::px4_usleep',
+    'string_append',
     'is_zero',
     'is_positive',
+    'zconfig_put',
+    'zmsg_addmem',
+    'zstr_free',
 }
 
 # Member assignments to ignore.
@@ -295,6 +306,8 @@ def main():
         level=logging.DEBUG,
         format='%(levelname)s: %(message)s',
     )
+
+    read_stdlib()
 
     signal.signal(signal.SIGHUP, HUP_signal_handler)
     signal.signal(signal.SIGTERM, TERM_signal_handler)
@@ -1030,10 +1043,8 @@ def types_equal(t1: DatatypeRef, t2: DatatypeRef) -> BoolRef:
         ),
         Type.is_constant(t1),
         Type.is_constant(t2),
-        And(
-            Type.is_void(t1),
-            Type.is_void(t2),
-        ),
+        Type.is_void(t1),
+        Type.is_void(t2),
     )
 
 
@@ -1320,6 +1331,17 @@ def _ignore_cursor(cursor: cindex.Cursor, ignore_locations: List[Tuple[str, int]
     return any([l[0] == cursor.location.file.name and l[1] ==
                 cursor.location.line for l in ignore_locations])
 
+
+def read_stdlib():
+    '''Reads the file stdlib.json, so we can ignore these functions.'''
+    global _IGNORE_FUNCS
+    try:
+        with open('stdlib.json') as stdlib_fd:
+            stdlib_apis = json.load(stdlib_fd)
+            _IGNORE_FUNCS = _IGNORE_FUNCS.union(stdlib_apis)
+    except FileNotFoundError:
+        logger.warning('Cannot read file stdlib.json')
+        pass
 
 if __name__ == '__main__':
     main()

@@ -1,1 +1,4050 @@
-[{"VariableName": "tv_sec", "SemanticInfo": {"Units": ["s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "tm_sec", "SemanticInfo": {"Units": ["s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "__x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "__old_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "std::__z", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "std::__x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "std::__y", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "__v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CPosition::north_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CPosition::east_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CPosition::m_north_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CPosition::m_east_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CPosition::m_altitude_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CCircle::m_dRadius_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CDataPoint::m_reTime_sec", "SemanticInfo": {"Units": ["s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CDataPoint::m_speed_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CWaypoint::m_speed_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CWaypoint::m_dSegmentLength_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CWaypoint::m_dObjectiveDesiredStandOff_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CWaypoint::m_reSegmentTime_sec", "SemanticInfo": {"Units": ["s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CWaypoint::m_dLoiterRadius_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CAssignment::dTotalDistance_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CAssignment::dReturnDistance_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CAssignment::m_dDistanceTotalPrevious_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CAssignment::m_dDistanceTotalTemp_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CAssignment::m_dDistanceAllocatedForAssignedTasks_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CAssignment::m_dMinimumWaypointSeparation_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CAssignment::m_dMinimumAssignmentSeparation_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CHeadingParameters::m_dStandoff_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CHeadingParameters::m_dFreeToTurn_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CTrajectoryParametersEnd::m_dStandOffNoHeadings_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CTrajectoryParameters::m_windSpeed_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CTrajectoryParameters::m_dSensorLeadingEdge_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CTrajectoryParameters::m_dSensorTrailingEdge_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CTrajectoryParameters::m_dSensorCenter_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CTrajectoryParameters::m_speed_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CTrajectoryParameters::m_dAltitude_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CTrajectoryParameters::m_dTurnRadius_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CTrajectoryParameters::m_dWaypointSeparationMin_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CTrajectoryParameters::m_dDistancePath_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dDistanceMinimum_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dDistance_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dSegmentTime_sec", "SemanticInfo": {"Units": ["s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dDistanceTotalMinimum_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dStandoff_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::distanceStartToFirst_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dDistanceFinalLeg_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::distancePathTotal_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dCenter1North_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dCenter1East_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dFreeToTurn_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dRadiusTurnCenter_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dRadiusLoiter_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dRadiusTurnOnToLoiterMin_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dDistanceInitialLeg_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::minStep_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dSensorStandoff_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::Vwind_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::firstStep_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::lengthFirstSgment_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::TU_sec", "SemanticInfo": {"Units": ["s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dWindSpeedNorth_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dWindSpeedEast_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dAirspeedNorth_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dAirspeedEast_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dGroundspeedNorth_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dGroundspeedEast_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dCenterNorth_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dCenterEast_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dTurnRadius_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::reSegmentTime_sec", "SemanticInfo": {"Units": ["s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "std::__detail::__x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::TaskOptionClass::m_altitude_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::TaskOptionClass::m_speed_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::TaskOptionClass::m_laneSpacing_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::TaskOptionClass::m_sensorHorizontalToLeadingEdge_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::DynamicTaskServiceBase::m_straightLineThreshold_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::DynamicTaskServiceBase::m_startPointLead_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::DynamicTaskServiceBase::m_throttle_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::OverwatchTaskService::m_loiterRadius_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "std::__m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "usecs_per_sec", "SemanticInfo": {"Units": ["s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "min_step_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "max_step_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "step_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::ConfigurationManager::s_entityStartTimeSinceEpoch_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::ConfigurationManager::s_serialPortWaitTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::ConfigurationManager::s_startDelay_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::ConfigurationManager::s_zeroMqReceiveSocketPollWaitTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::Time::time_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::Time::m_timeExternalCalibrationDelta_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::Time::m_cpuStartTimeSinceEpoch_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::Time::m_cpuStartTimeSinceEpoch_us", "SemanticInfo": {"Units": ["us"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::Time::m_discreteTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::DiscreteTime::time_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::log::m_time_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::SteeringService::m_currentStartTimestamp_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::SteeringService::m_leadAheadDistance_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::SteeringService::m_loiterRadius_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::SteeringService::m_acceptanceTimeToArrive_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "DISTANCE_TRESHOLD_M", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "north_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "east_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "loiterDuration_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "currentTimestamp_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::position_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::current_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::previous_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::speed_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::orbitRelativePosition_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::d_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::r_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::path_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::pathNormal_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::y_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::s_serialPortWaitTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::s_zeroMqReceiveSocketPollWaitTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::s_entityStartTimeSinceEpoch_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::s_startDelay_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::regex_constants::escape_type_control_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::regex_constants::escape_type_X", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::regex_constants::escape_type_Z", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "std::__re_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "std::__im_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::last_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::test::SendMessagesService::m_messageSendTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::test::SendMessagesService::m_messageSendPeriod_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::test::SendMessagesService::m_messageNextSendTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::test::SendMessagesService::m_messageZeroTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::extendTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::speedNom_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::communications::LmcpObjectNetworkClientBase::m_subclassTerminationAbortDuration_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::communications::LmcpObjectNetworkClientBase::m_subclassTerminationWarnDuration_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::communications::LmcpObjectNetworkClientBase::m_subclassTerminationAttemptPeriod_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::WaypointPlanManagerService::m_loiterRadiusDefault_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::WaypointPlanManagerService::_timeBetweenMissionCommandsMin_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::delayTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::nominalSpeedToOneDecimalPlace_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::distance_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::vehicleSpeed_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::cost_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::data::AutomationDiagramDataService::m_idVsTimeAutomationRequest_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::data::itassigmentTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::data::assigmentTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::d_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::container_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::OsmPlannerService::turnRadius_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::OsmPlannerService::m_distance_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::OsmPlannerService::m_PositionToCellFactorNorth_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::OsmPlannerService::m_PositionToCellFactorEast_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::OsmPlannerService::m_northMin_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::OsmPlannerService::m_eastMin_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::HelloWorld::m_sendPeriod_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::newNorth_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::newEast_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::costForward_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::date_time::_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::date_time::_y", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::date_time::fractional_sec_per_sec", "SemanticInfo": {"Units": ["s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::date_time::sub_sec", "SemanticInfo": {"Units": ["s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::date_time::frac_sec", "SemanticInfo": {"Units": ["s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::posix_time::frac_sec", "SemanticInfo": {"Units": ["s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::AutomationRequestValidatorService::m_maxResponseTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::communications::subclassTerminateDuration_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::AngledAreaSearchTaskService::lane_spacing_min_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::AngledAreaSearchTaskService::lane_spacing_max_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::currentNorth_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::currentEast_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::northMax_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::northMin_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::eastMax_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::eastMin_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::centerNorth_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::centerEast_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::currentAcrossValue_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::re_detail_106501::last_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::PatternSearchTaskService::m_waypointSpacing_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::PatternSearchTaskService::m_spiralCenterRadius_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::northStart_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::eastStart_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::northLast_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::eastLast_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::radius_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::deltaNorth_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::deltaEast_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::spiralBoundary_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::north_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::east_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::vehicleRadius_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::vehicleNorth_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::vehicleEast_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::radius1Offset_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::radius2Offset_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::radius1_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::radius2_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::north1_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::east1_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::north2_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::east2_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "arg_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "total_timeout_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "timeout_remaining_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CBoundary::m_vposBoundaryPoints_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CSensorFootprint::m_horizantalToLeadingEdge_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CSensorFootprint::m_horizantalToTrailingEdge_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CSensorFootprint::m_horizantalToCenter_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CSensorFootprint::m_widthCenter_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CSensorFootprint::m_slantRangeToCenter_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CGSD_Settings::m_altitude_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CGSD_Settings::m_gsd_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CVehicleParameters::m_assignedAltitude_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CVehicleParameters::m_altitudeMax_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CVehicleParameters::m_altitudeMin_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CVehicleParameters::m_commandTurnRadius_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CVehicleParameters::m_commandSpeed_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CVehicleParameters::m_maximumRange_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CVehicleParameters::m_dSpeedNominal_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CVehicleParameters::m_dSpeedMax_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::CVehicleParameters::m_dSpeedMin_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::m_waypointSeparationMin_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::m_turnRadius_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::m_speed_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dMid_X", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dMid_Y", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dMid_Z", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::dClosestEdge_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::communications::LmcpObjectNetworkSerialBridge::m_serialTimeout_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::c_VehicleInformationStatic::m_maxVehicleTravelTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::c_VehicleAssignmentState::m_travelTimeTotal_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::c_StaticAssignmentParameters::m_minimumAssignmentTravelTimeCandidate_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::c_StaticAssignmentParameters::m_assignmentStartTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::c_TaskAssignmentState::m_taskCompletionTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::c_Node_Base::m_travelTimeTotal_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::returnTravelTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::returnCost_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::prerequisiteTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::taskTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::travelTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::travelTimeTotalToBegin_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::travelTimeTotalToEnd_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::maxVehicleTravelTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::CUnitConversions::m_dRadiusEquatorial_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::CUnitConversions::m_dRadiusMeridional_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::CUnitConversions::m_dRadiusTransverse_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::CUnitConversions::m_dRadiusSmallCircleLatitude_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::m_dRadiusMeridional_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::m_dRadiusTransverse_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::m_dRadiusSmallCircleLatitude_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::dNorth_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::dEast_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::dNorth1_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::dEast1_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::dNorth2_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::dEast2_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "runUntil_sec", "SemanticInfo": {"Units": ["s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::PlanBuilderService::m_assignmentStartPointLead_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::maxClockTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::currentTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::localNominalAltitude_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::costReverse_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::groundAltitude_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::groundAltitudeTemp_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::timeNow_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::FlatEarth::m_radiusEquatorial_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::FlatEarth::m_radiusMeridional_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::FlatEarth::m_radiusTransverse_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::FlatEarth::m_radiusSmallCircleLatitude_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::communications::transport::lingerDuration_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::test::SerialAutomationRequestTestService::m_maxResponseTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::test::delayTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "std::_M_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "std::_M_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "std::_M_y", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "std::_M_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "std::_M_gd_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "std::_M_gd_y", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "std::seed_seq::_M_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "std::__v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "std::__cm", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::TimerManager::m_period_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::TimerManager::m_timeDurationReattempt_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::reattemptSleep_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::tmOut_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::RoutePlannerVisibilityService::turnRadius_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::RoutePlannerVisibilityService::nominalSpeed_mps", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::RoutePlannerVisibilityService::m_turnRadiusOffset_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::RoutePlannerVisibilityService::m_minimumWaypointSeparation_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::altitudeAgl_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::desiredGsd_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::slantRangeToCenter_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::horizantalToCenter_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::horizantalToLeadingEdge_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::horizantalToTrailingEdge_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::widthCenter_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::inv_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::inv_y", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "n_FrameworkLib::sign_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::StatusReportService::m_reportPeriod_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::StatusReportService::m_staleStateTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::StatusReportService::m_keepAliveExpirationTime_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::north_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::east_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::north1_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::east1_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::north2_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::east2_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::SensorSteering::m_cumulativeDistance_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::SensorSteering::m_waypointsLength_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::SensorSteering::m_roadLength_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::utilities::positionDistance_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::service::task::currentEastValue_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::nowTimeSinceEpoch_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::refTimeSinceEpoch_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "uxas::common::weeks_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::integer::gcd_detail::d_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::detail::wkt::has_z", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::detail::wkt::has_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::strategy::buffer::join_round_by_divide::vp1_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::strategy::buffer::join_round_by_divide::vp1_y", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::strategy::buffer::join_round_by_divide::vp2_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::strategy::buffer::join_round_by_divide::vp2_y", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::strategy::buffer::join_round_by_divide::v_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::strategy::buffer::join_round_by_divide::v_y", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::strategy::centroid::sums::sum_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::strategy::centroid::sums::sum_y", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::theta_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::d_theta_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::d_lambda_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::sin_theta_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::cos_theta_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::sin_d_theta_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::cos_d_theta_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::sin2_theta_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::cos2_theta_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::sin2_d_theta_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::cos2_d_theta_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::sin_d_lambda_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::sin2_d_lambda_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::cos_2sigma_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::cos2_2sigma_m", "SemanticInfo": {"Units": ["m"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::container::container_detail::first_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::container::is_propagable_from_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::index::detail::rtree::del_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::index::detail::rtree::visitors::del_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::index::detail::rtree::visitors::insert_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::index::detail::rtree::visitors::rstar::del_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::index::detail::rtree::visitors::lins_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::index::detail::rtree::visitors::ins_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::index::box_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::index::insert_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::index::remove_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::index::del_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::index::copy_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::index::find_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::index::distance_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::index::count_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::tan_alpha2_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::tan_alpha1_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::tan_lon_y", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::tan_lon_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::formula::sqrt_Y", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::detail::closest_feature::range_to_range_rtree::t_v", "SemanticInfo": {"Units": ["m/s"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::strategy::side::detail::m_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::strategy::side::detail::z0_ms", "SemanticInfo": {"Units": ["ms"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::detail::buffer::analyse_turn_wrt_point_piece::point_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::detail::buffer::previous_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}, {"VariableName": "boost::geometry::detail::buffer::point_x", "SemanticInfo": {"Units": ["cm"], "CoordinateFrames": ["GLOBAL"]}}]
+[
+  {
+    "VariableName": "tv_sec",
+    "SemanticInfo": {
+      "Units": [
+        "s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "tm_sec",
+    "SemanticInfo": {
+      "Units": [
+        "s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "__x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "__old_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "std::__z",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "std::__x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "std::__y",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "__v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CPosition::north_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CPosition::east_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CPosition::m_north_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CPosition::m_east_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CPosition::m_altitude_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CCircle::m_dRadius_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CDataPoint::m_reTime_sec",
+    "SemanticInfo": {
+      "Units": [
+        "s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CDataPoint::m_speed_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CWaypoint::m_speed_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CWaypoint::m_dSegmentLength_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CWaypoint::m_dObjectiveDesiredStandOff_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CWaypoint::m_reSegmentTime_sec",
+    "SemanticInfo": {
+      "Units": [
+        "s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CWaypoint::m_dLoiterRadius_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CAssignment::dTotalDistance_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CAssignment::dReturnDistance_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CAssignment::m_dDistanceTotalPrevious_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CAssignment::m_dDistanceTotalTemp_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CAssignment::m_dDistanceAllocatedForAssignedTasks_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CAssignment::m_dMinimumWaypointSeparation_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CAssignment::m_dMinimumAssignmentSeparation_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CHeadingParameters::m_dStandoff_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CHeadingParameters::m_dFreeToTurn_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CTrajectoryParametersEnd::m_dStandOffNoHeadings_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CTrajectoryParameters::m_windSpeed_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CTrajectoryParameters::m_dSensorLeadingEdge_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CTrajectoryParameters::m_dSensorTrailingEdge_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CTrajectoryParameters::m_dSensorCenter_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CTrajectoryParameters::m_speed_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CTrajectoryParameters::m_dAltitude_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CTrajectoryParameters::m_dTurnRadius_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CTrajectoryParameters::m_dWaypointSeparationMin_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CTrajectoryParameters::m_dDistancePath_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dDistanceMinimum_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dDistance_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dSegmentTime_sec",
+    "SemanticInfo": {
+      "Units": [
+        "s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dDistanceTotalMinimum_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dStandoff_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::distanceStartToFirst_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dDistanceFinalLeg_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::distancePathTotal_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dCenter1North_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dCenter1East_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dFreeToTurn_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dRadiusTurnCenter_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dRadiusLoiter_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dRadiusTurnOnToLoiterMin_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dDistanceInitialLeg_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::minStep_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dSensorStandoff_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::Vwind_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::firstStep_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::lengthFirstSgment_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::TU_sec",
+    "SemanticInfo": {
+      "Units": [
+        "s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dWindSpeedNorth_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dWindSpeedEast_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dAirspeedNorth_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dAirspeedEast_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dGroundspeedNorth_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dGroundspeedEast_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dCenterNorth_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dCenterEast_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dTurnRadius_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::reSegmentTime_sec",
+    "SemanticInfo": {
+      "Units": [
+        "s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "std::__detail::__x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::TaskOptionClass::m_altitude_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::TaskOptionClass::m_speed_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::TaskOptionClass::m_laneSpacing_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::TaskOptionClass::m_sensorHorizontalToLeadingEdge_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::DynamicTaskServiceBase::m_straightLineThreshold_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::DynamicTaskServiceBase::m_startPointLead_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::DynamicTaskServiceBase::m_throttle_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::OverwatchTaskService::m_loiterRadius_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "std::__m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "usecs_per_sec",
+    "SemanticInfo": {
+      "Units": [
+        "s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "min_step_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "max_step_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "step_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::ConfigurationManager::s_entityStartTimeSinceEpoch_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::ConfigurationManager::s_serialPortWaitTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::ConfigurationManager::s_startDelay_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::ConfigurationManager::s_zeroMqReceiveSocketPollWaitTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::Time::time_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::Time::m_timeExternalCalibrationDelta_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::Time::m_cpuStartTimeSinceEpoch_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::Time::m_cpuStartTimeSinceEpoch_us",
+    "SemanticInfo": {
+      "Units": [
+        "us"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::Time::m_discreteTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::DiscreteTime::time_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::log::m_time_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::SteeringService::m_currentStartTimestamp_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::SteeringService::m_leadAheadDistance_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::SteeringService::m_loiterRadius_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::SteeringService::m_acceptanceTimeToArrive_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "DISTANCE_TRESHOLD_M",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "north_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "east_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "loiterDuration_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "currentTimestamp_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::position_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::current_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::previous_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::speed_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::orbitRelativePosition_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::d_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::r_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::path_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::pathNormal_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::y_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::s_serialPortWaitTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::s_zeroMqReceiveSocketPollWaitTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::s_entityStartTimeSinceEpoch_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::s_startDelay_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::regex_constants::escape_type_control_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::regex_constants::escape_type_X",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::regex_constants::escape_type_Z",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "std::__re_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "std::__im_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::last_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::test::SendMessagesService::m_messageSendTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::test::SendMessagesService::m_messageSendPeriod_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::test::SendMessagesService::m_messageNextSendTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::test::SendMessagesService::m_messageZeroTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::extendTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::speedNom_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::communications::LmcpObjectNetworkClientBase::m_subclassTerminationAbortDuration_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::communications::LmcpObjectNetworkClientBase::m_subclassTerminationWarnDuration_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::communications::LmcpObjectNetworkClientBase::m_subclassTerminationAttemptPeriod_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::WaypointPlanManagerService::m_loiterRadiusDefault_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::WaypointPlanManagerService::_timeBetweenMissionCommandsMin_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::delayTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::nominalSpeedToOneDecimalPlace_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::distance_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::vehicleSpeed_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::cost_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::data::AutomationDiagramDataService::m_idVsTimeAutomationRequest_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::data::itassigmentTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::data::assigmentTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::d_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::container_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::OsmPlannerService::turnRadius_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::OsmPlannerService::m_distance_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::OsmPlannerService::m_PositionToCellFactorNorth_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::OsmPlannerService::m_PositionToCellFactorEast_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::OsmPlannerService::m_northMin_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::OsmPlannerService::m_eastMin_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::HelloWorld::m_sendPeriod_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::newNorth_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::newEast_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::costForward_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::date_time::_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::date_time::_y",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::date_time::fractional_sec_per_sec",
+    "SemanticInfo": {
+      "Units": [
+        "s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::date_time::sub_sec",
+    "SemanticInfo": {
+      "Units": [
+        "s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::date_time::frac_sec",
+    "SemanticInfo": {
+      "Units": [
+        "s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::posix_time::frac_sec",
+    "SemanticInfo": {
+      "Units": [
+        "s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::AutomationRequestValidatorService::m_maxResponseTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::communications::subclassTerminateDuration_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::AngledAreaSearchTaskService::lane_spacing_min_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::AngledAreaSearchTaskService::lane_spacing_max_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::currentNorth_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::currentEast_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::northMax_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::northMin_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::eastMax_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::eastMin_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::centerNorth_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::centerEast_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::currentAcrossValue_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::re_detail_106501::last_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::PatternSearchTaskService::m_waypointSpacing_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::PatternSearchTaskService::m_spiralCenterRadius_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::northStart_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::eastStart_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::northLast_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::eastLast_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::radius_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::deltaNorth_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::deltaEast_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::spiralBoundary_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::north_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::east_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::vehicleRadius_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::vehicleNorth_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::vehicleEast_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::radius1Offset_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::radius2Offset_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::radius1_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::radius2_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::north1_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::east1_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::north2_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::east2_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "arg_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "total_timeout_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "timeout_remaining_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CBoundary::m_vposBoundaryPoints_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CSensorFootprint::m_horizantalToLeadingEdge_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CSensorFootprint::m_horizantalToTrailingEdge_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CSensorFootprint::m_horizantalToCenter_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CSensorFootprint::m_widthCenter_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CSensorFootprint::m_slantRangeToCenter_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CGSD_Settings::m_altitude_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CGSD_Settings::m_gsd_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CVehicleParameters::m_assignedAltitude_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CVehicleParameters::m_altitudeMax_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CVehicleParameters::m_altitudeMin_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CVehicleParameters::m_commandTurnRadius_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CVehicleParameters::m_commandSpeed_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CVehicleParameters::m_maximumRange_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CVehicleParameters::m_dSpeedNominal_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CVehicleParameters::m_dSpeedMax_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::CVehicleParameters::m_dSpeedMin_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::m_waypointSeparationMin_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::m_turnRadius_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::m_speed_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dMid_X",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dMid_Y",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dMid_Z",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::dClosestEdge_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::communications::LmcpObjectNetworkSerialBridge::m_serialTimeout_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::c_VehicleInformationStatic::m_maxVehicleTravelTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::c_VehicleAssignmentState::m_travelTimeTotal_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::c_StaticAssignmentParameters::m_minimumAssignmentTravelTimeCandidate_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::c_StaticAssignmentParameters::m_assignmentStartTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::c_TaskAssignmentState::m_taskCompletionTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::c_Node_Base::m_travelTimeTotal_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::returnTravelTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::returnCost_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::prerequisiteTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::taskTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::travelTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::travelTimeTotalToBegin_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::travelTimeTotalToEnd_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::maxVehicleTravelTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::CUnitConversions::m_dRadiusEquatorial_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::CUnitConversions::m_dRadiusMeridional_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::CUnitConversions::m_dRadiusTransverse_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::CUnitConversions::m_dRadiusSmallCircleLatitude_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::m_dRadiusMeridional_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::m_dRadiusTransverse_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::m_dRadiusSmallCircleLatitude_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::dNorth_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::dEast_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::dNorth1_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::dEast1_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::dNorth2_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::dEast2_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "runUntil_sec",
+    "SemanticInfo": {
+      "Units": [
+        "s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::PlanBuilderService::m_assignmentStartPointLead_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::maxClockTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::currentTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::localNominalAltitude_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::costReverse_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::groundAltitude_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::groundAltitudeTemp_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::timeNow_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::FlatEarth::m_radiusEquatorial_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::FlatEarth::m_radiusMeridional_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::FlatEarth::m_radiusTransverse_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::FlatEarth::m_radiusSmallCircleLatitude_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::communications::transport::lingerDuration_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::test::SerialAutomationRequestTestService::m_maxResponseTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::test::delayTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "std::_M_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "std::_M_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "std::_M_y",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "std::_M_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "std::_M_gd_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "std::_M_gd_y",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "std::seed_seq::_M_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "std::__v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "std::__cm",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::TimerManager::m_period_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::TimerManager::m_timeDurationReattempt_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::reattemptSleep_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::tmOut_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::RoutePlannerVisibilityService::turnRadius_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::RoutePlannerVisibilityService::nominalSpeed_mps",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::RoutePlannerVisibilityService::m_turnRadiusOffset_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::RoutePlannerVisibilityService::m_minimumWaypointSeparation_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::altitudeAgl_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::desiredGsd_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::slantRangeToCenter_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::horizantalToCenter_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::horizantalToLeadingEdge_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::horizantalToTrailingEdge_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::widthCenter_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::inv_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::inv_y",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "n_FrameworkLib::sign_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::StatusReportService::m_reportPeriod_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::StatusReportService::m_staleStateTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::StatusReportService::m_keepAliveExpirationTime_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::north_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::east_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::north1_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::east1_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::north2_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::east2_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::SensorSteering::m_cumulativeDistance_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::SensorSteering::m_waypointsLength_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::SensorSteering::m_roadLength_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::utilities::positionDistance_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::service::task::currentEastValue_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::nowTimeSinceEpoch_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::refTimeSinceEpoch_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "uxas::common::weeks_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::integer::gcd_detail::d_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::detail::wkt::has_z",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::detail::wkt::has_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::strategy::buffer::join_round_by_divide::vp1_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::strategy::buffer::join_round_by_divide::vp1_y",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::strategy::buffer::join_round_by_divide::vp2_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::strategy::buffer::join_round_by_divide::vp2_y",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::strategy::buffer::join_round_by_divide::v_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::strategy::buffer::join_round_by_divide::v_y",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::strategy::centroid::sums::sum_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::strategy::centroid::sums::sum_y",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::theta_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::d_theta_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::d_lambda_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::sin_theta_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::cos_theta_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::sin_d_theta_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::cos_d_theta_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::sin2_theta_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::cos2_theta_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::sin2_d_theta_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::cos2_d_theta_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::sin_d_lambda_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::sin2_d_lambda_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::cos_2sigma_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::cos2_2sigma_m",
+    "SemanticInfo": {
+      "Units": [
+        "m"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::container::container_detail::first_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::container::is_propagable_from_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::index::detail::rtree::del_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::index::detail::rtree::visitors::del_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::index::detail::rtree::visitors::insert_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::index::detail::rtree::visitors::rstar::del_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::index::detail::rtree::visitors::lins_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::index::detail::rtree::visitors::ins_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::index::box_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::index::insert_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::index::remove_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::index::del_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::index::copy_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::index::find_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::index::distance_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::index::count_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::tan_alpha2_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::tan_alpha1_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::tan_lon_y",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::tan_lon_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::formula::sqrt_Y",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::detail::closest_feature::range_to_range_rtree::t_v",
+    "SemanticInfo": {
+      "Units": [
+        "m/s"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::strategy::side::detail::m_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::strategy::side::detail::z0_ms",
+    "SemanticInfo": {
+      "Units": [
+        "ms"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::detail::buffer::analyse_turn_wrt_point_piece::point_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::detail::buffer::previous_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "boost::geometry::detail::buffer::point_x",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  },
+  {
+    "VariableName": "alt_in_cm",
+    "SemanticInfo": {
+      "Units": [
+        "cm"
+      ],
+      "CoordinateFrames": [
+        "GLOBAL"
+      ]
+    }
+  }
+]
