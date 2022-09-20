@@ -54,12 +54,12 @@ The default `compile_commands.json` file in the `OpenUxAS` repository is missing
 ```
 
 ## Step 5: Insert a Synthetic Bug
-Edit the file `infrastructure/sbx/x86_64-linux/uxas-release/src/src/cpp/UxAS_Main.cpp` to introduce a bug.
+Edit the file `infrastructure/sbx/x86_64-linux/uxas-release/src/src/cpp/UxAS_Main.cpp` in the OpenUxAS directory to introduce a bug.
 
 For example, outside of the `main` function declare an uninitialized global variable `alt_in_cm`. Then, inside of `main` after the line `auto o = new afrl::cmasi::AirVehicleState;`, insert the line `alt_in_cm = o->getLocation()->getAltitude();`.
 
 ## Step 6: Analyze
-You're ready to detect your synthetic bug. Run these commands:
+You're ready to detect your synthetic bug. Run these commands from the OpenUxAS directory:
 ```sh
 $ docker container run                  \
    --rm                                 \
@@ -67,8 +67,7 @@ $ docker container run                  \
    -v "$(pwd)":/home/ardupilot/OpenUxAS \
    sa4u-openuxas                        \
    bash
-container$ ignore_flags=
-container$ for filename in $(cat ~/ignore_list); do ignore_flags="-i ${filename} ${ignore_flags}";	done
+container$ ignore_flags=; for filename in $(cat ~/ignore_list); do ignore_flags="-i ${filename} ${ignore_flags}";	done
 container$ python3.9 main.py -c ~/OpenUxAS/ -m ~/CMASI.xml -p ~/types.json $ignore_flags
 ```
 
