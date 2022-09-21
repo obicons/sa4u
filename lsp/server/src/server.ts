@@ -17,7 +17,8 @@ import {
 	DidChangeConfigurationParams
 } from 'vscode-languageserver/node';
 
-import { resolve } from 'path';
+import 'path';
+import { isAbsolute, join, resolve } from 'path';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
@@ -62,6 +63,7 @@ class SA4UConfig {
 	IgnoreFiles: string[];
 	Debug?: SA4UDebug;
 	constructor(config: any) {
+		console.log(`Got config: ${config.toString()}`);
 		if (config !== '') {
 			this.ProtocolDefinitionFile = config.MessageDefinition || config.ProtocolDefinitionFile;
 			this.CompilationDir = config.CompilationDir;
@@ -108,8 +110,13 @@ class SA4UConfig {
 		}
 	}
 	returnParameters(folder: WorkspaceFolder): string {
-		const path = getPath(folder, true);
-		return `${(this.Debug?.MaintainContainerOnExit) ? '' : '--rm '}--mount type=bind,source="${path}",target="/src/" --name sa4u_z3_server_${path.replace(/([^A-Za-z0-9]+)/g, '')} ${this.Debug?.Image ?? dockerImageName} -d True -c "/src/${this.CompilationDir}" ${(this.IgnoreFiles.length === 0) ? '' : '-i '.concat(this.IgnoreFiles.join(' -i '))} -p /src/${this.PriorTypes} -m /src/${this.ProtocolDefinitionFile} --serialize-analysis /src/.sa4u/cache`;
+		const folderPath = getPath(folder, true);
+		const targetPath = this.Debug?.MountLocation ?? '/src/';
+		const compileDir = isAbsolute(this.CompilationDir) ? this.CompilationDir : join(targetPath, this.CompilationDir);
+		const priorTypesPath = isAbsolute(this.PriorTypes) ? this.PriorTypes : join(targetPath, this.PriorTypes);
+		const protocolDefinitionPath = isAbsolute(this.ProtocolDefinitionFile) ? this.ProtocolDefinitionFile : join(targetPath, this.ProtocolDefinitionFile);
+		const ignore = `${(this.Debug?.MaintainContainerOnExit) ? '' : '--rm '}`;
+		return `--mount type=bind,source="${folderPath}",target="${targetPath}" --name sa4u_z3_server_${folderPath.replace(/([^A-Za-z0-9]+)/g, '')} ${this.Debug?.Image ?? dockerImageName} -d True -c "${compileDir}" ${(this.IgnoreFiles.length === 0) ? '' : '-i '.concat(this.IgnoreFiles.join(' -i '))} -p ${priorTypesPath} -m ${protocolDefinitionPath} --serialize-analysis ${targetPath}/.sa4u/cache -q`;
 	}
 }
 
@@ -205,15 +212,20 @@ async function getSA4UConfig(): Promise<SA4UConfig> {
 	}
 	const directory = resolve('./');
 	let readCompileCommands;
-	try {
-		readCompileCommands = (await promises.readFile(configJSON['CompilationDir'] + '/compile_commands.json')).toString().replace(directory, '/src/');
-	} catch (err) {
-		console.warn(`Failed to read ${configJSON['CompilationDir']}/compile_commands.json: ${err}`);
-		return new SA4UConfig('');
+	if (!isAbsolute(configJSON['CompilationDir']) && configJSON['CompilationDir'] !== '') {
+		try {
+			readCompileCommands = (await promises.readFile(configJSON['CompilationDir'] + '/compile_commands.json')).toString().replace(directory, '/src/');
+		} catch (err) {
+			console.warn(`Failed to read ${configJSON['CompilationDir']}/compile_commands.json: ${err}`);
+			return new SA4UConfig('');
+		}
 	}
+
 	try {
-		await promises.writeFile('.sa4u/compile_commands.json', readCompileCommands);
-		configJSON['CompilationDir'] = '.sa4u/';
+		if (!isAbsolute(configJSON['CompilationDir']) && configJSON['CompilationDir'] !== '') {
+			await promises.writeFile('.sa4u/compile_commands.json', readCompileCommands);
+			configJSON['CompilationDir'] = '.sa4u/';
+		}
 		return new SA4UConfig(configJSON);
 	} catch (err) {
 		console.warn(`Failed to write compile_commands.json into .sa4u directory: ${err}`);
@@ -325,6 +337,9 @@ async function dockerContainer(folder: WorkspaceFolder): Promise<void> {
 				createDiagnostics(line);
 			}
 		});
+
+		child.stderr?.on('data', (_) => {return;});
+
 		startedSA4U_Z3 = true;
 	} catch (e) {
 		connection.sendNotification('ServerError', `Failed to start the docker container: ${e}`);

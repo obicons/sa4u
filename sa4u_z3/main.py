@@ -288,6 +288,15 @@ def main():
         type=str,
         default=None,
     )
+    parser.add_argument(
+        '-q',
+        '--quiet',
+        dest='quiet',
+        help='Turn off verbose logs',
+        required=False,
+        type=bool,
+        default=False,
+    )
     parsed_args = parser.parse_args()
 
     protocol_definition_location = parsed_args.flex_module_api_url or parsed_args.message_definition_path
@@ -303,7 +312,7 @@ def main():
     )
 
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.ERROR if parsed_args.quiet else logging.INFO,
         format='%(levelname)s: %(message)s',
     )
 
@@ -827,7 +836,8 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             accessed_object = get_next_decl_ref_expr(cursor)
             if accessed_object is not None:
                 obj_name = get_fq_name(accessed_object)
-                frame_constraint = context.get('ActiveConstraints', {}).get(obj_name)
+                frame_constraint = context.get(
+                    'ActiveConstraints', {}).get(obj_name)
 
         expr_repr = get_fq_member_expr(cursor)
         if expr_repr in _IGNORE_MEMBERS:
@@ -1342,6 +1352,7 @@ def read_stdlib():
     except FileNotFoundError:
         logger.warning('Cannot read file stdlib.json')
         pass
+
 
 if __name__ == '__main__':
     main()
