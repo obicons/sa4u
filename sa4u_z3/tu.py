@@ -78,7 +78,7 @@ def get_stored_stu(compile_command: cindex.CompileCommand, cache_path: Optional[
         if _tu_filename_to_stu[cache_key].serialization_time >= modified_time:
             logger.info(f'Using in-memory cache for {cache_key}')
             return _tu_filename_to_stu[cache_key]
-        else :
+        else:
             logger.info(f'Dirty in-memory cache for {cache_key}')
     # Check for a stored serialized Translation Unit stored on the Hard Drive and compare last modified times
     else:
@@ -165,8 +165,6 @@ def write_tu(path: str, stu: 'SerializedTU'):
             'Solver': stu.solver,
         }
         json.dump(serialized_obj, f)
-        
-        
 
 
 def _translation_unit_file_path_to_filename(tuSpelling: str) -> str:

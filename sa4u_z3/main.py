@@ -407,7 +407,7 @@ def main():
         #     print(assertion)
 
         start = time.time()
-        solver.set(timeout=5 * 60 * 1000)
+        solver.set(timeout=30 * 1000)
         status = solver.check(all_assertions)
         end = time.time()
         print(f'Z3 elapsed time: {end - start} seconds', flush=True)
