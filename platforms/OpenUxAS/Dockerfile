@@ -42,7 +42,7 @@ ENV USER ardupilot
 RUN sudo apt-get update && sudo apt-get install -y python3.9 python3.9-distutils pkg-config vim
 RUN wget -O- 'https://bootstrap.pypa.io/get-pip.py' | python3.9
 
-ARG SA4U_SHA="4b3031ff27a5b671679f8d791a216b14ec273247"
+ARG SA4U_SHA="2d9a96a817286827c51242dcf06ee5a9fcd9880c"
 RUN git clone https://github.com/obicons/sa4u /home/ardupilot/sa4u
 WORKDIR /home/ardupilot/sa4u/sa4u_z3
 RUN git checkout ${SA4U_SHA}
@@ -52,6 +52,4 @@ ADD CMASI.xml /home/ardupilot/CMASI.xml
 ADD types.json /home/ardupilot/types.json
 ADD ignore_list /home/ardupilot/ignore_list
 
-# && mv compile_commands.json compile_commands_uxas.json
-# && bear ./anod build amase                              \
-# && mv compile_commands.json compile_commands_amase.json \
+ENTRYPOINT [ "python3.9", "main.py" ]

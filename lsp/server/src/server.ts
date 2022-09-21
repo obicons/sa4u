@@ -25,6 +25,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { exec, execSync } from 'child_process';
 import { promisify } from 'util';
 import { constants, promises } from 'fs';
+
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 const connection = createConnection(ProposedFeatures.all);
@@ -33,7 +34,7 @@ const connection = createConnection(ProposedFeatures.all);
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 // Docker image to use for analysis.
-const dockerImageName = 'sa4u/sa4u:0.7.0';
+const dockerImageName = 'sa4u/sa4u:0.7.1';
 
 // Location of config file
 const CONFIG_FILE = '.sa4u/config.json';
@@ -42,6 +43,8 @@ let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let allowConfigurationChanges = false;
 let startedSA4U_Z3 = false;
+
+let childProcess = null;
 
 const execAsync = promisify(exec);
 
@@ -261,6 +264,7 @@ async function changedConfiguration(change: DidChangeConfigurationParams): Promi
 async function dockerContainer(folder: WorkspaceFolder): Promise<void> {
 	const filePath = decodeURIComponent(folder.uri);
 	const diagnosticsMap = new Map<string, Diagnostic[]>();
+	const sa4uConfig = await getSA4UConfig();
 	try {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		const readline = require('readline');
@@ -316,16 +320,23 @@ async function dockerContainer(folder: WorkspaceFolder): Promise<void> {
 			for (const parser of parsers) {
 				const maybeMatch = line.match(parser.regex);
 				if (maybeMatch) {
-					const encoded = encodeURI(filePath + parser.parse(maybeMatch).source.replace(/\/src/, ''));
-					if (!diagnosticsMap.has(encoded))
+					const encoded = encodeURI(
+						join(
+							filePath,
+							parser.parse(maybeMatch).source.replace(sa4uConfig.Debug?.MountLocation || '/src/', ''),
+						),
+					);
+					console.log('Sending diagnostic for ' + encoded);
+					if (!diagnosticsMap.has(encoded)) {
 						diagnosticsMap.set(encoded, []);
+					}
 					diagnosticsMap.get(encoded)?.push(parser.parse(maybeMatch));
 				}
 			}
 		};
-		const sa4uConfig = await getSA4UConfig();
-		const child = exec(`docker container run ${sa4uConfig.returnParameters(folder)}`);
-		const rl = readline.createInterface({ input: child.stdout });
+
+		childProcess = exec(`docker container run ${sa4uConfig.returnParameters(folder)}`, {maxBuffer: 16384 * 1024});
+		const rl = readline.createInterface({ input: childProcess.stdout });
 		rl.on('line', (line: any) => {
 			console.log(line);
 			if (line.match(/---END RUN---/)) {
@@ -338,7 +349,13 @@ async function dockerContainer(folder: WorkspaceFolder): Promise<void> {
 			}
 		});
 
-		child.stderr?.on('data', (_) => {return;});
+		console.log('Process PID: ' + childProcess.pid);
+		childProcess.stderr?.on('data', (data) => {console.log(data);});
+		childProcess.stderr?.on('close', () => console.log('closed'));
+		childProcess.stderr?.on('error', (err) => console.log('error: ' + err));
+		childProcess.stderr?.on('end', () => console.log('ended'));
+		childProcess.on('close', (exitCode, signal) => console.log('process exited (closed) with code: ' + exitCode + ' ' + signal));
+		childProcess.on('exit', (exitCode, signal) => console.log('process exited with code: ' + exitCode + ' ' + signal));
 
 		startedSA4U_Z3 = true;
 	} catch (e) {
