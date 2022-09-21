@@ -294,8 +294,7 @@ def main():
         dest='quiet',
         help='Turn off verbose logs',
         required=False,
-        type=bool,
-        default=False,
+        action='store_true',
     )
     parsed_args = parser.parse_args()
 
