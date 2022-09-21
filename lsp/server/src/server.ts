@@ -47,9 +47,11 @@ const execAsync = promisify(exec);
 class SA4UDebug {
 	Image: string;
 	MaintainContainerOnExit: boolean;
-	constructor(image:string, maintainOnExit:boolean) {
+	MountLocation: string;
+	constructor(image: string, maintainOnExit: boolean, mountLocation: string) {
 		this.Image = image;
 		this.MaintainContainerOnExit = maintainOnExit;
+		this.MountLocation = mountLocation;
 	}
 }
 
@@ -58,7 +60,7 @@ class SA4UConfig {
 	CompilationDir: string;
 	PriorTypes: string;
 	IgnoreFiles: string[];
-	Debug?:SA4UDebug;
+	Debug?: SA4UDebug;
 	constructor(config: any) {
 		if (config !== '') {
 			this.ProtocolDefinitionFile = config.MessageDefinition || config.ProtocolDefinitionFile;
@@ -73,8 +75,12 @@ class SA4UConfig {
 			} else {
 				this.IgnoreFiles = config.IgnoreFiles || [];
 			}
-			if (config.DebugMode === true || config.Debug) {
-				this.Debug = new SA4UDebug(config.DebugModeDockerImage || config.Debug?.Image, config.DebugModeMaintainContainerOnExit || config.Debug?.MaintainContainerOnExit);
+			if (config.DebugMode || config.Debug) {
+				this.Debug = new SA4UDebug(
+					config.DebugModeDockerImage || config.Debug?.Image,
+					config.DebugModeMaintainContainerOnExit || config.Debug?.MaintainContainerOnExit,
+					config.DebugModeMountLocation || config.Debug?.MountLocation || '/src/',
+				);
 			}
 		} else {
 			this.ProtocolDefinitionFile = '';
@@ -109,7 +115,7 @@ class SA4UConfig {
 
 async function checkForDockerRunningAndInstalled(): Promise<void> {
 	return await execAsync('docker info')
-		.then(() => {return;}, () => {throw 'Please verify Docker is installed and Docker daemon is running.';});
+		.then(() => { return; }, () => { throw 'Please verify Docker is installed and Docker daemon is running.'; });
 }
 
 async function startDockerContainer() {
@@ -200,7 +206,7 @@ async function getSA4UConfig(): Promise<SA4UConfig> {
 	const directory = resolve('./');
 	let readCompileCommands;
 	try {
-		readCompileCommands = (await promises.readFile(configJSON['CompilationDir']+'/compile_commands.json')).toString().replace(directory, '/src/');
+		readCompileCommands = (await promises.readFile(configJSON['CompilationDir'] + '/compile_commands.json')).toString().replace(directory, '/src/');
 	} catch (err) {
 		console.warn(`Failed to read ${configJSON['CompilationDir']}/compile_commands.json: ${err}`);
 		return new SA4UConfig('');
@@ -260,37 +266,37 @@ async function dockerContainer(folder: WorkspaceFolder): Promise<void> {
 					parse: ([_, varName, filename, line]: string[]) => ({
 						severity: DiagnosticSeverity.Error,
 						range: {
-							start: {line: parseInt(line)-1, character: 0},
-							end: {line: parseInt(line), character: 0},
+							start: { line: parseInt(line) - 1, character: 0 },
+							end: { line: parseInt(line), character: 0 },
 						},
 						message: `Incorrect store to ${varName}.`,
 						source: `${filename}`,
-						data: {title: `Multiply ${varName} by 100.`, change: ' * 100'}
+						data: { title: `Multiply ${varName} by 100.`, change: ' * 100' }
 					}),
 				},
 				{
 					regex: /Assignment to (.*) in (.*) on line ([0-9]+)/,
 					parse: ([_, varName, filename, line]: string[]) => ({
-							severity: DiagnosticSeverity.Error,
-							range: {
-								start: {line: parseInt(line)-1, character: 0},
-								end: {line: parseInt(line), character: 0},
-							},
-							message: `Stores to ${varName}.`,
-							source: `${filename}`,
-							data: {title: `Multiply ${varName} by 100.`, change: ' * 100'},
+						severity: DiagnosticSeverity.Error,
+						range: {
+							start: { line: parseInt(line) - 1, character: 0 },
+							end: { line: parseInt(line), character: 0 },
+						},
+						message: `Stores to ${varName}.`,
+						source: `${filename}`,
+						data: { title: `Multiply ${varName} by 100.`, change: ' * 100' },
 					}),
 				},
 				{
 					regex: /Call to (.*) in (.*) on line ([0-9]+)/,
 					parse: ([_, functionName, filename, line]: string[]) => ({
-							severity: DiagnosticSeverity.Error,
-							range: {
-								start: {line: parseInt(line)-1, character: 0},
-								end: {line: parseInt(line), character: 0},
-							},
-							message: `Calls to ${functionName}.`,
-							source: `${filename}`,
+						severity: DiagnosticSeverity.Error,
+						range: {
+							start: { line: parseInt(line) - 1, character: 0 },
+							end: { line: parseInt(line), character: 0 },
+						},
+						message: `Calls to ${functionName}.`,
+						source: `${filename}`,
 					}),
 				},
 			];
@@ -298,7 +304,7 @@ async function dockerContainer(folder: WorkspaceFolder): Promise<void> {
 			for (const parser of parsers) {
 				const maybeMatch = line.match(parser.regex);
 				if (maybeMatch) {
-					const encoded = encodeURI(filePath+parser.parse(maybeMatch).source.replace(/\/src/, ''));
+					const encoded = encodeURI(filePath + parser.parse(maybeMatch).source.replace(/\/src/, ''));
 					if (!diagnosticsMap.has(encoded))
 						diagnosticsMap.set(encoded, []);
 					diagnosticsMap.get(encoded)?.push(parser.parse(maybeMatch));
@@ -307,12 +313,12 @@ async function dockerContainer(folder: WorkspaceFolder): Promise<void> {
 		};
 		const sa4uConfig = await getSA4UConfig();
 		const child = exec(`docker container run ${sa4uConfig.returnParameters(folder)}`);
-		const rl = readline.createInterface({input: child.stdout});
+		const rl = readline.createInterface({ input: child.stdout });
 		rl.on('line', (line: any) => {
 			console.log(line);
 			if (line.match(/---END RUN---/)) {
 				diagnosticsMap.forEach((value, key) => {
-					connection.sendDiagnostics({uri: key, diagnostics: value});
+					connection.sendDiagnostics({ uri: key, diagnostics: value });
 					diagnosticsMap.set(key, []);
 				});
 			} else {
@@ -325,7 +331,7 @@ async function dockerContainer(folder: WorkspaceFolder): Promise<void> {
 	}
 }
 
-function getPath (folder: WorkspaceFolder, basic = false): string {
+function getPath(folder: WorkspaceFolder, basic = false): string {
 	let path = decodeURIComponent(folder.uri);
 	path = path.replace(/(^\w+:|^)\/\//, '');
 	path = path.replace(/:/, '');
@@ -375,8 +381,8 @@ connection.onInitialized(() => {
 		});
 	}
 	Promise.all([checkForDockerRunningAndInstalled(), updateConfigurations(), stopAndRemoveDockerContainer()]).then(
-		() => {startDockerContainer();}, 
-		(err) => {connection.sendNotification('ServerError', `Server Failed to start Docker container: ${err}`);}
+		() => { startDockerContainer(); },
+		(err) => { connection.sendNotification('ServerError', `Server Failed to start Docker container: ${err}`); }
 	);
 	if (hasConfigurationCapability) {
 		// Register for all configuration changes.
@@ -409,7 +415,7 @@ connection.onCodeAction((params) => {
 });
 
 connection.onExecuteCommand(async (params) => {
-	if (params.arguments ===  undefined) {
+	if (params.arguments === undefined) {
 		return;
 	}
 	if (params.command === 'sa4u.fix') {
@@ -422,7 +428,7 @@ connection.onExecuteCommand(async (params) => {
 			connection.workspace.applyEdit({
 				documentChanges: [
 					TextDocumentEdit.create({ uri: textDocument.uri, version: textDocument.version }, [
-						TextEdit.insert(textDocument.positionAt(textDocument.offsetAt({line: params.arguments[2].end.line, character: params.arguments[2].end.character})-3), newText)
+						TextEdit.insert(textDocument.positionAt(textDocument.offsetAt({ line: params.arguments[2].end.line, character: params.arguments[2].end.character }) - 3), newText)
 					])
 				]
 			});
@@ -437,7 +443,7 @@ connection.onDidChangeWatchedFiles(_change => {
 });
 
 connection.onShutdown(() => {
-	connection.workspace.getWorkspaceFolders().then((folders: null|WorkspaceFolder[]|void) => {
+	connection.workspace.getWorkspaceFolders().then((folders: null | WorkspaceFolder[] | void) => {
 		if (folders) {
 			folders.forEach((folder) => {
 				const path = getPath(folder);
