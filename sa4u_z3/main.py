@@ -761,7 +761,6 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
                 f'Frames must agree in operator {operator} applied in {cursor.location.file} on line {cursor.location.line} ({_counter})',
             )
             _counter += 1
-
             product_type = Type.type(
                 create_unit(
                     scalar_multiply(
@@ -1052,8 +1051,10 @@ def types_equal(t1: DatatypeRef, t2: DatatypeRef) -> BoolRef:
         ),
         Type.is_constant(t1),
         Type.is_constant(t2),
-        Type.is_void(t1),
-        Type.is_void(t2),
+        And(
+            Type.is_void(t1),
+            Type.is_void(t2),
+        ),
     )
 
 

@@ -2,50 +2,38 @@
 SA4U is a static analyzer for detecting unit conversion errors in UAV source code.
 
 ## Directory Layout
-There are currently 2 directories:
-* `platforms/` contains Dockerfiles for building an environment to
-  analyze supported UAV systems. Currently, we support ArduPilot. We
-  intend to eventually support PX4. Each system has its own
-  subdirectory, e.g. `platforms/ArduPilot`.
-* `src/` contains the source code for SA4U. 
+* `bugs/` - contains scripts to recreate bugs diagnosed by SA4U
+* `demos/` - contains examples to analyze with SA4U
+* `lsp/` - contains the SA4U VSCode extension
+* `platforms/` - contains support data for SA4U to analyze special subjects
+* `sa4u_z3/` - contains the source code for the latest SA4U
 
-## Important Notes
-The analysis process generates a lot of data. You may run out of
-memory. Increase your swap size if this occurs. SA4U is designed to
-use memory in a way that swapping should not slow down the analysis too much.
+## Running on a Demo
 
-## Build Steps
-1. Clone this repository:
+### Step 1: Build Docker Image
+```sh
+$ (cd sa4u_z3 && docker image build -t sa4u ./)
 ```
-> git clone https://github.com/obicons/sa4u
+
+### Step 2: Invoke SA4U on `demos/01`
+```sh
+$ docker container run        \
+  -v "$(pwd)/demos/01":/src/  \
+  sa4u                        \
+  -m /src/CMASI.xml           \
+  -p /src/ex_prior.json       \
+  -c /src/compile_commands_dir
 ```
-2. Change directories into sa4u (`cd sa4u`). Initialize all dependencies:
+
+You should see no errors.
+
+### Step 3: Insert an error in `demos/01`
+Uncomment the first line in `demos/01` that indicates that there is an error. Invoke SA4U like you did in step 2. You should see output like this:
 ```
-> git submodule update --init --recursive
-```
-3. Build a platform to analyze. Have a coffee & browse HN. ArduPilot has many dependencies, so this will take a
-while. 
-```
-> docker image build -t sa4u-ardupilot ./platforms/ArduPilot
-```
-4. Change the permissions of the source code repository so that the
-   Docker container's user can read/write:
-```
-> chmod -R a+rw ./
-```
-5. Start an analysis container:
-```
-> docker container run -ti -v $(pwd):/home/ardupilot/sa4u sa4u-ardupilot bash
-```
-6. In the analysis container, build SA4U:
-```
-> cd /home/ardupilot/sa4u/src/
-> make
-```
-7: Run the analysis:
-```
-> ./sa4u                                                    \
-    --compilation-database ../../ardupilot/build/sitl/      \
-    --mavlink-definitions ../platforms/ArduPilot/common.xml \
-    --prior-types ../platforms/ArduPilot/sample.json
+ERROR!
+  afrl::cmasi::Location3D::getAltitude return unit known from CMASI definition
+  afrl::cmasi::Location3D::getAltitude known from CMASI definition
+  Variable z declared in /src/ex.cpp on line 25 (1)
+  Call to set_alt_in_cm in /src/ex.cpp on line 29 column 3 (9)
+  Call to set_alt_in_cm in /src/ex.cpp on line 31 column 3 (10)
 ```
