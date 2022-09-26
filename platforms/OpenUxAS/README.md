@@ -39,12 +39,12 @@ $ docker image build -t sa4u-openuxas ./
 Next, build OpenUxAS in a container. First, navigate to the directory where you clone OpenUxAS. Then, run these commands:
 ```sh
 $ docker container run                  \
+   --entrypoint=/bin/bash               \
    --rm                                 \
    -ti                                  \
    -w /home/ardupilot/OpenUxAS          \
    -v "$(pwd)":/home/ardupilot/OpenUxAS \
-   sa4u-openuxas                        \
-   bash
+   sa4u-openuxas
 container$ bear ./anod build uxas --force
 ```
 
@@ -64,11 +64,11 @@ For example, outside of the `main` function declare an uninitialized global vari
 You're ready to detect your synthetic bug. Run these commands from the OpenUxAS directory:
 ```sh
 $ docker container run                  \
+   --entrypoint=/bin/bash               \
    --rm                                 \
    -ti                                  \
    -v "$(pwd)":/home/ardupilot/OpenUxAS \
-   sa4u-openuxas                        \
-   bash
+   sa4u-openuxas
 container$ ignore_flags=; for filename in $(cat ~/ignore_list); do ignore_flags="-i ${filename} ${ignore_flags}";	done
 container$ python3.9 main.py -c ~/OpenUxAS/ -m ~/CMASI.xml -p ~/types.json $ignore_flags
 ```
