@@ -546,7 +546,12 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
 
         # Weird, but correct. The first child is the true right hand side.
         # get_lhs returns the first child, so this does what we want.
-        rhs_type = type_expr(get_lhs(cursor), data)
+        rhs = get_lhs(cursor)
+        if rhs.kind == cindex.CursorKind.INTEGER_LITERAL or rhs.kind == cindex.CursorKind.CXX_BOOL_LITERAL_EXPR or rhs.kind == cindex.CursorKind.FLOATING_LITERAL:
+            # Ignore inititializations to literals.
+            return WalkResult.CONTINUE
+
+        rhs_type = type_expr(rhs, data)
         if rhs_type is None:
             return WalkResult.CONTINUE
 
@@ -555,7 +560,10 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
             _var_name_to_type[lhs_typename] = Const(lhs_typename, Type)
 
         assert_and_check(
-            _var_name_to_type[lhs_typename] == rhs_type,
+            types_equal(
+                _var_name_to_type[lhs_typename],
+                rhs_type,
+            ),
             f'Variable {cursor.spelling} declared in {cursor.location.file} on line {cursor.location.line} ({_counter})',
         )
         _counter += 1
@@ -574,7 +582,12 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
             _ignored += 1
             return WalkResult.CONTINUE
 
-        rhs_type = type_expr(get_rhs(cursor), data)
+        rhs = get_rhs(cursor)
+        if rhs.kind == cindex.CursorKind.INTEGER_LITERAL or rhs.kind == cindex.CursorKind.CXX_BOOL_LITERAL_EXPR or rhs.kind == cindex.CursorKind.FLOATING_LITERAL:
+            # Ignore assignments to literals.
+            return WalkResult.CONTINUE
+
+        rhs_type = type_expr(rhs, data)
         if rhs_type is None:
             _ignored += 1
             logger.warning(
@@ -676,10 +689,10 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
                 Type,
             )
             _fn_name_to_return_type[reference_typename] = t
-            assert_and_check(
-                Type.is_constant(t) == False,
-                'return type is not a constant',
-            )
+            # assert_and_check(
+            #     Type.is_constant(t) == False,
+            #     'return type is not a constant',
+            # )
 
         func_name = String(fq_fn_name)
         for arg, arg_no in zip(get_arguments(cursor), range(0, 1000)):
@@ -712,7 +725,6 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             )
         if cursor.referenced is None:
             return None
-
         var_typename = f'{get_fq_name(cursor.referenced)}_type'
         if _var_name_to_type.get(var_typename) is None:
             _var_name_to_type[var_typename] = Const(var_typename, Type)
@@ -790,14 +802,14 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
                     ],
                 ),
                 Type.frame(lhs_type),
-                And(
-                    Type.is_constant(lhs_type),
-                    Type.is_constant(rhs_type),
-                ),
-                And(
-                    Type.is_void(lhs_type),
-                    Type.is_void(rhs_type),
-                ),
+                # And(
+                #     Type.is_constant(lhs_type),
+                #     Type.is_constant(rhs_type),
+                # ),
+                # And(
+                #     Type.is_void(lhs_type),
+                #     Type.is_void(rhs_type),
+                # ),
             )
             _counter += 1
             return product_type
@@ -810,10 +822,9 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
                 *UNIT_TO_BASE_UNIT_VECTOR['literal'],
                 *([0] * MAX_FUNCTION_PARAMETERS),
             ),
-            # FreshConst(Unit, 'literal_unit'),
             FreshConst(Frames, 'literal_frames'),
-            True,
-            False,
+            # True,
+            # False,
         )
         return literal_type
     elif cursor.kind == cindex.CursorKind.FLOATING_LITERAL:
@@ -825,8 +836,8 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             ),
             # FreshConst(Unit, 'literal_unit'),
             FreshConst(Frames, 'literal_frames'),
-            True,
-            False,
+            # True,
+            # False,
         )
     elif cursor.kind == cindex.CursorKind.MEMBER_REF_EXPR or cursor.kind == cindex.CursorKind.ARRAY_SUBSCRIPT_EXPR:
         frame_constraint = None
@@ -861,8 +872,8 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
             return Type.type(
                 Type.unit(t),
                 frame_constraint,
-                False,
-                False,
+                # False,
+                # False,
             )
         return t
     elif cursor.kind == cindex.CursorKind.UNARY_OPERATOR:
@@ -1036,8 +1047,8 @@ def declare_types():
         'type',
         ('unit', Unit),
         ('frame', Frames),
-        ('is_constant', BoolSort()),
-        ('is_void', BoolSort()),
+        # ('is_constant', BoolSort()),
+        # ('is_void', BoolSort()),
     )
     Type = Type.create()
 
@@ -1049,12 +1060,12 @@ def types_equal(t1: DatatypeRef, t2: DatatypeRef) -> BoolRef:
             Type.unit(t1) == Type.unit(t2),
             Type.frame(t1) == Type.frame(t2),
         ),
-        Type.is_constant(t1),
-        Type.is_constant(t2),
-        And(
-            Type.is_void(t1),
-            Type.is_void(t2),
-        ),
+        # Type.is_constant(t1),
+        # Type.is_constant(t2),
+        # And(
+        #     Type.is_void(t1),
+        #     Type.is_void(t2),
+        # ),
     )
 
 
@@ -1161,8 +1172,8 @@ def parse_variable_description(description: Dict[str, Any]):
     var_type = Type.type(
         variable_unit,
         variable_frames,
-        False,
-        False,
+        # False,
+        # False,
     )
     assert_and_check(
         variable_type == var_type,
@@ -1237,8 +1248,8 @@ async def _load_from_flex_module_api(api_url: str):
                     return_type == Type.type(
                         return_unit,
                         return_frames,
-                        False,
-                        False,
+                        # False,
+                        # False,
                     ),
                     f'{getter_name} known from CMASI definition',
                 )
@@ -1293,8 +1304,8 @@ def parse_cmasi(xml: ET.Element):
                 return_type == Type.type(
                     return_unit,
                     return_frames,
-                    False,
-                    False,
+                    # False,
+                    # False,
                 ),
                 f'{getter_name} known from CMASI definition',
             )
@@ -1329,8 +1340,8 @@ def parse_mavlink(xml: ET.Element):
                     *([0] * MAX_FUNCTION_PARAMETERS),
                 ),
                 Frames.frames(*[True for _ in range(NUM_FRAMES)]),
-                False,
-                False,
+                # False,
+                # False,
             )
 
 
