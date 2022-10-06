@@ -547,8 +547,7 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
         # Weird, but correct. The first child is the true right hand side.
         # get_lhs returns the first child, so this does what we want.
         rhs = get_lhs(cursor)
-        if rhs.kind == cindex.CursorKind.INTEGER_LITERAL or rhs.kind == cindex.CursorKind.CXX_BOOL_LITERAL_EXPR or rhs.kind == cindex.CursorKind.FLOATING_LITERAL:
-            # Ignore inititializations to literals.
+        if is_const_expr(rhs):
             return WalkResult.CONTINUE
 
         rhs_type = type_expr(rhs, data)
@@ -583,8 +582,10 @@ def walker(cursor: cindex.Cursor, data: Dict[Any, Any]) -> WalkResult:
             return WalkResult.CONTINUE
 
         rhs = get_rhs(cursor)
-        if rhs.kind == cindex.CursorKind.INTEGER_LITERAL or rhs.kind == cindex.CursorKind.CXX_BOOL_LITERAL_EXPR or rhs.kind == cindex.CursorKind.FLOATING_LITERAL:
-            # Ignore assignments to literals.
+        # if rhs.kind == cindex.CursorKind.INTEGER_LITERAL or rhs.kind == cindex.CursorKind.CXX_BOOL_LITERAL_EXPR or rhs.kind == cindex.CursorKind.FLOATING_LITERAL:
+        #     # Ignore assignments to literals.
+        #     return WalkResult.CONTINUE
+        if is_const_expr(rhs):
             return WalkResult.CONTINUE
 
         rhs_type = type_expr(rhs, data)
@@ -889,6 +890,26 @@ def type_expr(cursor: cindex.Cursor, context: Dict[Any, Any]) -> Optional[Dataty
     # else:
     #     print(
     #         f'type_expr(): unrecognized cursor: {cursor.kind} in {cursor.location.file} on line {cursor.location.line}')
+
+
+def is_const_expr(cursor: cindex.Cursor) -> bool:
+    """Returns true if the expression at cursor only involves constants."""
+    def walker(c: cindex.Cursor, ctx: dict) -> WalkResult:
+        if c.kind == cindex.CursorKind.BINARY_OPERATOR:
+            operator = get_binary_op(c)
+            ctx['IsConstant'] = ctx['IsConstant'] and operator in ['+', '-', '*', '/']
+            return WalkResult.RECURSE
+        elif c.kind == cindex.CursorKind.UNEXPOSED_EXPR:
+            walk_ast(c, walker, ctx)
+            return WalkResult.RECURSE
+        elif c.kind not in [cindex.CursorKind.INTEGER_LITERAL, cindex.CursorKind.CXX_BOOL_LITERAL_EXPR, cindex.CursorKind.FLOATING_LITERAL]:
+            ctx['IsConstant'] = False
+            return WalkResult.BREAK
+        else:
+            return WalkResult.RECURSE
+    data = {'IsConstant': True}
+    walk_ast(cursor, walker, data)
+    return data['IsConstant'] and cursor.kind in [cindex.CursorKind.BINARY_OPERATOR, cindex.CursorKind.INTEGER_LITERAL, cindex.CursorKind.CXX_BOOL_LITERAL_EXPR, cindex.CursorKind.FLOATING_LITERAL]
 
 
 def extract_conditional_constraints(if_stmt: cindex.Cursor) -> Optional[Tuple[str, DatatypeRef]]:

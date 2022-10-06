@@ -11,7 +11,7 @@ struct my_struct {
   double z;
 };
 
-double alt_in_cm = 100.0;
+double alt_in_cm = 100.0 * 10;
 void set_alt_in_cm(int p) { alt_in_cm = p; }
 
 int get_value() {
@@ -30,7 +30,18 @@ int main() {
   alt_in_cm = z * 100;
 
   // This is right, for all we know.
-  alt_in_cm = 1000;
+  alt_in_cm = 1000 * 10;
+
+  // This could also be correct.
+  double some_const = 42;
+  alt_in_cm = some_const;
+
+  // But if we store another value in some_const, it's not a constant.
+  // Error:
+  // some_const = z;
+
+  // Storing another constant into some_const is okay, though:
+  some_const = 19;
 
   // Fine:
   set_alt_in_cm(z * 100);
