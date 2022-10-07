@@ -42,7 +42,7 @@ ENV USER ardupilot
 RUN sudo apt-get update && sudo apt-get install -y python3.9 python3.9-distutils pkg-config vim
 RUN wget -O- 'https://bootstrap.pypa.io/get-pip.py' | python3.9
 
-ARG SA4U_SHA="2d9a96a817286827c51242dcf06ee5a9fcd9880c"
+ARG SA4U_SHA="c31ead5326474295dfc0682700144b521a2e64d4"
 RUN git clone https://github.com/obicons/sa4u /home/ardupilot/sa4u
 WORKDIR /home/ardupilot/sa4u/sa4u_z3
 RUN git checkout ${SA4U_SHA}
